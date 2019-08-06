@@ -2,98 +2,81 @@
 #include "bmi2.h"
 #include "bmi270.h"
 
+
 void delay_us(uint32_t period);
-int8_t i2c_reg_write(uint8_t i2c_addr, uint8_t reg_addr, const uint8_t *reg_data, uint16_t length);
-int8_t i2c_reg_read(uint8_t i2c_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
-int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
-int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
+int8_t i2c_reg_read(uint8_t i2c_add, uint8_t reg_add, uint8_t *regd_data, uint16_t length);
+int8_t i2c_reg_write(uint8_t i2c_add, uint8_t reg_add, const uint8_t *reg_data, uint16_t length);
+int8_t spi_reg_read(uint8_t cs, uint8_t reg_add, uint8_t *reg_data, uint16_t length);
+int8_t spi_reg_write(uint8_t cs, uint8_t reg_add, uint8_t *reg_data, uint16_t length);
 void print_rslt(int8_t rslt);
 
 int main(void)
 {
-    /* Variable to define rslt */
-    int8_t rslt;
+
     struct bmi2_dev dev;
-    struct bmi2_sens_config config;
 
-    /* Array to select sensors */
-    uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_NO_MOTION };
+    /*! @name Structure to define type of sensor and their respective data */
+    struct bmi2_sensor_data sensor_data;
 
-    /* Variable to get any-motion status */
-    uint16_t no_mot_status = 0;
+    uint8_t sens_sel[2] = { BMI2_ACCEL, BMI2_GYRO };
 
-    /* Select features and their pins to be mapped to */
-    struct bmi2_sens_int_config sens_int = { .type = BMI2_NO_MOTION, .hw_int_pin = BMI2_INT1 };
+    /*variable to define rslt*/
+    int8_t rslt;
 
+    /*to enable i2c interface*/
+    dev.read = i2c_reg_read;
+    dev.write = i2c_reg_write;
+    dev.delay_us = delay_us;
+    dev.read_write_len = 128;
+    dev.intf = BMI2_I2C_INTERFACE;
+    dev.dev_id = BMI2_I2C_PRIM_ADDR;
 
-    /*to enable the i2c interface*/
-       dev.read = i2c_reg_read;
-       dev.write = i2c_reg_write;
-       dev.delay_us = delay_us;
-       dev.read_write_len = 128;
-       dev.intf = BMI2_I2C_INTERFACE;
-       dev.dev_id = BMI2_I2C_PRIM_ADDR;
-
-       /*to enable spi interface*/
-    /*
-     * ac_setup_interface(AC_SPI_STD);
-     * dev.read = ac_spi_read;
-     * dev.write = ac_spi_write;
-     * dev.delay_us = delay_us;
-     * dev.read_write_len = 4096;
-     * dev.intf = BMI2_SPI_INTERFACE;
-     * dev.dev_id = SPI_CS;
-     * dev.dummy_byte = 1;
-     */
-
+    /*to enable spi interface*/
+   /* dev.read = spi_reg_read;
+    dev.write = spi_reg_write;
+    dev.delay_us = delay_us;
+    dev.read_write_len = 4096;
+    dev.intf = BMI2_SPI_INTERFACE;
+    dev.dev_id = SPI_CS;
+    dev.dummy_byte = 1;
+    */
     dev.config_file_ptr = NULL;
 
-    /*initialize bmi270 */
+    /*to Initialize bmi270*/
     rslt = bmi270_init(&dev);
     print_rslt(rslt);
 
-    /* Enable the selected sensors */
-    rslt = bmi2_sensor_enable(sens_list, 2, &dev);
+    rslt = bmi2_sensor_enable(&sens_sel[0], 1, &dev);
     print_rslt(rslt);
 
-    /* Configure type of feature */
-    config.type = BMI2_NO_MOTION;
-
-    /* Get default configurations for the type of feature selected */
-    rslt = bmi2_get_sensor_config(&config, 1, &dev);
+    rslt = bmi2_sensor_disable(&sens_sel[1], 1, &dev);
     print_rslt(rslt);
 
-    /* Set the new configuration */
-    rslt = bmi2_set_sensor_config(&config, 1, &dev);
+    sensor_data.type = BMI2_ACCEL;
+
+    dev.delay_us(100000);
+
+    printf("\nbefore CRT Accel x,y,z values\n");
+
+    /* read the accel data before CRT*/
+    rslt = bmi2_get_sensor_data(&sensor_data, 1, &dev);
     print_rslt(rslt);
+    printf("\nX axes: %d, Y axes: %d, Z axes: %d \n", sensor_data.sens_data.acc.x, sensor_data.sens_data.acc.y, sensor_data.sens_data.acc.z );
 
-    /* Set the new configuration */
-    rslt = bmi2_map_feat_int(&sens_int, 1, &dev);
+    /*brief This API is to run the CRT process*/
+    rslt = bmi2_do_crt(&dev);
     print_rslt(rslt);
-
-    printf("Do not move the board\n");
-
-    while (1)
+    if(rslt == BMI2_OK)
     {
-        /* Clear buffer */
-        no_mot_status = 0;
+    	printf("\nAfter CRT Accel x,y,z values\n");
 
-        dev.delay_us(50000);
+    	/* read the accel data after CRT*/
+    	rslt = bmi2_get_sensor_data(&sensor_data, 1, &dev);
+    	print_rslt(rslt);
 
-        /* Check the interrupt status of the no-motion */
-        rslt = bmi2_get_int_status(&no_mot_status, &dev);
-        print_rslt(rslt);
-        if (no_mot_status & BMI270_NO_MOT_STATUS_MASK)
-        {
-            printf("no_mot_status = %x\n", no_mot_status);
-            printf("No-motion interrupt generated");
-            break;
-        }
-
-        dev.delay_us(50000);
+    	printf("X axes: %d, Y axes: %d, Z axes: %d",sensor_data.sens_data.acc.x, sensor_data.sens_data.acc.y, sensor_data.sens_data.acc.z );
     }
 
-    return 0;
 }
 
 /*!
@@ -222,6 +205,12 @@ void print_rslt(int8_t rslt)
             break;
         case BMI2_E_INVALID_INT_PIN:
             printf("warning [%d] : invalid int pin\r\n", rslt);
+            break;
+        case BMI2_E_CRT_ERROR:
+            printf("warning[%d] : CRT fail\r\n", rslt);
+            break;
+        case BMI2_E_ABORT_ERROR:
+            printf("warning[%d] : Abort eror\r\n", rslt);
             break;
         default:
             printf("Error [%d] : Unknown error code\r\n", rslt);

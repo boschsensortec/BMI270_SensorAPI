@@ -40,8 +40,8 @@
  * patent rights of the copyright holder.
  *
  * @file	bmi2.c
- * @date	2019-5-28
- * @version	v2.19.0
+ * @date	2019-07-24
+ * @version	v2.34.0
  *
  */
 
@@ -359,14 +359,14 @@
 #define GYRO_FOC_NOISE_LIMIT_POSITIVE    UINT8_C(20)
 
 /* reference value with positive and negative noise range in lsb */
-#define ACC_2G_MAX_NOISE_LIMIT           UINT16_C(ACC_FOC_2G_REF + 255)
-#define ACC_2G_MIN_NOISE_LIMIT           UINT16_C(ACC_FOC_2G_REF - 255)
-#define ACC_4G_MAX_NOISE_LIMIT           UINT16_C(ACC_FOC_4G_REF + 255)
-#define ACC_4G_MIN_NOISE_LIMIT           UINT16_C(ACC_FOC_4G_REF - 255)
-#define ACC_8G_MAX_NOISE_LIMIT           UINT16_C(ACC_FOC_8G_REF + 255)
-#define ACC_8G_MIN_NOISE_LIMIT           UINT16_C(ACC_FOC_8G_REF - 255)
-#define ACC_16G_MAX_NOISE_LIMIT          UINT16_C(ACC_FOC_16G_REF + 255)
-#define ACC_16G_MIN_NOISE_LIMIT          UINT16_C(ACC_FOC_16G_REF - 255)
+#define ACC_2G_MAX_NOISE_LIMIT           (ACC_FOC_2G_REF + UINT16_C(255))
+#define ACC_2G_MIN_NOISE_LIMIT           (ACC_FOC_2G_REF - UINT16_C(255))
+#define ACC_4G_MAX_NOISE_LIMIT           (ACC_FOC_4G_REF + UINT16_C(255))
+#define ACC_4G_MIN_NOISE_LIMIT           (ACC_FOC_4G_REF - UINT16_C(255))
+#define ACC_8G_MAX_NOISE_LIMIT           (ACC_FOC_8G_REF + UINT16_C(255))
+#define ACC_8G_MIN_NOISE_LIMIT           (ACC_FOC_8G_REF - UINT16_C(255))
+#define ACC_16G_MAX_NOISE_LIMIT          (ACC_FOC_16G_REF + UINT16_C(255))
+#define ACC_16G_MIN_NOISE_LIMIT          (ACC_FOC_16G_REF - UINT16_C(255))
 
 #define BMI2_FOC_SAMPLE_LIMIT            UINT8_C(128)
 
@@ -4180,7 +4180,7 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev)
     {
         /* Reset bmi2 device */
         rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &data, 1, dev);
-        dev->delay_us(1800);
+        dev->delay_us(2000);
 
         /* set APS flag as after soft reset the sensor is on advance power save mode */
         dev->aps_status = BMI2_ENABLE;
@@ -5196,16 +5196,11 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, const struct bmi2_dev *
         /* Clear the FIFO data structure */
         reset_fifo_frame_structure(fifo, dev);
 
-        /* Select the interface */
-        if (dev->intf == BMI2_SPI_INTERFACE)
-        {
-            addr = addr | BMI2_SPI_RD_MASK;
-        }
-
-        /* Read FIFO data */
-        rslt = dev->read(dev->dev_id, addr, fifo->data, fifo->length);
+        /*red fifo data*/
+        rslt = bmi2_get_regs(addr, fifo->data, fifo->length, dev);
         if (rslt == BMI2_OK)
         {
+
             /* Get the set FIFO frame configurations */
             rslt = bmi2_get_regs(BMI2_FIFO_CONFIG_0_ADDR, config_data, 2, dev);
             if (rslt == BMI2_OK)
@@ -5265,6 +5260,7 @@ int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
+
             /* Get the number of accelerometer bytes to be read */
             rslt = parse_fifo_accel_len(&data_index, &data_read_length, accel_length, fifo, dev);
 
@@ -5333,6 +5329,7 @@ int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
+            /* Get the number of gyro bytes to be read */
             rslt = parse_fifo_gyro_len(&data_index, &data_read_length, gyro_length, fifo, dev);
 
             /* Convert word to byte since all sensor enables are in a byte */
@@ -7673,14 +7670,13 @@ int8_t bmi2_set_act_recg_sett(const struct act_recg_sett *sett, struct bmi2_dev 
         {
             /* Define the offset in bytes */
             idx = act_recg_sett.start_addr;
-            if((sett->act_rec_4 > 10) || (sett->act_rec_5 > 10)){
+            if ((sett->act_rec_4 > 10) || (sett->act_rec_5 > 10))
+            {
                 rslt = BMI2_E_INVALID_INPUT;
             }
             if (rslt == BMI2_OK)
             {
-                feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx],
-                                                     BMI2_ACT_RECG_POST_PROS_EN_DIS,
-                                                     sett->act_rec_1);
+                feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], BMI2_ACT_RECG_POST_PROS_EN_DIS, sett->act_rec_1);
 
                 /* increment idx by 2 to point min gdi thres addres */
                 idx = idx + 2;
@@ -13328,11 +13324,12 @@ static int8_t get_gyro_sensor_data(struct bmi2_sens_axes_data *data, uint8_t reg
         /* Get gyroscope data from the register */
         get_acc_gyr_data(data, reg_data);
 
+        /* Get the compensated gyroscope data */
+        comp_gyro_cross_axis_sensitivity(data, dev);
+
         /* Get the re-mapped gyroscope data */
         get_remapped_data(data, dev);
 
-        /* Get the compensated gyroscope data */
-        comp_gyro_cross_axis_sensitivity(data, dev);
     }
 
     return rslt;
@@ -16562,7 +16559,7 @@ static int8_t perform_accel_foc(const struct accel_foc_g_value *accel_g_value,
     uint8_t reg_status = 0;
 
     /* Array of structure to store accelerometer data */
-    struct bmi2_sens_axes_data accel_value[128];
+    struct bmi2_sens_axes_data accel_value[128] = { { 0 } };
 
     /* Structure to store accelerometer data temporarily */
     struct foc_temp_value temp = { 0, 0, 0 };

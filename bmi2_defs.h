@@ -40,8 +40,8 @@
  * patent rights of the copyright holder.
  *
  * @file	bmi2_defs.h
- * @date	2019-5-28
- * @version	v2.19.0
+ * @date	2019-07-24
+ * @version	v2.34.0
  *
  */
 
