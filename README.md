@@ -1,6 +1,8 @@
-# BMI2xy Sensor API
+# BMI2xy Sensor API v2.34.0
 
 > This package contains BMI2xy sensor API
+
+**Note : When updating from 2.19.0 to 2.34.0, the gyroscope offset calibration data cannot be reused. In case of a permanently stored gyroscope offset (inside the sensor NVM or on the host), please perform calibration again with API version 2.34.0.
 
 ## Sensor Overview
 
