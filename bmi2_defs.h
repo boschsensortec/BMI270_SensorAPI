@@ -1,51 +1,40 @@
 /**
- * Copyright (C) 2019 Bosch Sensortec GmbH
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * Neither the name of the copyright holder nor the names of the
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER
- * OR CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
- * OR CONSEQUENTIAL DAMAGES(INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- *
- * The information provided is believed to be accurate and reliable.
- * The copyright holder assumes no responsibility
- * for the consequences of use
- * of such information nor for any infringement of patents or
- * other rights of third parties which may result from its use.
- * No license is granted by implication or otherwise under any patent or
- * patent rights of the copyright holder.
- *
- * @file	bmi2_defs.h
- * @date	2019-07-24
- * @version	v2.34.0
- *
- */
-
-#ifndef BMI2_DEFS_H_
+* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+*
+* BSD-3-Clause
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its
+*    contributors may be used to endorse or promote products derived from
+*    this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+* POSSIBILITY OF SUCH DAMAGE.
+*
+* @file	bmi2_defs.h
+* @date	2020-01-10
+* @version	v2.46.1
+*
+*/#ifndef BMI2_DEFS_H_
 #define BMI2_DEFS_H_
 
 /******************************************************************************/
@@ -379,41 +368,47 @@
 #define BMI2_ACCEL                         UINT8_C(0)
 #define BMI2_GYRO                          UINT8_C(1)
 #define BMI2_AUX                           UINT8_C(2)
-#define BMI2_TEMP                          UINT8_C(3)
+#define BMI2_SIG_MOTION                    UINT8_C(3)
 #define BMI2_ANY_MOTION                    UINT8_C(4)
 #define BMI2_NO_MOTION                     UINT8_C(5)
-#define BMI2_TILT                          UINT8_C(6)
-#define BMI2_ORIENTATION                   UINT8_C(7)
-#define BMI2_SIG_MOTION                    UINT8_C(8)
-#define BMI2_STEP_DETECTOR                 UINT8_C(9)
-#define BMI2_STEP_COUNTER                  UINT8_C(10)
-#define BMI2_STEP_ACTIVITY                 UINT8_C(11)
-#define BMI2_GYRO_GAIN_UPDATE              UINT8_C(12)
-#define BMI2_UP_HOLD_TO_WAKE               UINT8_C(13)
-#define BMI2_GLANCE_DETECTOR               UINT8_C(14)
-#define BMI2_WAKE_UP                       UINT8_C(15)
-#define BMI2_HIGH_G                        UINT8_C(16)
-#define BMI2_LOW_G                         UINT8_C(17)
-#define BMI2_FLAT                          UINT8_C(18)
-#define BMI2_EXT_SENS_SYNC                 UINT8_C(19)
-#define BMI2_WRIST_GESTURE                 UINT8_C(20)
-#define BMI2_WRIST_WEAR_WAKE_UP            UINT8_C(21)
-#define BMI2_ACTIVITY_RECOGNITION          UINT8_C(22)
+#define BMI2_STEP_DETECTOR                 UINT8_C(6)
+#define BMI2_STEP_COUNTER                  UINT8_C(7)
+#define BMI2_STEP_ACTIVITY                 UINT8_C(8)
+#define BMI2_GYRO_GAIN_UPDATE              UINT8_C(9)
+#define BMI2_TILT                          UINT8_C(10)
+#define BMI2_UP_HOLD_TO_WAKE               UINT8_C(11)
+#define BMI2_GLANCE_DETECTOR               UINT8_C(12)
+#define BMI2_WAKE_UP                       UINT8_C(13)
+#define BMI2_ORIENTATION                   UINT8_C(14)
+#define BMI2_HIGH_G                        UINT8_C(15)
+#define BMI2_LOW_G                         UINT8_C(16)
+#define BMI2_FLAT                          UINT8_C(17)
+#define BMI2_EXT_SENS_SYNC                 UINT8_C(18)
+#define BMI2_WRIST_GESTURE                 UINT8_C(19)
+#define BMI2_WRIST_WEAR_WAKE_UP            UINT8_C(20)
+#define BMI2_WRIST_WEAR_WAKE_UP_WH         UINT8_C(21)
+#define BMI2_WRIST_GESTURE_WH              UINT8_C(22)
+#define BMI2_PRIMARY_OIS                   UINT8_C(23)
+#define BMI2_FREE_FALL_DET                 UINT8_C(24)
 
-#define BMI2_AXIS_MAP                      UINT8_C(23)
-#define BMI2_GYRO_SELF_OFF                 UINT8_C(24)
+/* Non virtual sensor features */
 #define BMI2_STEP_COUNTER_PARAMS           UINT8_C(25)
-#define BMI2_NVM_STATUS                    UINT8_C(26)
-#define BMI2_VFRM_STATUS                   UINT8_C(27)
-#define BMI2_GYRO_CROSS_SENSE              UINT8_C(28)
-#define BMI2_ACCEL_SELF_TEST               UINT8_C(29)
+#define BMI2_TEMP                          UINT8_C(26)
+#define BMI2_ACCEL_SELF_TEST               UINT8_C(27)
+#define BMI2_GYRO_SELF_OFF                 UINT8_C(28)
+#define BMI2_ACTIVITY_RECOGNITION          UINT8_C(29)
 #define BMI2_MAX_BURST_LEN                 UINT8_C(30)
-
 #define BMI2_SENS_MAX_NUM                  UINT8_C(31)
-#define BMI2_CRT_GYRO_SELF_TEST            UINT8_C(32)
-#define BMI2_ABORT_CRT_GYRO_SELF_TEST      UINT8_C(33)
-#define BMI2_NVM_PROG_PREP                 UINT8_C(34)
-#define BMI2_ACTIVITY_RECOGNITION_SETTINGS UINT8_C(35)
+#define BMI2_AXIS_MAP                      UINT8_C(32)
+#define BMI2_NVM_STATUS                    UINT8_C(33)
+#define BMI2_VFRM_STATUS                   UINT8_C(34)
+#define BMI2_GYRO_CROSS_SENSE              UINT8_C(35)
+#define BMI2_CRT_GYRO_SELF_TEST            UINT8_C(36)
+#define BMI2_ABORT_CRT_GYRO_SELF_TEST      UINT8_C(37)
+#define BMI2_NVM_PROG_PREP                 UINT8_C(38)
+#define BMI2_ACTIVITY_RECOGNITION_SETTINGS UINT8_C(39)
+#define BMI2_OIS_OUTPUT                    UINT8_C(40)
+#define BMI2_CONFIG_ID                     UINT8_C(41)
 
 /*! @name Bit wise for selecting BMI2 sensors/features */
 #define BMI2_ACCEL_SENS_SEL                (1)
@@ -441,6 +436,10 @@
 #define BMI2_WRIST_WEAR_WAKE_UP_SEL        (1 << BMI2_WRIST_WEAR_WAKE_UP)
 #define BMI2_ACTIVITY_RECOGNITION_SEL      (1 << BMI2_ACTIVITY_RECOGNITION)
 #define BMI2_ACCEL_SELF_TEST_SEL           (1 << BMI2_ACCEL_SELF_TEST)
+#define BMI2_WRIST_GEST_W_SEL              (1 << BMI2_WRIST_GESTURE_WH)
+#define BMI2_WRIST_WEAR_WAKE_UP_WH_SEL     (1 << BMI2_WRIST_WEAR_WAKE_UP_WH)
+#define BMI2_PRIMARY_OIS_SEL               (1 << BMI2_PRIMARY_OIS)
+#define BMI2_FREE_FALL_DET_SEL             (1 << BMI2_FREE_FALL_DET)
 
 /*! @name Bit wise selection of BMI2 sensors */
 #define BMI2_MAIN_SENSORS \
@@ -448,25 +447,28 @@
      | BMI2_AUX_SENS_SEL | BMI2_TEMP_SENS_SEL)
 
 /*!  @name Maximum number of BMI2 main sensors */
-#define BMI2_MAIN_SENS_MAX_NUM     UINT8_C(4)
+#define BMI2_MAIN_SENS_MAX_NUM          UINT8_C(4)
 
 /*! @name Macro to specify the number of step counter parameters */
-#define BMI2_STEP_CNT_N_PARAMS     UINT8_C(25)
+#define BMI2_STEP_CNT_N_PARAMS          UINT8_C(25)
+
+/*! @name Macro to specify the number of free-fall accel setting parameters */
+#define BMI2_FREE_FALL_ACCEL_SET_PARAMS UINT8_C(7)
 
 /*!  @name Macro to select between single and double tap */
-#define BMI2_DOUBLE_TAP_SEL        UINT8_C(0)
-#define BMI2_SINGLE_TAP_SEL        UINT8_C(1)
+#define BMI2_DOUBLE_TAP_SEL             UINT8_C(0)
+#define BMI2_SINGLE_TAP_SEL             UINT8_C(1)
 
-#define BMI2_SELECT_GYRO_SELF_TEST UINT8_C(0)
-#define BMI2_SELECT_CRT            UINT8_C(1)
+#define BMI2_SELECT_GYRO_SELF_TEST      UINT8_C(0)
+#define BMI2_SELECT_CRT                 UINT8_C(1)
 
 /*! @name Macro for NVM enable */
-#define BMI2_NVM_UNLOCK_ENABLE     UINT8_C(0x02)
-#define BMI2_NVM_UNLOCK_DISABLE    UINT8_C(0x00)
+#define BMI2_NVM_UNLOCK_ENABLE          UINT8_C(0x02)
+#define BMI2_NVM_UNLOCK_DISABLE         UINT8_C(0x00)
 
 /*! @name macro to select between gyro self test and CRT */
-#define BMI2_GYRO_SELF_TEST_SEL    UINT8_C(0)
-#define BMI2_CRT_SEL               UINT8_C(1)
+#define BMI2_GYRO_SELF_TEST_SEL         UINT8_C(0)
+#define BMI2_CRT_SEL                    UINT8_C(1)
 
 /******************************************************************************/
 /*! @name       Accelerometer Macro Definitions               */
@@ -517,14 +519,9 @@
 /*! @name Self test macro to show resulting minimum and maximum difference
  * signal of the axes in mg
  */
-#define BMI2_ST_ACC_X_SIG_MIN_DIFF     INT16_C(1800)
-#define BMI2_ST_ACC_X_SIG_MAX_DIFF     INT16_C(10200)
-
-#define BMI2_ST_ACC_Y_SIG_MIN_DIFF     INT16_C(-10200)
-#define BMI2_ST_ACC_Y_SIG_MAX_DIFF     INT16_C(-1800)
-
-#define BMI2_ST_ACC_Z_SIG_MIN_DIFF     INT16_C(800)
-#define BMI2_ST_ACC_Z_SIG_MAX_DIFF     INT16_C(10200)
+#define BMI2_ST_ACC_X_SIG_MIN_DIFF     INT16_C(16000)
+#define BMI2_ST_ACC_Y_SIG_MIN_DIFF     INT16_C(-15000)
+#define BMI2_ST_ACC_Z_SIG_MIN_DIFF     INT16_C(10000)
 
 /*! @name Mask definitions for accelerometer self-test */
 #define BMI2_ACC_SELF_TEST_EN_MASK     UINT8_C(0x01)
@@ -909,7 +906,8 @@ typedef void (*bmi2_delay_fptr_t)(uint32_t period);
 /*!  @name Enum to define BMI2 sensor interfaces */
 enum bmi2_intf_type {
     BMI2_SPI_INTERFACE = 1,
-    BMI2_I2C_INTERFACE
+    BMI2_I2C_INTERFACE,
+    BMI2_I3C_INTERFACE
 };
 
 /*!  @name Enum to define BMI2 sensor configuration errors for accelerometer
@@ -1065,6 +1063,9 @@ struct bmi2_int_map
 
     /*! Output configuration value of wrist wear wake-up */
     uint8_t wrist_wear_wake_up_out_conf;
+
+    /*! Output configuration value of free-fall detection */
+    uint8_t freefall_out_conf;
 };
 
 /*! @name Structure to define output for activity recognition */
@@ -1290,6 +1291,28 @@ struct bmi2_orientation_output
     uint8_t faceup_down;
 };
 
+/*! @name Structure to define OIS output */
+struct bmi2_ois_output
+{
+    /*! OIS accel x axis */
+    int16_t ois_acc_x;
+
+    /*! OIS accel y axis */
+    int16_t ois_acc_y;
+
+    /*! OIS accel z axis */
+    int16_t ois_acc_z;
+
+    /*! ois gyro x axis */
+    int16_t ois_gyro_x;
+
+    /*! OIS gyro y axis */
+    int16_t ois_gyro_y;
+
+    /*! OIS gyro z axis */
+    int16_t ois_gyro_z;
+};
+
 /*! @name Union to define BMI2 sensor data */
 union bmi2_sens_data
 {
@@ -1331,6 +1354,9 @@ union bmi2_sens_data
 
     /*! Accelerometer self test feature status */
     struct bmi2_acc_self_test_status accel_self_test_output;
+
+    /*! OIS output */
+    struct bmi2_ois_output ois_output;
 };
 
 /*! @name Structure to define type of sensor and their respective data */
@@ -1596,17 +1622,18 @@ struct bmi2_high_g_config
 /*! @name Structure to define low-g configuration */
 struct bmi2_low_g_config
 {
-    /*!  Acceleration threshold */
+    /*! Acceleration threshold */
     uint16_t threshold;
 
-    /*!  Hysteresis */
+    /*! Hysteresis */
     uint16_t hysteresis;
 
-    /*!  Duration interval */
+    /*! Duration interval */
     uint16_t duration;
 
     /*! Enable bits for enabling output into the register status bits */
     uint16_t out_conf;
+
 };
 
 /*! @name Structure to define flat configuration */
@@ -1664,43 +1691,150 @@ struct bmi2_wrist_wear_wake_up_config
     /*! Enable bits for enabling output into the register status bits */
     uint16_t out_conf;
 
-    /*! Cosine of min expected attitude change of the device within 1 second time window when moving within focus
-     * position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774. Default is 1448.  */
+    /*! Cosine of min expected attitude change of the device within 1 second time window when
+     *  moving within focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
+     *  Default is 1448.  */
     uint16_t min_angle_focus;
 
-    /*! Cosine of min expected attitude change of the device within 1 second time window when moving from non-focus to
-     * focus position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1448 to 1856. Default value is 1774.  */
+    /*! Cosine of min expected attitude change of the device within 1 second time window when
+     *  moving from non-focus to focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1448 to 1856.
+     *  Default value is 1774.  */
     uint16_t min_angle_nonfocus;
 
-    /*! Sine of the max allowed downward tilt angle in landscape right direction of the device, when it is in focus
-     * position
+    /*! Sine of the max allowed downward tilt angle in landscape right direction of the device,
+     *  when it is in focus position
      *  (i.e. user is able to comfortably look at the dial of wear device).
-     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to 1024. Default value is
-     * 1024.  */
+     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to 1024.
+     *  Default value is 1024.  */
     uint16_t max_tilt_lr;
 
-    /*! Sine of the max allowed downward tilt angle in landscape left direction of the device, when it is in focus
-     * position
+    /*! Sine of the max allowed downward tilt angle in landscape left direction of the device,
+     * when it is in focus position
      *  (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to 1024. Default value is
-     * 700.  */
+     *   The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to
+     * 1024. Default value is 700.  */
     uint16_t max_tilt_ll;
 
-    /*! Sine of the max allowed backward tilt angle in portrait down direction of the device, when it is in focus
-     * position
+    /*! Sine of the max allowed backward tilt angle in portrait down direction of the device,
+     *  when it is in focus position
      *  (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 0 to179. Default value is 179.
-     **/
+     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 0 to179.
+     *  Default value is 179. */
     uint16_t max_tilt_pd;
 
-    /*!     Sine of the maximum allowed forward tilt angle in portrait up direction of the device, when it is in focus
-     * position
+    /*! Sine of the maximum allowed forward tilt angle in portrait up direction of the
+     *  device, when it is in focus position
      *  (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 1774 to 1978. Default value is
-     * 1925. */
+     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 1774 to 1978.
+     *  Default value is 1925. */
     uint16_t max_tilt_pu;
+};
+
+/*! @name Structure to define wrist gesture configuration for wearable variant */
+struct bmi2_wrist_gest_w_config
+{
+    /*!  Wearable arm (left or right) */
+    uint8_t wearable_arm : 1;
+
+    /*! Enable bits for enabling output into the register status bits */
+    uint8_t out_conf : 4;
+
+    /*! Sine of the minimum tilt angle in portrait down direction of the device when wrist is rolled
+     *  away from user. The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
+     *  Range is 1448 to 1774. Default value is 1774.  */
+    uint16_t min_flick_peak;
+
+    /*! Value of minimum time difference between wrist roll-out and roll-in movement during flick gesture.
+     *  Range is 3 to 5 samples at 50Hz. Default value is 4 (i.e. 0.08 seconds).  */
+    uint16_t min_flick_samples;
+
+    /*! Maximum time within which gesture movement has to be completed. Range is 150 to 250 samples at 50Hz.
+     * Default value is 200 (i.e. 4 seconds).  */
+    uint16_t max_duration;
+
+    /*!  Defines the Wait time between the detection of the wrist gesture and reporting the wrist gesture.
+     *  The sample resolution is 20ms. The default value is 25 which is equal to reporting delay 500ms .
+     */
+    uint16_t reporting_delay;
+};
+
+/*! @name Structure to define wrist wear wake-up configuration for wearable configuration */
+struct bmi2_wrist_wear_wake_up_wh_config
+{
+    /*! Enable bits for enabling output into the register status bits */
+    uint16_t out_conf;
+
+    /*! Cosine of min expected attitude change of the device within 1 second time window when
+     * moving within focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
+     *  Default is 1448.  */
+    uint16_t min_angle_focus;
+
+    /*! Cosine of min expected attitude change of the device within 1 second time window when
+     * moving from non-focus to focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1448 to 1856.
+     *  Default value is 1774.  */
+    uint16_t min_angle_nonfocus;
+
+    /*! Sine of the max allowed downward tilt angle in landscape right direction of the device,
+     * when it is in focus position  (i.e. user is able to comfortably look at the dial of wear device).
+     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 88 to 128.
+     * Default value is 128.  */
+    uint8_t angle_lr;
+
+    /*! Sine of the max allowed downward tilt angle in landscape left direction of the device,
+     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
+     *   The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 88 to 128.
+     * Default value is 128.  */
+    uint8_t angle_ll;
+
+    /*! Sine of the max allowed backward tilt angle in portrait down direction of the device,
+     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
+     *   The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 0 to 179.
+     * Default value is 22. */
+    uint8_t angle_pd;
+
+    /*! Sine of the maximum allowed forward tilt angle in portrait up direction of the device,
+     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
+     * The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 222 to 247.
+     * Default value is 241. */
+    uint8_t angle_pu;
+
+    /*! Minimum duration the arm should be moved while performing gesture. Range: 1 to 10,
+     * resolution = 20 ms.
+     * Default 2(40 ms)*/
+    uint8_t min_dur_mov;
+
+    /*! Minimum duration the arm should be static between two consecutive gestures. Range: 1 to
+     * 10, resolution = 20 ms
+     * Default 2(40 ms)*/
+    uint8_t min_dur_quite;
+};
+
+/*! @name Structure to define primary OIS configuration */
+struct bmi2_primary_ois_config
+{
+    uint8_t lp_filter_enable;
+
+    uint8_t lp_filter_config;
+
+    uint8_t primary_ois_reserved;
+
+    uint8_t primary_ois_gyro_en;
+
+    uint8_t primary_ois_accel_en;
+};
+
+/*! @name Structure to configure free-fall detection settings */
+struct bmi2_free_fall_det_config
+{
+    /*! Enable bits for enabling output into the register status bits */
+    uint16_t out_conf;
+
+    /*! free-fall accel settings */
+    uint16_t freefall_accel_settings[BMI2_FREE_FALL_ACCEL_SET_PARAMS];
 };
 
 /*!  @name Union to define the sensor configurations */
@@ -1766,6 +1900,17 @@ union bmi2_sens_config_types
     /*! Wrist wear wake-up configuration */
     struct bmi2_wrist_wear_wake_up_config wrist_wear_wake_up;
 
+    /*! Wrist gesture configuration for wearable variant */
+    struct bmi2_wrist_gest_w_config wrist_gest_w;
+
+    /*! Wrist wear wake-up configuration for wearable variant */
+    struct bmi2_wrist_wear_wake_up_wh_config wrist_wear_wake_up_wh;
+
+    /*! Primary OIS configuration */
+    struct bmi2_primary_ois_config primary_ois;
+
+    /* Free-fall detection configurations */
+    struct bmi2_free_fall_det_config free_fall_det;
 };
 
 /*!  @name Structure to define the type of the sensor and its configurations */
@@ -1871,7 +2016,6 @@ struct bmi2_dev
 
     /* To store hold the size of config file */
     uint16_t config_size;
-
 };
 
 /*!  @name Structure to enable an accel axis for foc */

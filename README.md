@@ -1,4 +1,4 @@
-# BMI2xy Sensor API v2.34.0
+BMI2xy Sensor API
 
 > This package contains BMI2xy sensor API
 

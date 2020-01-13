@@ -1,51 +1,40 @@
 /**
- * Copyright (C) 2019 Bosch Sensortec GmbH
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * Neither the name of the copyright holder nor the names of the
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER
- * OR CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
- * OR CONSEQUENTIAL DAMAGES(INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- *
- * The information provided is believed to be accurate and reliable.
- * The copyright holder assumes no responsibility
- * for the consequences of use
- * of such information nor for any infringement of patents or
- * other rights of third parties which may result from its use.
- * No license is granted by implication or otherwise under any patent or
- * patent rights of the copyright holder.
- *
- * @file	bmi2.c
- * @date	2019-07-24
- * @version	v2.34.0
- *
- */
-
-/******************************************************************************/
+* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+*
+* BSD-3-Clause
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its
+*    contributors may be used to endorse or promote products derived from
+*    this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+* POSSIBILITY OF SUCH DAMAGE.
+*
+* @file	bmi2.c
+* @date	2020-01-10
+* @version	v2.46.1
+*
+*//******************************************************************************/
 
 /*!  @name          Header Files                                  */
 /******************************************************************************/
@@ -87,6 +76,7 @@
 #define GYRO_SELF_TEST_CRT_EN_MASK       UINT8_C(0x01)
 #define ABORT_FEATURE_EN_MASK            UINT8_C(0x02)
 #define NVM_PREP_FEATURE_EN_MASK         UINT8_C(0x04)
+#define FREE_FALL_DET_FEAT_EN_MASK       UINT8_C(0x01)
 
 /*! @name Bit position definitions for BMI2 feature enable/disable */
 #define ANY_NO_MOT_EN_POS                UINT8_C(0x07)
@@ -102,6 +92,18 @@
 #define ACC_SELF_TEST_FEAT_EN_POS        UINT8_C(0x01)
 #define ABORT_FEATURE_EN_POS             UINT8_C(0x1)
 #define NVM_PREP_FEATURE_EN_POS          UINT8_C(0x02)
+
+/*! Primary OIS low pass filter configuration position and mask */
+#define LP_FILTER_EN_MASK                UINT8_C(0x01)
+
+#define LP_FILTER_CONFIG_POS             UINT8_C(0x01)
+#define LP_FILTER_CONFIG_MASK            UINT8_C(0x06)
+
+#define PRIMARY_OIS_GYR_EN_POS           UINT8_C(0x06)
+#define PRIMARY_OIS_GYR_EN_MASK          UINT8_C(0x40)
+
+#define PRIMARY_OIS_ACC_EN_POS           UINT8_C(0x07)
+#define PRIMARY_OIS_ACC_EN_MASK          UINT8_C(0x80)
 
 /*! @name Mask definitions for BMI2 any and no-motion feature configuration */
 #define ANY_NO_MOT_DUR_MASK              UINT16_C(0x1FFF)
@@ -225,13 +227,13 @@
 #define VFRM_WRITE_ERR_STATUS_POS        UINT8_C(0x06)
 #define VFRM_FATAL_ERR_STATUS_POS        UINT8_C(0x07)
 
-/*! @name Mask definitions for accelerometer self test status */
+/*! @name Mask definitions for accelerometer self-test status */
 #define ACC_SELF_TEST_DONE_MASK          UINT8_C(0x01)
 #define ACC_X_OK_MASK                    UINT8_C(0x02)
 #define ACC_Y_OK_MASK                    UINT8_C(0x04)
 #define ACC_Z_OK_MASK                    UINT8_C(0x08)
 
-/*! @name Bit Positions for accelerometer self test status */
+/*! @name Bit Positions for accelerometer self-test status */
 #define ACC_X_OK_POS                     UINT8_C(0x01)
 #define ACC_Y_OK_POS                     UINT8_C(0x02)
 #define ACC_Z_OK_POS                     UINT8_C(0x03)
@@ -281,6 +283,13 @@
 #define LOW_G_DUR_MASK                   UINT16_C(0x0FFF)
 #define LOW_G_OUT_CONF_MASK              UINT16_C(0xF000)
 
+/*! @name Mask definitions for BMI2 free-fall detection feature configuration */
+#define FREE_FALL_OUT_CONF_MASK          UINT16_C(0x001E)
+#define FREE_FALL_ACCEL_SETT_MASK        UINT16_C(0xFFFF)
+
+/*! @name Bit position definitions for BMI2 free-fall detection feature configuration */
+#define FREE_FALL_OUT_CONF_POS           UINT8_C(0x01)
+
 /*! @name Bit position definitions for BMI2 low-g feature configuration */
 #define LOW_G_OUT_CONF_POS               UINT8_C(0x0C)
 
@@ -313,6 +322,19 @@
 /*! @name Mask definitions for BMI2 wrist wear wake-up configuration */
 #define WRIST_WAKE_UP_OUT_CONF_MASK      UINT16_C(0x000F)
 
+/*! @name Mask definition for BMI2 wrist wear wake-up configuration for wearable variant */
+#define WRIST_WAKE_UP_ANGLE_LR_MASK      UINT16_C(0x00FF)
+#define WRIST_WAKE_UP_ANGLE_LL_MASK      UINT16_C(0xFF00)
+#define WRIST_WAKE_UP_ANGLE_PD_MASK      UINT16_C(0x00FF)
+#define WRIST_WAKE_UP_ANGLE_PU_MASK      UINT16_C(0xFF00)
+#define WRIST_WAKE_UP_MIN_DUR_MOVED_MASK UINT16_C(0x00FF)
+#define WRIST_WAKE_UP_MIN_DUR_QUITE_MASK UINT16_C(0xFF00)
+
+/*! @name Bit position definition for BMI2 wrist wear wake-up configuration for wearable variant */
+#define WRIST_WAKE_UP_ANGLE_LL_POS       UINT16_C(0x0008)
+#define WRIST_WAKE_UP_ANGLE_PU_POS       UINT16_C(0x0008)
+#define WRIST_WAKE_UP_MIN_DUR_QUITE_POS  UINT16_C(0x0008)
+
 /*! @name Macros to define values of BMI2 axis and its sign for re-map
  * settings
  */
@@ -341,10 +363,10 @@
 #define POS_SIGN                         INT16_C(1)
 
 /*! @name Macro to define related to CRT */
-#define CRT_READY_FOR_DOWNLOAD_US        UINT8_C(2000)
+#define CRT_READY_FOR_DOWNLOAD_US        UINT16_C(2000)
 #define CRT_READY_FOR_DOWNLOAD_RETRY     UINT8_C(100)
 
-#define CRT_WAIT_RUNNING_US              UINT8_C(10000)
+#define CRT_WAIT_RUNNING_US              UINT16_C(10000)
 #define CRT_WAIT_RUNNING_RETRY_EXECUTION UINT8_C(200)
 
 #define CRT_MIN_BURST_WORD_LENGTH        UINT8_C(2)
@@ -356,7 +378,7 @@
 #define ACC_FOC_16G_REF                  UINT16_C(2048)
 
 #define GYRO_FOC_NOISE_LIMIT_NEGATIVE    INT8_C(-20)
-#define GYRO_FOC_NOISE_LIMIT_POSITIVE    UINT8_C(20)
+#define GYRO_FOC_NOISE_LIMIT_POSITIVE    INT8_C(20)
 
 /* reference value with positive and negative noise range in lsb */
 #define ACC_2G_MAX_NOISE_LIMIT           (ACC_FOC_2G_REF + UINT16_C(255))
@@ -923,6 +945,46 @@ static int8_t set_wrist_gesture(uint8_t enable, struct bmi2_dev *dev);
 static int8_t set_wrist_wear_wake_up(uint8_t enable, struct bmi2_dev *dev);
 
 /*!
+ * @brief This internal API enables the wrist gesture feature for wearable variant.
+ *
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ * @param[in] enable         : Enables/Disables wrist gesture.
+ *
+ * Enable       |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Disables wrist gesture
+ * BMI2_ENABLE  | Enables wrist gesture
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_wrist_gesture_wh(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API enables the wrist wear wake up feature for wearable variant.
+ *
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ * @param[in] enable         : Enables/Disables wrist wear wake up.
+ *
+ * Enable       |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Disables wrist wear wake up
+ * BMI2_ENABLE  | Enables wrist wear wake up
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_wrist_wear_wake_up_wh(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
  * @brief This internal API enables/disables the activity recognition feature.
  *
  * @param[in] enable    : Enables/Disables activity recognition.
@@ -943,16 +1005,16 @@ static int8_t set_wrist_wear_wake_up(uint8_t enable, struct bmi2_dev *dev);
 static int8_t set_act_recog(uint8_t enable, struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API gives an option to enable accelerometer self test
+ * @brief This internal API gives an option to enable accelerometer self-test
  * in the feature register.
  *
- * @param[in] enable    : Enables/Disables accelerometer self test.
+ * @param[in] enable    : Enables/Disables accelerometer self-test.
  * @param[in] dev       : Structure instance of bmi2_dev.
  *
  *  enable      |  Description
  * -------------|---------------
- * BMI2_ENABLE  | Enables accelerometer self test.
- * BMI2_DISABLE | Disables accelerometer self test.
+ * BMI2_ENABLE  | Enables accelerometer self-test.
+ * BMI2_DISABLE | Disables accelerometer self-test.
  *
  * @return Result of API execution status
  *
@@ -962,6 +1024,27 @@ static int8_t set_act_recog(uint8_t enable, struct bmi2_dev *dev);
  * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
  */
 static int8_t set_feat_accel_self_test(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gives an option to enable low pass filter
+ * in the feature register.
+ *
+ * @param[in] enable    : Enables/Disables accelerometer self-test.
+ * @param[in] dev       : Structure instance of bmi2_dev.
+ *
+ *  enable      |  Description
+ * -------------|---------------
+ * BMI2_ENABLE  | Enables low pass filter.
+ * BMI2_DISABLE | Disables low pass filter.
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_primary_ois_low_pass_filter(uint8_t enable, struct bmi2_dev *dev);
 
 /*!
  * @brief  This internal API sets accelerometer configurations like ODR,
@@ -1712,6 +1795,66 @@ static int8_t set_wrist_gest_config(const struct bmi2_wrist_gest_config *config,
 static int8_t set_wrist_wear_wake_up_config(const struct bmi2_wrist_wear_wake_up_config *config, struct bmi2_dev *dev);
 
 /*!
+ * @brief This internal API sets wrist gesture configurations like wearable-arm,
+ * and output-configuration for wearable variant.
+ *
+ * @param[in]       config    : Structure instance of bmi2_wrist_gest_config.
+ * @param[in, out]  dev       : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *-----------------------------------------------------------------------------
+ *  bmi2_wrist_gest_config  |
+ *  Structure parameters    |               Description
+ *--------------------------|--------------------------------------------------
+ *                          | Device in left (0) or right (1) arm. By default,
+ *  wear_arm                | the wearable device is assumed to be in left arm
+ *                          | i.e. default value is 0.
+ * -------------------------|---------------------------------------------------
+ *                          | Enable bits for enabling output into the
+ *  out_conf                | register status bits and, if desired, onto the
+ *                          | interrupt pin.
+ * -------------------------|---------------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_wrist_gest_w_config(const struct bmi2_wrist_gest_w_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API sets wrist wear wake-up configurations like
+ * output-configuration for wearable variant.
+ *
+ * @param[in]       config    : Structure instance of
+ *                              bmi2_wrist_wear_wake_up_config.
+ * @param[in, out]  dev       : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *-----------------------------------------------------------------------------
+ * bmi2_wrist_wear_wake_up_config   |
+ *  Structure parameters            |               Description
+ *----------------------------------|-------------------------------------------
+ *                                  | Enable bits for enabling output into the
+ *  out_conf                        | register status bits and, if desired, onto
+ *                                  | the interrupt pin.
+ * ---------------------------------|-------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_wrist_wear_wake_up_wh_config(const struct bmi2_wrist_wear_wake_up_wh_config *config,
+                                               struct bmi2_dev *dev);
+
+/*!
  * @brief This internal API gets accelerometer configurations like ODR,
  * bandwidth, performance mode and g-range.
  *
@@ -2161,6 +2304,65 @@ static int8_t get_wrist_gest_config(struct bmi2_wrist_gest_config *config, struc
  * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
  */
 static int8_t get_wrist_wear_wake_up_config(struct bmi2_wrist_wear_wake_up_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets wrist gesture configurations like wearable-arm,
+ * and output-configuration for wearable variant.
+ *
+ * @param[out]      config    : Structure instance of bmi2_wrist_gest_config.
+ * @param[in, out]  dev       : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *-----------------------------------------------------------------------------
+ *  bmi2_wrist_gest_config  |
+ *  Structure parameters    |               Description
+ *--------------------------|--------------------------------------------------
+ *                          | Device in left (0) or right (1) arm. By default,
+ *  wear_arm                | the wearable device is assumed to be in left arm
+ *                          | i.e. default value is 0.
+ * -------------------------|---------------------------------------------------
+ *                          | Enable bits for enabling output into the
+ *  out_conf                | register status bits and, if desired, onto the
+ *                          | interrupt pin.
+ * -------------------------|---------------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t get_wrist_gest_w_config(struct bmi2_wrist_gest_w_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets wrist wear wake-up configurations like
+ * output-configuration for wearable variant.
+ *
+ * @param[out]      config    : Structure instance of
+ *                              bmi2_wrist_wear_wake_up_config.
+ * @param[in, out]  dev       : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *-----------------------------------------------------------------------------
+ * bmi2_wrist_wear_wake_up_config   |
+ *  Structure parameters            |               Description
+ *----------------------------------|-------------------------------------------
+ *                                  | Enable bits for enabling output into the
+ *  out_conf                        | register status bits and, if desired, onto
+ *                                  | the interrupt pin.
+ * ---------------------------------|-------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t get_wrist_wear_wake_up_wh_config(struct bmi2_wrist_wear_wake_up_wh_config *config, struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API gets orientation configurations like upside/down
@@ -2755,7 +2957,6 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
  * @param[out] len         : Number of bytes to be parsed.
  * @param[in]  acc_count   : Number of accelerometer frames to be read.
  * @param[in]  fifo        : Structure instance of bmi2_fifo_frame.
- * @param[in]  dev         : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
  *
@@ -2765,8 +2966,7 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
 static int8_t parse_fifo_accel_len(uint16_t *start_idx,
                                    uint16_t *len,
                                    const uint16_t *acc_count,
-                                   const struct bmi2_fifo_frame *fifo,
-                                   const struct bmi2_dev *dev);
+                                   const struct bmi2_fifo_frame *fifo);
 
 /*!
  * @brief This internal API is used to parse accelerometer data from the FIFO
@@ -2846,7 +3046,6 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
  * @param[in]  frame       : Either data enabled by user in header-less
  *                            mode or header frame value in header mode.
  * @param[in]  fifo        : Structure instance of bmi2_fifo_frame.
- * @param[in]  dev         : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
  *
@@ -2856,8 +3055,7 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
 static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
                                   uint16_t(*len),
                                   const uint16_t *gyr_count,
-                                  const struct bmi2_fifo_frame *fifo,
-                                  const struct bmi2_dev *dev);
+                                  const struct bmi2_fifo_frame *fifo);
 
 /*!
  * @brief This internal API is used to parse the gyroscope data from the FIFO
@@ -2933,7 +3131,7 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
  * @param[out] len         : Number of bytes to be parsed.
  * @param[in]  aux_count   : Number of accelerometer frames to be read.
  * @param[in]  fifo        : Structure instance of bmi2_fifo_frame.
- * @param[in]  dev         : Structure instance of bmi2_dev.
+ *
  *
  * @return Result of API execution status
  *
@@ -2943,8 +3141,7 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
 static int8_t parse_fifo_aux_len(uint16_t *start_idx,
                                  uint16_t(*len),
                                  const uint16_t *aux_count,
-                                 const struct bmi2_fifo_frame *fifo,
-                                 const struct bmi2_dev *dev);
+                                 const struct bmi2_fifo_frame *fifo);
 
 /*!
  * @brief This API is used to parse auxiliary data from the FIFO data.
@@ -3089,7 +3286,7 @@ static int8_t unpack_skipped_frame(uint16_t *data_index, struct bmi2_fifo_frame 
 
 /*!
  * @brief This internal API enables and configures the accelerometer which is
- * needed for self test operation. It also sets the amplitude for the self-test.
+ * needed for self-test operation. It also sets the amplitude for the self-test.
  *
  * @param[in]  dev      : Structure instance of bmi2_dev.
  *
@@ -3103,8 +3300,8 @@ static int8_t unpack_skipped_frame(uint16_t *data_index, struct bmi2_fifo_frame 
 static int8_t pre_self_test_config(struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API performs the steps needed for self test operation
- * before reading the accelerometer self test data.
+ * @brief This internal API performs the steps needed for self-test operation
+ * before reading the accelerometer self-test data.
  *
  * @param[in] sign      : Selects sign of self-test excitation
  * @param[in] dev       : Structure instance of bmi2_dev.
@@ -3122,7 +3319,7 @@ static int8_t pre_self_test_config(struct bmi2_dev *dev);
 static int8_t self_test_config(uint8_t sign, struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API enables or disables the accelerometer self test
+ * @brief This internal API enables or disables the accelerometer self-test
  * feature in the sensor.
  *
  * @param[in] enable            : Enables/ Disables self-test.
@@ -3160,7 +3357,7 @@ static int8_t set_accel_self_test_enable(uint8_t enable, struct bmi2_dev *dev);
 static int8_t set_acc_self_test_sign(uint8_t sign, struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API sets the amplitude of the accelerometer self test
+ * @brief This internal API sets the amplitude of the accelerometer self-test
  * deflection in the sensor.
  *
  * @param[in] amp       : Select amplitude of the self-test deflection.
@@ -3220,7 +3417,7 @@ static int32_t power(int16_t base, uint8_t resolution);
 
 /*!
  * @brief This internal API validates the accelerometer self-test data and
- * decides the result of self test operation.
+ * decides the result of self-test operation.
  *
  * @param[in] accel_data_diff   : Stores the acceleration value difference.
  *
@@ -3711,7 +3908,7 @@ static int8_t check_boundary_val(uint8_t *val, uint8_t min, uint8_t max, struct 
 static int8_t null_ptr_check(const struct bmi2_dev *dev);
 
 /*!
- * @brief This updates the result for CRT or gyro self test.
+ * @brief This updates the result for CRT or gyro self-test.
  *
  * @param[in] dev : Structure instance of bmi2_dev.
  *
@@ -3820,7 +4017,7 @@ static int8_t write_crt_config_file(uint16_t write_len,
 static int8_t wait_rdy_for_dl_toggle(uint8_t retry_complete, uint8_t download_ready, const struct bmi2_dev *dev);
 
 /*!
- * @brief This function is to wait till the CRT or gyro self test process is completed
+ * @brief This function is to wait till the CRT or gyro self-test process is completed
  *
  * @param[in] retry_complete: wait for given time to complete the crt process
  * @param[in] dev   : Structure instance of bmi2_dev
@@ -3849,7 +4046,7 @@ static int8_t wait_st_running(uint8_t retry_complete, const struct bmi2_dev *dev
 static int8_t process_crt_download(uint8_t last_byte_flag, struct bmi2_dev *dev);
 
 /*!
- * @brief This api is used to enable the gyro self test or crt.
+ * @brief This api is used to enable the gyro self-test or crt.
  *
  * @param[in] dev        : Structure instance of bmi2_dev.
  *
@@ -3859,7 +4056,7 @@ static int8_t process_crt_download(uint8_t last_byte_flag, struct bmi2_dev *dev)
  * @retval BMI2_E_NULL_PTR - Error: Null pointer error
  * @retval BMI2_E_COM_FAIL - Error: Communication fail
  */
-static int8_t bmi2_select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev);
+static int8_t select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev);
 
 /*!
  * @brief This api is used to enable/disable abort.
@@ -3873,10 +4070,11 @@ static int8_t bmi2_select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev);
  * @retval BMI2_E_NULL_PTR - Error: Null pointer error
  * @retval BMI2_E_COM_FAIL - Error: Communication fail
  */
-static int8_t bmi2_abort(uint8_t abort_enable, struct bmi2_dev *dev);
+static int8_t abort_bmi2(uint8_t abort_enable, struct bmi2_dev *dev);
 
 /*!
- * @brief This api is use to wait till  gyro self test is completed and update the status of gyro self test.
+ * @brief This api is use to wait till  gyro self-test is completed and update the status of gyro
+ * self-test.
  *
  * @param[in] dev   : Structure instance of bmi2_dev.
  *
@@ -3899,7 +4097,7 @@ static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_s
  * @retval BMI2_E_NULL_PTR - Error: Null pointer error
  * @retval BMI2_E_COM_FAIL - Error: Communication fail
  */
-static int8_t bmi2_set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev);
+static int8_t set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev);
 
 /*!
  * @brief This api validates accel foc position as per the range
@@ -3961,6 +4159,178 @@ static int8_t verify_foc_position(uint8_t sens_list, const struct accel_foc_g_va
  * @retval BMI2_OK
  */
 static int8_t get_average_of_sensor_data(uint8_t sens_list, struct foc_temp_value *temp_foc_data, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API sets primary OIS configurations,
+ * low pass filter cut-off frequency.
+ *
+ * @param[in]      config      : Structure instance of bmi2_primary_ois_config.
+ * @param[in, out] dev         : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *----------------------------------------------------------------------------
+ *  bmi2_primary_ois_config    |
+ *  Structure parameters    |                   Description
+ *--------------------------|--------------------------------------------------
+ * lp filter config         | Lp filter cut off frequency
+ *                          | Value   Name    Description
+ *                          | 00  280_Hz  Cut off frequency configured to 280 Hz
+ *                          | 01  350_Hz  Cut off frequency configured to 350 Hz
+ *                          | 10  410_Hz  Cut off frequency configured to 410 Hz
+ *                          | 11  612_Hz  Cut off frequency configured to 612 Hz
+ * ----------------------------------------------------------------------------
+ *
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_primary_ois_config(const struct bmi2_primary_ois_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets primary OIS configurations,
+ * low pass filter cut-off frequency.
+ *
+ * @param[out] config        : Structure instance of bmi2_primary_ois_config.
+ * @param[in, out]  dev      : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *----------------------------------------------------------------------------
+ *  bmi2_primary_ois_config   |
+ *  Structure parameters    |                   Description
+ *--------------------------|--------------------------------------------------
+ * lp filter config         | Lp filter cut off frequency
+ *                          | Value   Name    Description
+ *                          | 00  280_Hz  Cut off frequency configured to 280 Hz
+ *                          | 01  350_Hz  Cut off frequency configured to 350 Hz
+ *                          | 10  410_Hz  Cut off frequency configured to 410 Hz
+ *                          | 11  612_Hz  Cut off frequency configured to 612 Hz
+ * ----------------------------------------------------------------------------
+ *
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t get_primary_ois_config(struct bmi2_primary_ois_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets the output data of OIS.
+ *
+ * @param[out] ois_output       : Structure instance to the stored OIS data.
+ * @param[in]  dev              : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t get_ois_output(struct bmi2_ois_output *ois_output, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal api gets major and minor version for config file
+ *
+ * @param[out] config_major     :   Pointer to store the major version
+ * @param[out] config_minor     :   Pointer to store the minor version
+ * @param[in]  dev              :   Structure instance of bmi2_dev
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK                  -   Success.
+ * @retval BMI2_E_INVALID_SENSOR    - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE      - Error: Invalid Page
+ */
+static int8_t extract_config_file(uint16_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets free-fall configurations like free-fall accel settings,
+ * and output configuration.
+ *
+ * @param[in] config              : Structure instance of bmi2_free_fall_det_config.
+ * @param[in, out] dev            : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *----------------------------------------------------------------------------
+ *   bmi2_free_fall_det_config  |
+ *   Structure parameters       |               Description
+ *------------------------------|--------------------------------------------------
+ *  free-fall accel settings    |  Free-fall accel settings.
+ *  1 - 7                       |
+ * -----------------------------|---------------------------------------------------
+ *                              | Enable bits for enabling output into the
+ *  out_conf                    | register status bits and, if desired, onto the
+ *                              | interrupt pin.
+ * -----------------------------|---------------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t get_free_fall_det_config(struct bmi2_free_fall_det_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API sets free-fall configurations like free-fall accel settings,
+ * and output configuration.
+ *
+ * @param[in] config              : Structure instance of bmi2_free_fall_det_config.
+ * @param[in, out] dev            : Structure instance of bmi2_dev.
+ *
+ * @verbatim
+ *----------------------------------------------------------------------------
+ *   bmi2_free_fall_det_config  |
+ *   Structure parameters       |               Description
+ *------------------------------|--------------------------------------------------
+ *  free-fall accel settings    |  Free-fall accel settings.
+ *  1 - 7                       |
+ * -----------------------------|---------------------------------------------------
+ *                              | Enable bits for enabling output into the
+ *  out_conf                    | register status bits and, if desired, onto the
+ *                              | interrupt pin.
+ * -----------------------------|---------------------------------------------------
+ * @endverbatim
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_free_fall_det_config(const struct bmi2_free_fall_det_config *config, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to enable/disable free-fall detection feature.
+ *
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ * @param[in] enable         : Enables/Disables free-fall detection.
+ *
+ * Enable       |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Disables free-fall detection
+ * BMI2_ENABLE  | Enables free-fall detection
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ */
+static int8_t set_free_fall_det(uint8_t enable, struct bmi2_dev *dev);
 
 /******************************************************************************/
 /*!  @name      User Interface Definitions                            */
@@ -4143,7 +4513,6 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
             else
             {
                 dev->aps_status = BMI2_DISABLE;
-
             }
         }
         if (rslt != BMI2_OK)
@@ -4210,20 +4579,26 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This API is used to get the config file major and minor information.
+ * @brief This API is used to get the config file major and minor version information.
  */
-int8_t bmi2_get_config_file_version(uint16_t *config_major, uint8_t *config_minor, const struct bmi2_dev *dev)
+int8_t bmi2_get_config_file_version(uint16_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev)
 {
-    uint16_t temp;
+    /* Variable to define error */
+    int8_t rslt;
 
-    /* extract the config  information */
-    temp =
-        (uint16_t)((uint16_t)(dev->config_file_ptr[BMI2_CONFIG_INFO_LOWER]) |
-                   ((uint16_t)(dev->config_file_ptr[BMI2_CONFIG_INFO_HIGHER]) << 8));
-    *config_major = BMI2_GET_BITS(temp, BMI2_CONFIG_MAJOR);
-    *config_minor = BMI2_GET_BIT_POS0(dev->config_file_ptr[BMI2_CONFIG_INFO_LOWER], BMI2_CONFIG_MINOR);
+    /* NULL pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (config_major != NULL) && (config_minor != NULL))
+    {
+        /* Extract the config file identification from the dmr page and get the major and minor version */
+        rslt = extract_config_file(config_major, config_minor, dev);
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
 
-    return BMI2_OK;
+    return rslt;
 }
 
 /*!
@@ -4313,7 +4688,8 @@ int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
             /* Disable Advance power save if enabled for auxiliary
              * and feature configurations
              */
-            if ((sens_cfg[loop].type >= BMI2_MAIN_SENS_MAX_NUM) || (sens_cfg[loop].type == BMI2_AUX))
+            if ((sens_cfg[loop].type != BMI2_ACCEL) || (sens_cfg[loop].type != BMI2_GYRO) ||
+                (sens_cfg[loop].type != BMI2_TEMP) || (sens_cfg[loop].type != BMI2_AUX))
             {
 
                 if (aps_stat == BMI2_ENABLE)
@@ -4363,9 +4739,7 @@ int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
                         rslt = set_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
                         break;
 
-                    /* Set step counter/detector/activity
-                     * configuration
-                     */
+                    /* Set step counter/detector/activity configuration */
                     case BMI2_STEP_DETECTOR:
                     case BMI2_STEP_COUNTER:
                     case BMI2_STEP_ACTIVITY:
@@ -4431,6 +4805,27 @@ int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
                     case BMI2_WRIST_WEAR_WAKE_UP:
                         rslt = set_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
                         break;
+
+                    /* Set the wrist gesture configuration */
+                    case BMI2_WRIST_GESTURE_WH:
+                        rslt = set_wrist_gest_w_config(&sens_cfg[loop].cfg.wrist_gest_w, dev);
+                        break;
+
+                    /* Set the wrist wear wake-up configuration for wearable variant */
+                    case BMI2_WRIST_WEAR_WAKE_UP_WH:
+                        rslt = set_wrist_wear_wake_up_wh_config(&sens_cfg[loop].cfg.wrist_wear_wake_up_wh, dev);
+                        break;
+
+                    /* Set primary OIS configuration */
+                    case BMI2_PRIMARY_OIS:
+                        rslt = set_primary_ois_config(&sens_cfg[loop].cfg.primary_ois, dev);
+                        break;
+
+                    /* Set the free-fall detection configurations */
+                    case BMI2_FREE_FALL_DET:
+                        rslt = set_free_fall_det_config(&sens_cfg[loop].cfg.free_fall_det, dev);
+                        break;
+
                     default:
                         rslt = BMI2_E_INVALID_SENSOR;
                         break;
@@ -4535,9 +4930,7 @@ int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
                         rslt = get_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
                         break;
 
-                    /* Get step counter/detector/activity
-                     * configuration
-                     */
+                    /* Get step counter/detector/activity configuration */
                     case BMI2_STEP_DETECTOR:
                     case BMI2_STEP_COUNTER:
                     case BMI2_STEP_ACTIVITY:
@@ -4603,6 +4996,27 @@ int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
                     case BMI2_WRIST_WEAR_WAKE_UP:
                         rslt = get_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
                         break;
+
+                    /* Get the wrist gesture configuration for wearable variant */
+                    case BMI2_WRIST_GESTURE_WH:
+                        rslt = get_wrist_gest_w_config(&sens_cfg[loop].cfg.wrist_gest_w, dev);
+                        break;
+
+                    /* Get the wrist wear wake-up configuration for wearable variant */
+                    case BMI2_WRIST_WEAR_WAKE_UP_WH:
+                        rslt = get_wrist_wear_wake_up_wh_config(&sens_cfg[loop].cfg.wrist_wear_wake_up_wh, dev);
+                        break;
+
+                    /* Get the primary OIS filter configuration */
+                    case BMI2_PRIMARY_OIS:
+                        rslt = get_primary_ois_config(&sens_cfg[loop].cfg.primary_ois, dev);
+                        break;
+
+                    /* Get the free-fall detection configurations */
+                    case BMI2_FREE_FALL_DET:
+                        rslt = get_free_fall_det_config(&sens_cfg[loop].cfg.free_fall_det, dev);
+                        break;
+
                     default:
                         rslt = BMI2_E_INVALID_SENSOR;
                         break;
@@ -4724,6 +5138,7 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
                         rslt = get_vfrm_error_status(&sensor_data[loop].sens_data.vfrm_status, dev);
                         break;
                     case BMI2_WRIST_GESTURE:
+                    case BMI2_WRIST_GESTURE_WH:
 
                         /* Get wrist gesture status  */
                         rslt = get_wrist_gest_status(&sensor_data[loop].sens_data.wrist_gesture_output, dev);
@@ -4737,6 +5152,11 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
 
                         /* Get accelerometer self-test */
                         rslt = get_accel_self_test_status(&sensor_data[loop].sens_data.accel_self_test_output, dev);
+                        break;
+                    case BMI2_OIS_OUTPUT:
+
+                        /* Get OIS accel and gyro x,y,z data */
+                        rslt = get_ois_output(&sensor_data[loop].sens_data.ois_output, dev);
                         break;
                     default:
                         rslt = BMI2_E_INVALID_SENSOR;
@@ -5196,7 +5616,7 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, const struct bmi2_dev *
         /* Clear the FIFO data structure */
         reset_fifo_frame_structure(fifo, dev);
 
-        /*red fifo data*/
+        /* Read FIFO data */
         rslt = bmi2_get_regs(addr, fifo->data, fifo->length, dev);
         if (rslt == BMI2_OK)
         {
@@ -5208,9 +5628,7 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, const struct bmi2_dev *
                 /* Get FIFO header status */
                 fifo->header_enable = (uint8_t)((config_data[1]) & (BMI2_FIFO_HEADER_EN >> 8));
 
-                /* Get sensor enable status, of which the data
-                 * is to be read
-                 */
+                /* Get sensor enable status, of which the data is to be read */
                 fifo->data_enable =
                     (uint16_t)(((config_data[0]) | ((uint16_t) config_data[1] << 8)) & BMI2_FIFO_ALL_EN);
             }
@@ -5262,7 +5680,7 @@ int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
         {
 
             /* Get the number of accelerometer bytes to be read */
-            rslt = parse_fifo_accel_len(&data_index, &data_read_length, accel_length, fifo, dev);
+            rslt = parse_fifo_accel_len(&data_index, &data_read_length, accel_length, fifo);
 
             /* Convert word to byte since all sensor enables are in a byte */
             data_enable = (uint8_t)(fifo->data_enable >> 8);
@@ -5330,7 +5748,7 @@ int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
         if (fifo->header_enable == 0)
         {
             /* Get the number of gyro bytes to be read */
-            rslt = parse_fifo_gyro_len(&data_index, &data_read_length, gyro_length, fifo, dev);
+            rslt = parse_fifo_gyro_len(&data_index, &data_read_length, gyro_length, fifo);
 
             /* Convert word to byte since all sensor enables are in a byte */
             data_enable = (uint8_t)(fifo->data_enable >> 8);
@@ -5396,7 +5814,7 @@ int8_t bmi2_extract_aux(struct bmi2_aux_fifo_data *aux,
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
-            rslt = parse_fifo_aux_len(&data_index, &data_read_length, aux_length, fifo, dev);
+            rslt = parse_fifo_aux_len(&data_index, &data_read_length, aux_length, fifo);
 
             /* Convert word to byte since all sensor enables are in
              * a byte
@@ -6151,9 +6569,8 @@ int8_t bmi2_perform_accel_self_test(struct bmi2_dev *dev)
                     {
                         /* Read and store positive acceleration value */
                         rslt = read_accel_xyz(&positive, dev);
-
-                        /* If polarity is negative */
                     }
+                    /* If polarity is negative */
                     else if (sign == BMI2_DISABLE)
                     {
                         /* Read and store negative acceleration value */
@@ -6187,12 +6604,12 @@ int8_t bmi2_perform_accel_self_test(struct bmi2_dev *dev)
                  */
                 convert_lsb_g(&accel_data_diff, &accel_data_diff_mg, dev);
 
-                /* Validate self test for acceleration values
+                /* Validate self-test for acceleration values
                  * in mg and get the self-test result
                  */
                 st_rslt = validate_self_test(&accel_data_diff_mg);
 
-                /* Trigger a soft reset after performing self test */
+                /* Trigger a soft reset after performing self-test */
                 rslt = bmi2_soft_reset(dev);
 
                 /* Return the self-test result */
@@ -6319,6 +6736,21 @@ int8_t bmi2_map_feat_int(const struct bmi2_sens_int_config *sens_int, uint8_t n_
 
                         /* Get the value of the feature interrupt to be mapped */
                         feat_int = dev->int_map.wrist_wear_wake_up_out_conf;
+                        break;
+                    case BMI2_WRIST_GESTURE_WH:
+
+                        /* Get the value of the feature interrupt to be mapped for wearable variant */
+                        feat_int = dev->int_map.wrist_gest_out_conf;
+                        break;
+                    case BMI2_WRIST_WEAR_WAKE_UP_WH:
+
+                        /* Get the value of the feature interrupt to be mapped for wearable variant */
+                        feat_int = dev->int_map.wrist_wear_wake_up_out_conf;
+                        break;
+                    case BMI2_FREE_FALL_DET:
+
+                        /* Get the value of the feature interrupt to be mapped for free-fall detection */
+                        feat_int = dev->int_map.freefall_out_conf;
                         break;
                     default:
                         rslt = BMI2_E_INVALID_SENSOR;
@@ -7093,13 +7525,6 @@ int8_t bmi2_get_act_recog_output(struct bmi2_act_recog_output *act_recog,
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (act_recog != NULL) && (act_frm_len != NULL) && (fifo != NULL))
     {
-        /* Check if this is the first iteration of data unpacking
-         * if yes, then consider dummy byte on SPI
-         */
-        if (fifo->act_recog_byte_start_idx == 0)
-        {
-            fifo->act_recog_byte_start_idx = dev->dummy_byte;
-        }
 
         /* Store the number of frames to be read */
         frame_to_read = *act_frm_len;
@@ -7286,8 +7711,8 @@ int8_t bmi2_get_internal_status(uint8_t *int_stat, const struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This API verifies and allows only the correct position to do Fast Offset Compensation for accelerometer &
- * gyro.
+ * @brief This API verifies and allows only the correct position to do Fast Offset Compensation for
+ * accelerometer & gyro.
  */
 static int8_t verify_foc_position(uint8_t sens_list, const struct accel_foc_g_value *accel_g_axis, struct bmi2_dev *dev)
 {
@@ -7460,17 +7885,13 @@ int8_t bmi2_perform_gyro_foc(struct bmi2_dev *dev)
             {
                 for (loop = 0; loop < 128; loop++)
                 {
-                    /* Giving a delay of more than 40ms since ODR is
-                     * configured as 25Hz
-                     */
+                    /* Giving a delay of more than 40ms since ODR is configured as 25Hz */
                     dev->delay_us(50000);
 
                     /* Get gyroscope data ready interrupt status */
                     rslt = bmi2_get_status(&reg_status, dev);
 
-                    /* Read 128 samples of gyroscope data on
-                     * data ready interrupt
-                     */
+                    /* Read 128 samples of gyroscope data on data ready interrupt */
                     if ((rslt == BMI2_OK) && (reg_status & BMI2_DRDY_GYR))
                     {
                         rslt = read_gyro_xyz(&gyr_value[loop], dev);
@@ -8199,6 +8620,34 @@ static int8_t sensor_enable(uint32_t sensor_sel, struct bmi2_dev *dev)
                     }
                 }
 
+                /* Enable wrist gesture feature for wearable variant */
+                if (sensor_sel & BMI2_WRIST_GEST_W_SEL)
+                {
+                    rslt = set_wrist_gesture_wh(BMI2_ENABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat |= BMI2_WRIST_GEST_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                /* Enable wrist wear wake-up feature for wearable variant */
+                if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_WH_SEL)
+                {
+                    rslt = set_wrist_wear_wake_up_wh(BMI2_ENABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat |= BMI2_WRIST_WEAR_WAKE_UP_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 /* Enable activity recognition feature */
                 if (sensor_sel & BMI2_ACTIVITY_RECOGNITION_SEL)
                 {
@@ -8220,6 +8669,33 @@ static int8_t sensor_enable(uint32_t sensor_sel, struct bmi2_dev *dev)
                     if (rslt == BMI2_OK)
                     {
                         dev->sens_en_stat |= BMI2_ACCEL_SELF_TEST_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                /* Enable low pass filter feature for wearable variant */
+                if (sensor_sel & BMI2_PRIMARY_OIS_SEL)
+                {
+                    rslt = set_primary_ois_low_pass_filter(BMI2_ENABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat |= BMI2_PRIMARY_OIS_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (sensor_sel & BMI2_FREE_FALL_DET_SEL)
+                {
+                    rslt = set_free_fall_det(BMI2_ENABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat |= BMI2_FREE_FALL_DET_SEL;
                     }
                     else
                     {
@@ -8570,6 +9046,34 @@ static int8_t sensor_disable(uint32_t sensor_sel, struct bmi2_dev *dev)
                     }
                 }
 
+                /* Disable wrist gesture feature for wearable variant*/
+                if (sensor_sel & BMI2_WRIST_GEST_W_SEL)
+                {
+                    rslt = set_wrist_gesture_wh(BMI2_DISABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat &= ~BMI2_WRIST_GEST_W_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                /* Disable wrist wear wake-up feature for wearable variant*/
+                if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_WH_SEL)
+                {
+                    rslt = set_wrist_wear_wake_up_wh(BMI2_DISABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat &= ~BMI2_WRIST_WEAR_WAKE_UP_WH_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 /* Disable activity recognition feature */
                 if (sensor_sel & BMI2_ACTIVITY_RECOGNITION_SEL)
                 {
@@ -8591,6 +9095,20 @@ static int8_t sensor_disable(uint32_t sensor_sel, struct bmi2_dev *dev)
                     if (rslt == BMI2_OK)
                     {
                         dev->sens_en_stat &= ~BMI2_ACCEL_SELF_TEST_SEL;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                /* Disable accelerometer free-fall detection feature */
+                if (sensor_sel & BMI2_FREE_FALL_DET_SEL)
+                {
+                    rslt = set_free_fall_det(BMI2_DISABLE, dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        dev->sens_en_stat |= BMI2_FREE_FALL_DET_SEL;
                     }
                     else
                     {
@@ -8694,14 +9212,27 @@ static int8_t select_sensor(const uint8_t *sens_list, uint8_t n_sens, uint32_t *
             case BMI2_WRIST_GESTURE:
                 *sensor_sel |= BMI2_WRIST_GEST_SEL;
                 break;
+
+            case BMI2_WRIST_GESTURE_WH:
+                *sensor_sel |= BMI2_WRIST_GEST_W_SEL;
+                break;
             case BMI2_WRIST_WEAR_WAKE_UP:
                 *sensor_sel |= BMI2_WRIST_WEAR_WAKE_UP_SEL;
+                break;
+            case BMI2_WRIST_WEAR_WAKE_UP_WH:
+                *sensor_sel |= BMI2_WRIST_WEAR_WAKE_UP_WH_SEL;
                 break;
             case BMI2_ACTIVITY_RECOGNITION:
                 *sensor_sel |= BMI2_ACTIVITY_RECOGNITION_SEL;
                 break;
             case BMI2_ACCEL_SELF_TEST:
                 *sensor_sel |= BMI2_ACCEL_SELF_TEST_SEL;
+                break;
+            case BMI2_PRIMARY_OIS:
+                *sensor_sel |= BMI2_PRIMARY_OIS_SEL;
+                break;
+            case BMI2_FREE_FALL_DET:
+                *sensor_sel |= BMI2_FREE_FALL_DET_SEL;
                 break;
             default:
                 rslt = BMI2_E_INVALID_SENSOR;
@@ -9485,8 +10016,7 @@ static int8_t set_wrist_gesture(uint8_t enable, struct bmi2_dev *dev)
         rslt = get_feat_config(wrist_gest_cfg.page, feat_config, dev);
         if (rslt == BMI2_OK)
         {
-            /* Define the offset for enable/disable of wrist gesture
-             */
+            /* Define the offset for enable/disable of wrist gesture */
             idx = wrist_gest_cfg.start_addr;
 
             /* Set the feature enable bit */
@@ -9526,6 +10056,100 @@ static int8_t set_wrist_wear_wake_up(uint8_t enable, struct bmi2_dev *dev)
 
     /* Search for wrist wear wake up and extract its configuration details */
     feat_found = extract_input_feat_config(&wrist_wake_up_cfg, BMI2_WRIST_WEAR_WAKE_UP, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist wear wake up
+         * feature resides
+         */
+        rslt = get_feat_config(wrist_wake_up_cfg.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset for enable/disable of wrist wear wake up */
+            idx = wrist_wake_up_cfg.start_addr;
+
+            /* Set the feature enable bit */
+            feat_config[idx] = BMI2_SET_BITS(feat_config[idx], WRIST_WEAR_WAKE_UP_FEAT_EN, enable);
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API enables the wrist gesture feature.
+ */
+static int8_t set_wrist_gesture_wh(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist gesture */
+    struct bmi2_feature_config wrist_gest_cfg = { 0, 0, 0 };
+
+    /* Search for wrist gesture and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_gest_cfg, BMI2_WRIST_GESTURE_WH, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist gesture feature resides */
+        rslt = get_feat_config(wrist_gest_cfg.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset for enable/disable of wrist gesture */
+            idx = wrist_gest_cfg.start_addr;
+
+            /* Set the feature enable bit */
+            feat_config[idx] = BMI2_SET_BITS(feat_config[idx], WRIST_GEST_FEAT_EN, enable);
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API enables the wrist wear wake up feature.
+ */
+static int8_t set_wrist_wear_wake_up_wh(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist wear wake up */
+    struct bmi2_feature_config wrist_wake_up_cfg = { 0, 0, 0 };
+
+    /* Search for wrist wear wake up and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_wake_up_cfg, BMI2_WRIST_WEAR_WAKE_UP_WH, dev);
     if (feat_found)
     {
         /* Get the configuration from the page where wrist wear wake up
@@ -9648,7 +10272,7 @@ static int8_t set_gyro_user_gain(uint8_t enable, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This internal API gives an option to enable accelerometer self test
+ * @brief This internal API gives an option to enable accelerometer self-test
  * in the feature register.
  */
 static int8_t set_feat_accel_self_test(uint8_t enable, struct bmi2_dev *dev)
@@ -9659,15 +10283,15 @@ static int8_t set_feat_accel_self_test(uint8_t enable, struct bmi2_dev *dev)
     uint8_t feat_found;
     struct bmi2_feature_config acc_feat_self_test_cfg = { 0, 0, 0 };
 
-    /* Search for accelerometer self test and extract its configuration details */
+    /* Search for accelerometer self-test and extract its configuration details */
     feat_found = extract_input_feat_config(&acc_feat_self_test_cfg, BMI2_ACCEL_SELF_TEST, dev);
     if (feat_found)
     {
-        /* Get the configuration from the page where accelerometer self test feature resides */
+        /* Get the configuration from the page where accelerometer self-test feature resides */
         rslt = get_feat_config(acc_feat_self_test_cfg.page, feat_config, dev);
         if (rslt == BMI2_OK)
         {
-            /* Define the offset for enable/disable of accelerometer self test */
+            /* Define the offset for enable/disable of accelerometer self-test */
             idx = acc_feat_self_test_cfg.start_addr;
 
             /* Set the feature enable bit */
@@ -9678,6 +10302,45 @@ static int8_t set_feat_accel_self_test(uint8_t enable, struct bmi2_dev *dev)
 
             /* Delay added as per the firmware spec */
             dev->delay_us(160000);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gives an option to enable low pass filter
+ * in the feature register.
+ */
+static int8_t set_primary_ois_low_pass_filter(uint8_t enable, struct bmi2_dev *dev)
+{
+    int8_t rslt = BMI2_OK;
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+    uint8_t idx = 0;
+    uint8_t feat_found;
+    struct bmi2_feature_config primary_ois_lp_filter_cfg = { 0, 0, 0 };
+
+    /* Search for low pass filter and extract its configuration details */
+    feat_found = extract_input_feat_config(&primary_ois_lp_filter_cfg, BMI2_PRIMARY_OIS, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where low pass filter feature resides */
+        rslt = get_feat_config(primary_ois_lp_filter_cfg.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset for enable/disable of low pass filter */
+            idx = primary_ois_lp_filter_cfg.start_addr;
+
+            /* Set the feature enable bit */
+            feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], LP_FILTER_EN, enable);
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
         }
     }
     else
@@ -10580,8 +11243,7 @@ static int8_t set_step_count_params_config(const uint16_t *step_count_params, st
 
 /*!
  * @brief This internal API sets step counter configurations like water-mark
- * level, reset-counter and output-configuration step detector and
- * activity.
+ * level, reset-counter and output-configuration step detector and activity.
  */
 static int8_t set_step_config(const struct bmi2_step_config *config, struct bmi2_dev *dev)
 {
@@ -11647,6 +12309,197 @@ static int8_t set_wrist_wear_wake_up_config(const struct bmi2_wrist_wear_wake_up
             /* Increment offset by 1 more word to set max_tilt_pu */
             idx++;
             *(data_p + idx) = config->max_tilt_pu;
+
+            /* Increment offset by 1 more word to get the total length in words */
+            idx++;
+
+            /* Get total length in bytes to copy from local pointer to the array */
+            idx = (uint8_t)(idx * 2) - wrist_wake_up_config.start_addr;
+
+            /* Copy the bytes to be set back to the array */
+            for (i = 0; i < idx; i++)
+            {
+                feat_config[wrist_wake_up_config.start_addr +
+                            i] = *((uint8_t *) data_p + wrist_wake_up_config.start_addr + i);
+            }
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+            if (rslt == BMI2_OK)
+            {
+                /* Copy out_conf value to a local copy in device structure */
+                dev->int_map.wrist_wear_wake_up_out_conf = (uint8_t) config->out_conf;
+            }
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API sets wrist gesture configurations like wearable-arm,
+ * and output-configuration for wearable variant.
+ */
+static int8_t set_wrist_gest_w_config(const struct bmi2_wrist_gest_w_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define index */
+    uint8_t i = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist gesture */
+    struct bmi2_feature_config wrist_gest_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *) (void *)feat_config;
+
+    /* Search for wrist gesture feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_gest_config, BMI2_WRIST_GESTURE_WH, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist gesture feature resides */
+        rslt = get_feat_config(wrist_gest_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for gesture select */
+            idx = wrist_gest_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Set wearable arm */
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), WRIST_GEST_WEAR_ARM, config->wearable_arm);
+
+            /* Set output configuration */
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), WRIST_GEST_OUT_CONF, config->out_conf);
+
+            /* Increment offset by 1 more word to set minimum tilt angle (min_flick_peak) */
+            idx++;
+            *(data_p + idx) = config->min_flick_peak;
+
+            /* Increment offset by 1 more word to set min_flick_samples */
+            idx++;
+            *(data_p + idx) = config->min_flick_samples;
+
+            /* Increment offset by 1 more word to set max time within gesture moment has to be completed */
+            idx++;
+            *(data_p + idx) = config->max_duration;
+
+            /* Increment offset by 1 more word to set reporting delay */
+            idx++;
+            *(data_p + idx) = config->reporting_delay;
+
+            /* Increment offset by 1 more word to get the total length in words */
+            idx++;
+
+            /* Get total length in bytes to copy from local pointer to the array */
+            idx = (uint8_t)(idx * 2) - wrist_gest_config.start_addr;
+
+            /* Copy the bytes to be set back to the array */
+            for (i = 0; i < idx; i++)
+            {
+                feat_config[wrist_gest_config.start_addr +
+                            i] = *((uint8_t *) data_p + wrist_gest_config.start_addr + i);
+            }
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+            if (rslt == BMI2_OK)
+            {
+                /* Copy out_conf value to a local copy in device structure */
+                dev->int_map.wrist_gest_out_conf = (uint8_t) config->out_conf;
+            }
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API sets wrist wear wake-up configurations like
+ * output-configuration for wearable variant.
+ */
+static int8_t set_wrist_wear_wake_up_wh_config(const struct bmi2_wrist_wear_wake_up_wh_config *config,
+                                               struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define index */
+    uint8_t i = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist wear wake-up */
+    struct bmi2_feature_config wrist_wake_up_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *) (void *)feat_config;
+
+    /* Search for wrist wear wake-up feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_wake_up_config, BMI2_WRIST_WEAR_WAKE_UP_WH, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist wear wake-up feature resides */
+        rslt = get_feat_config(wrist_wake_up_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for wrist wear wake-up select */
+            idx = wrist_wake_up_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Set output configuration */
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_OUT_CONF, config->out_conf);
+
+            /* Increment offset by 1 more word to set min_angle_focus */
+            idx++;
+            *(data_p + idx) = config->min_angle_focus;
+
+            /* Increment offset by 1 more word to set min_angle_nonfocus */
+            idx++;
+            *(data_p + idx) = config->min_angle_nonfocus;
+
+            /* Increment offset by 1 more word to set angle landscape right and angle landscape left */
+            idx++;
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_ANGLE_LR, config->angle_lr);
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), WRIST_WAKE_UP_ANGLE_LL, config->angle_ll);
+
+            /* Increment offset by 1 more word to set angle portrait down and angle portrait left */
+            idx++;
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_ANGLE_PD, config->angle_pd);
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), WRIST_WAKE_UP_ANGLE_PU, config->angle_pu);
+
+            /* Increment offset by 1 more word to set min duration moved and min duration quite */
+            idx++;
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_MIN_DUR_MOVED, config->min_dur_mov);
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), WRIST_WAKE_UP_MIN_DUR_QUITE, config->min_dur_quite);
 
             /* Increment offset by 1 more word to get the total length in words */
             idx++;
@@ -12821,6 +13674,155 @@ static int8_t get_wrist_wear_wake_up_config(struct bmi2_wrist_wear_wake_up_confi
 }
 
 /*!
+ * @brief This internal API gets wrist gesture configurations like wearable-arm,
+ * and output-configuration for wearable variant.
+ */
+static int8_t get_wrist_gest_w_config(struct bmi2_wrist_gest_w_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist gesture */
+    struct bmi2_feature_config wrist_gest_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *) (void *)feat_config;
+
+    /* Search for wrist gesture feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_gest_config, BMI2_WRIST_GESTURE_WH, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist gesture feature  resides */
+        rslt = get_feat_config(wrist_gest_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for wrist gesture select */
+            idx = wrist_gest_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Get wearable arm */
+            config->wearable_arm = (*(data_p + idx) & WRIST_GEST_WEAR_ARM_MASK) >> WRIST_GEST_WEAR_ARM_POS;
+
+            /* Get output configuration */
+            config->out_conf = BMI2_GET_BIT_POS0(*(data_p + idx), WRIST_GEST_OUT_CONF);
+
+            /* Copy out_conf value to a local copy in device structure */
+            dev->int_map.wrist_gest_out_conf = (uint8_t) config->out_conf;
+
+            /* Increment the offset by 1 word to get min_flick_peak */
+            idx++;
+            config->min_flick_peak = *(data_p + idx);
+
+            /* Increment the offset by 1 word to get min_flick_samples */
+            idx++;
+            config->min_flick_samples = *(data_p + idx);
+
+            /* Increment the offset by 1 word to get max_duration */
+            idx++;
+            config->max_duration = *(data_p + idx);
+
+            /* Increment the offset by 1 word to get reporting delay */
+            idx++;
+            config->reporting_delay = *(data_p + idx);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gets wrist wear wake-up configurations like
+ * output-configuration for wearable variant.
+ */
+static int8_t get_wrist_wear_wake_up_wh_config(struct bmi2_wrist_wear_wake_up_wh_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for wrist wear wake-up */
+    struct bmi2_feature_config wrist_wake_up_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *) (void *)feat_config;
+
+    /* Search for wrist wear wake-up feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&wrist_wake_up_config, BMI2_WRIST_WEAR_WAKE_UP_WH, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where wrist wear wake-up feature  resides */
+        rslt = get_feat_config(wrist_wake_up_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for wrist wear wake-up select */
+            idx = wrist_wake_up_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Get output configuration */
+            config->out_conf = BMI2_GET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_OUT_CONF);
+
+            /* Copy out_conf value to a local copy in device structure */
+            dev->int_map.wrist_wear_wake_up_out_conf = (uint8_t) config->out_conf;
+
+            /* Increment the offset value by 1 word to get min_angle_focus */
+            idx++;
+            config->min_angle_focus = *(data_p + idx);
+
+            /* Increment the offset value by 1 word to get min_angle_nonfocus */
+            idx++;
+            config->min_angle_nonfocus = *(data_p + idx);
+
+            /* Increment the offset value by 1 word to get angle landscape right and angle landscape left */
+            idx++;
+            config->angle_lr = BMI2_GET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_ANGLE_LR);
+            config->angle_ll = BMI2_GET_BITS(*(data_p + idx), WRIST_WAKE_UP_ANGLE_LL);
+
+            /* Increment the offset value by 1 word to get angle portrait down and angle portrait up */
+            idx++;
+            config->angle_pd = BMI2_GET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_ANGLE_PD);
+            config->angle_pu = BMI2_GET_BITS(*(data_p + idx), WRIST_WAKE_UP_ANGLE_PU);
+
+            /* Increment the offset value by 1 word to get min duration quite and min duration moved */
+            idx++;
+            config->min_dur_mov = BMI2_GET_BIT_POS0(*(data_p + idx), WRIST_WAKE_UP_MIN_DUR_MOVED);
+            config->min_dur_quite = BMI2_GET_BITS(*(data_p + idx), WRIST_WAKE_UP_MIN_DUR_QUITE);
+
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
  * @brief This internal API gets orientation configurations like upside/down
  * detection, symmetrical modes, blocking mode, theta, hysteresis and output
  * configuration.
@@ -12881,9 +13883,7 @@ static int8_t get_orient_config(struct bmi2_orient_config *config, struct bmi2_d
             /* Get theta */
             config->theta = (lsb_msb & ORIENT_THETA_MASK) >> ORIENT_THETA_POS;
 
-            /* Get the next word to calculate hysteresis and output
-             * configuration
-             */
+            /* Get the next word to calculate hysteresis and output configuration */
             lsb = (uint16_t) feat_config[idx++];
             msb = ((uint16_t) feat_config[idx++] << 8);
             lsb_msb = lsb | msb;
@@ -12894,9 +13894,7 @@ static int8_t get_orient_config(struct bmi2_orient_config *config, struct bmi2_d
             /* Get output configuration */
             config->out_conf = (lsb_msb & ORIENT_OUT_CONF_MASK) >> ORIENT_OUT_CONF_POS;
 
-            /* Copy out_conf value to a local copy in device
-             * tructure
-             */
+            /* Copy out_conf value to a local copy in device structure */
             dev->int_map.orient_out_conf = (uint8_t) config->out_conf;
         }
     }
@@ -12942,9 +13940,7 @@ static int8_t get_high_g_config(struct bmi2_high_g_config *config, struct bmi2_d
     feat_found = extract_input_feat_config(&high_g_config, BMI2_HIGH_G, dev);
     if (feat_found)
     {
-        /* Get the configuration from the page where high-g feature
-         * resides
-         */
+        /* Get the configuration from the page where high-g feature resides */
         rslt = get_feat_config(high_g_config.page, feat_config, dev);
         if (rslt == BMI2_OK)
         {
@@ -13259,7 +14255,7 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
                     break;
                 case BMI2_INT_BOTH:
 
-                    /* Map the corresponding feature interrupt to interrupt pin 1 and 2*/
+                    /* Map the corresponding feature interrupt to interrupt pin 1 and 2 */
                     reg_data_array[0] |= int_mask;
                     reg_data_array[1] |= int_mask;
                     break;
@@ -13984,7 +14980,8 @@ static int8_t get_gyro_cross_sense(int16_t *cross_sense, struct bmi2_dev *dev)
         feat_found = extract_output_feat_config(&cross_sense_out_config, BMI2_GYRO_CROSS_SENSE, dev);
         if (feat_found)
         {
-            /* Get the feature output configuration for gyroscope cross sensitivity feature */
+            /* Get the feature output configuration for gyroscope cross sensitivity
+             * feature */
             rslt = get_feat_config(cross_sense_out_config.page, feat_config, dev);
             if (rslt == BMI2_OK)
             {
@@ -14098,7 +15095,7 @@ static int8_t get_accel_self_test_status(struct bmi2_acc_self_test_status *acc_s
             /* Define the offset in bytes for accelerometer self-test */
             idx = acc_self_test_cfg.start_addr;
 
-            /* Bit to check if self test is done */
+            /* Bit to check if self-test is done */
             acc_self_test_stat->acc_self_test_done = BMI2_GET_BIT_POS0(feat_config[idx], ACC_SELF_TEST_DONE);
 
             /* Bit to check if accelerometer X-axis test is passed */
@@ -14126,52 +15123,37 @@ static int8_t get_accel_self_test_status(struct bmi2_acc_self_test_status *acc_s
 static int8_t parse_fifo_accel_len(uint16_t *start_idx,
                                    uint16_t *len,
                                    const uint16_t *acc_count,
-                                   const struct bmi2_fifo_frame *fifo,
-                                   const struct bmi2_dev *dev)
+                                   const struct bmi2_fifo_frame *fifo)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
 
-    /* Variable to define dummy byte in SPI interface */
-    uint8_t dummy_byte_spi = 0;
-
-    /* Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->acc_byte_start_idx == 0)
-    {
-        dummy_byte_spi = dev->dummy_byte;
-    }
-
     /* Data start index */
-    (*start_idx) = fifo->acc_byte_start_idx + dummy_byte_spi;
+    (*start_idx) = fifo->acc_byte_start_idx;
 
     /* If only accelerometer is enabled */
     if (fifo->data_enable == BMI2_FIFO_ACC_EN)
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*acc_count) * BMI2_FIFO_ACC_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer and auxiliary are enabled */
+        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_LENGTH);
     }
+    /* If only accelerometer and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*acc_count) * BMI2_FIFO_ACC_AUX_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer and gyroscope are enabled */
+        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_AUX_LENGTH);
     }
+    /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*acc_count) * BMI2_FIFO_ACC_GYR_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer, gyroscope and auxiliary are enabled */
+        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_GYR_LENGTH);
     }
+    /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*acc_count) * BMI2_FIFO_ALL_LENGTH) + dummy_byte_spi);
+        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ALL_LENGTH);
     }
     else
     {
@@ -14217,13 +15199,6 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
     /* Variable to indicate accelerometer frames read */
     uint16_t frame_to_read = *accel_length;
 
-    /* Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->acc_byte_start_idx == 0)
-    {
-        fifo->acc_byte_start_idx = dev->dummy_byte;
-    }
     for (data_index = fifo->acc_byte_start_idx; data_index < fifo->length;)
     {
         /* Get frame header byte */
@@ -14563,52 +15538,37 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
 static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
                                   uint16_t(*len),
                                   const uint16_t *gyr_count,
-                                  const struct bmi2_fifo_frame *fifo,
-                                  const struct bmi2_dev *dev)
+                                  const struct bmi2_fifo_frame *fifo)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
 
-    /* Variable to define dummy byte in SPI interface */
-    uint8_t dummy_byte_spi = 0;
-
-    /* Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->gyr_byte_start_idx == 0)
-    {
-        dummy_byte_spi = dev->dummy_byte;
-    }
-
     /* Data start index */
-    (*start_idx) = fifo->gyr_byte_start_idx + dummy_byte_spi;
+    (*start_idx) = fifo->gyr_byte_start_idx;
 
     /* If only gyroscope is enabled */
     if (fifo->data_enable == BMI2_FIFO_GYR_EN)
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*gyr_count) * BMI2_FIFO_GYR_LENGTH) + dummy_byte_spi);
-
-        /* If only gyroscope and auxiliary are enabled */
+        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_GYR_LENGTH);
     }
+    /* If only gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*gyr_count) * BMI2_FIFO_GYR_AUX_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer and gyroscope are enabled */
+        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_GYR_AUX_LENGTH);
     }
+    /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*gyr_count) * BMI2_FIFO_ACC_GYR_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer, gyroscope and auxiliary are enabled */
+        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_ACC_GYR_LENGTH);
     }
+    /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*gyr_count) * BMI2_FIFO_ALL_LENGTH) + dummy_byte_spi);
+        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_ALL_LENGTH);
     }
     else
     {
@@ -14654,13 +15614,6 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
     /* Variable to indicate gyroscope frames read */
     uint16_t frame_to_read = (*gyro_length);
 
-    /* Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->gyr_byte_start_idx == 0)
-    {
-        fifo->gyr_byte_start_idx = dev->dummy_byte;
-    }
     for (data_index = fifo->gyr_byte_start_idx; data_index < fifo->length;)
     {
         /* Get frame header byte */
@@ -15002,52 +15955,37 @@ static void unpack_gyro_data(struct bmi2_sens_axes_data *gyr,
 static int8_t parse_fifo_aux_len(uint16_t *start_idx,
                                  uint16_t(*len),
                                  const uint16_t *aux_count,
-                                 const struct bmi2_fifo_frame *fifo,
-                                 const struct bmi2_dev *dev)
+                                 const struct bmi2_fifo_frame *fifo)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
 
-    /* Variable to define dummy byte in SPI interface */
-    uint8_t dummy_byte_spi = 0;
-
-    /*Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->aux_byte_start_idx == 0)
-    {
-        dummy_byte_spi = dev->dummy_byte;
-    }
-
     /* Data start index */
-    *start_idx = fifo->aux_byte_start_idx + dummy_byte_spi;
+    *start_idx = fifo->aux_byte_start_idx;
 
     /* If only auxiliary is enabled */
     if (fifo->data_enable == BMI2_FIFO_AUX_EN)
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*aux_count) * BMI2_FIFO_AUX_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer and auxiliary are enabled */
+        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_AUX_LENGTH);
     }
+    /* If only accelerometer and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*aux_count) * BMI2_FIFO_ACC_AUX_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer and gyroscope are enabled */
+        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ACC_AUX_LENGTH);
     }
+    /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*aux_count) * BMI2_FIFO_GYR_AUX_LENGTH) + dummy_byte_spi);
-
-        /* If only accelerometer, gyroscope and auxiliary are enabled */
+        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_GYR_AUX_LENGTH);
     }
+    /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)(((*aux_count) * BMI2_FIFO_ALL_LENGTH) + dummy_byte_spi);
+        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ALL_LENGTH);
     }
     else
     {
@@ -15093,13 +16031,6 @@ static int8_t extract_aux_header_mode(struct bmi2_aux_fifo_data *aux,
     /* Variable to indicate auxiliary frames read */
     uint16_t frame_to_read = *aux_len;
 
-    /*Check if this is the first iteration of data unpacking
-     * if yes, then consider dummy byte on SPI
-     */
-    if (fifo->aux_byte_start_idx == 0)
-    {
-        fifo->aux_byte_start_idx = dev->dummy_byte;
-    }
     for (data_index = fifo->aux_byte_start_idx; data_index < fifo->length;)
     {
         /* Get frame header byte */
@@ -15724,7 +16655,7 @@ static int8_t unpack_act_recog_output(struct bmi2_act_recog_output *act_recog,
 
 /*!
  * @brief This internal API enables and configures the accelerometer which is
- * needed for self test operation. It also sets the amplitude for the self-test.
+ * needed for self-test operation. It also sets the amplitude for the self-test.
  */
 static int8_t pre_self_test_config(struct bmi2_dev *dev)
 {
@@ -15741,10 +16672,10 @@ static int8_t pre_self_test_config(struct bmi2_dev *dev)
     rslt = bmi2_sensor_enable(&sens_sel, 1, dev);
     dev->delay_us(1000);
 
-    /* Set self test amplitude low */
+    /* Enable self-test amplitude */
     if (rslt == BMI2_OK)
     {
-        rslt = set_accel_self_test_amp(BMI2_DISABLE, dev);
+        rslt = set_accel_self_test_amp(BMI2_ENABLE, dev);
     }
     if (rslt == BMI2_OK)
     {
@@ -15770,15 +16701,15 @@ static int8_t pre_self_test_config(struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This internal API performs the steps needed for self test operation
- * before reading the accelerometer self test data.
+ * @brief This internal API performs the steps needed for self-test operation
+ * before reading the accelerometer self-test data.
  */
 static int8_t self_test_config(uint8_t sign, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt;
 
-    /* Enable the accelerometer self test feature */
+    /* Enable the accelerometer self-test feature */
     rslt = set_accel_self_test_enable(BMI2_ENABLE, dev);
     if (rslt == BMI2_OK)
     {
@@ -15790,7 +16721,7 @@ static int8_t self_test_config(uint8_t sign, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This internal API enables or disables the accelerometer self test
+ * @brief This internal API enables or disables the accelerometer self-test
  * feature in the sensor.
  */
 static int8_t set_accel_self_test_enable(uint8_t enable, struct bmi2_dev *dev)
@@ -15836,7 +16767,7 @@ static int8_t set_acc_self_test_sign(uint8_t sign, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This internal API sets the amplitude of the accelerometer self test
+ * @brief This internal API sets the amplitude of the accelerometer self-test
  * deflection in the sensor.
  */
 static int8_t set_accel_self_test_amp(uint8_t amp, struct bmi2_dev *dev)
@@ -15847,7 +16778,7 @@ static int8_t set_accel_self_test_amp(uint8_t amp, struct bmi2_dev *dev)
     /* Variable to define data */
     uint8_t data = 0;
 
-    /* Select amplitude of the self test deflection */
+    /* Select amplitude of the self-test deflection */
     rslt = bmi2_get_regs(BMI2_ACC_SELF_TEST_ADDR, &data, 1, dev);
     if (rslt == BMI2_OK)
     {
@@ -16027,19 +16958,18 @@ static int32_t power(int16_t base, uint8_t resolution)
 
 /*!
  * @brief This internal API validates the accelerometer self-test data and
- * decides the result of self test operation.
+ * decides the result of self-test operation.
  */
 static int8_t validate_self_test(const struct selftest_delta_limit *accel_data_diff)
 {
     /* Variable to define error */
     int8_t rslt;
 
-    /* Validating accelerometer data by comparing with minimum and maximum
-     * difference signal value of the axes in mg
+    /* As per the data sheet, The actually measured signal differences should be significantly
+     * larger than the minimum differences for each axis in order for the self-test to pass.
      */
-    if (((accel_data_diff->x > BMI2_ST_ACC_X_SIG_MIN_DIFF) && (accel_data_diff->x < BMI2_ST_ACC_X_SIG_MAX_DIFF)) &&
-        ((accel_data_diff->y > BMI2_ST_ACC_Y_SIG_MIN_DIFF) && (accel_data_diff->y < BMI2_ST_ACC_Y_SIG_MAX_DIFF)) &&
-        ((accel_data_diff->z > BMI2_ST_ACC_Z_SIG_MIN_DIFF) && (accel_data_diff->z < BMI2_ST_ACC_Z_SIG_MAX_DIFF)))
+    if ((accel_data_diff->x > BMI2_ST_ACC_X_SIG_MIN_DIFF) && (accel_data_diff->y < BMI2_ST_ACC_Y_SIG_MIN_DIFF) &&
+        (accel_data_diff->z > BMI2_ST_ACC_Z_SIG_MIN_DIFF))
     {
         /* Self-test pass */
         rslt = BMI2_OK;
@@ -16191,9 +17121,7 @@ static int8_t set_remap_axes(const struct axes_remap *remap, struct bmi2_dev *de
         feat_found = extract_input_feat_config(&remap_config, BMI2_AXIS_MAP, dev);
         if (feat_found)
         {
-            /* Get the configuration from the page where axis
-             * re-mapping feature resides
-             */
+            /* Get the configuration from the page where axis re-mapping feature resides */
             rslt = get_feat_config(remap_config.page, feat_config, dev);
             if (rslt == BMI2_OK)
             {
@@ -16325,14 +17253,12 @@ static int8_t get_feat_config(uint8_t sw_page, uint8_t *feat_config, struct bmi2
 
                 /* Burst read 16 bytes */
             }
-            else
+            else if (rslt == BMI2_OK)
             {
-                if (rslt == BMI2_OK)
-                {
-                    /* Get configuration from the page */
-                    rslt = bmi2_get_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
-                }
+                /* Get configuration from the page */
+                rslt = bmi2_get_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
             }
+
         }
         else
         {
@@ -16523,9 +17449,7 @@ static int8_t set_accel_foc_config(struct bmi2_dev *dev)
     rslt = set_accel_offset_comp(BMI2_DISABLE, dev);
     if (rslt == BMI2_OK)
     {
-        /* Set accelerometer configurations to 50Hz, continuous mode,
-         * CIC mode
-         */
+        /* Set accelerometer configurations to 50Hz, continuous mode, CIC mode */
         rslt = bmi2_set_regs(BMI2_ACC_CONF_ADDR, &acc_conf_data, 1, dev);
         if (rslt == BMI2_OK)
         {
@@ -16623,9 +17547,8 @@ static int8_t perform_accel_foc(const struct accel_foc_g_value *accel_g_value,
         /* Get the exact range value */
         map_accel_range(acc_cfg->range, &range);
 
-        /* Get the smallest possible measurable
-         * acceleration level given the range and resolution
-         */
+        /* Get the smallest possible measurable acceleration level given the range and
+         * resolution */
         lsb_per_g = (uint16_t)(power(2, dev->resolution) / (2 * range));
 
         /* Compensate acceleration data against gravity */
@@ -17140,7 +18063,9 @@ static int8_t write_crt_config_file(uint16_t write_len,
     {
 
         /* Write the configuration file */
-        for (index = start_index; (index < (start_index + config_file_size)) && (rslt == BMI2_OK); index += write_len)
+        for (index = start_index;
+             (index < (start_index + config_file_size)) && (rslt == BMI2_OK);
+             index += write_len)
         {
             rslt = upload_file((dev->config_file_ptr + index), index, write_len, dev);
             if (index >= ((start_index + config_file_size) - (write_len)))
@@ -17223,8 +18148,8 @@ static int8_t wait_rdy_for_dl_toggle(uint8_t retry_complete, uint8_t download_re
         if ((rslt == BMI2_OK) && (st_status == 0))
         {
             rslt = BMI2_E_ST_ALREADY_RUNNING;
-
         }
+
     }
 
     return rslt;
@@ -17256,7 +18181,7 @@ static int8_t wait_st_running(uint8_t retry_complete, const struct bmi2_dev *dev
 }
 
 /*!
- * @brief this api is used to perform gyroscope self test.
+ * @brief This api is used to perform gyroscope self-test.
  */
 int8_t bmi2_do_gyro_st(struct bmi2_dev *dev)
 {
@@ -17268,7 +18193,7 @@ int8_t bmi2_do_gyro_st(struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This API is to run the crt process for both max burst length 0 and non zero condition.
+ * @brief This API is to run the CRT process for both max burst length 0 and non zero condition.
  */
 int8_t bmi2_do_crt(struct bmi2_dev *dev)
 {
@@ -17335,20 +18260,20 @@ static int8_t do_gtrigger_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
                     rslt = crt_prepare_setup(dev);
                 }
 
-                /* enable the CRT */
+                /* Enable the gyro self-test, CRT */
                 if (rslt == BMI2_OK)
                 {
-                    rslt = bmi2_select_self_test(gyro_st_crt, dev);
+                    rslt = select_self_test(gyro_st_crt, dev);
                 }
 
                 /* Check if FIFO is unchanged by checking the max burst length */
                 if ((rslt == BMI2_OK) && (max_burst_length == 0))
                 {
-                    /* Trigger CRT  */
+                    /* Trigger CRT */
                     rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &cmd, 1, dev);
                     if (rslt == BMI2_OK)
                     {
-                        /* wait until st_status = 0 or time out is 2 seconds */
+                        /* Wait until st_status = 0 or time out is 2 seconds */
                         rslt = wait_st_running(CRT_WAIT_RUNNING_RETRY_EXECUTION, dev);
 
                         /* CRT Running wait & check is successful */
@@ -17466,14 +18391,14 @@ static int8_t crt_prepare_setup(struct bmi2_dev *dev)
     {
         /* Disable Abort after 1 msec */
         dev->delay_us(1000);
-        rslt = bmi2_abort(BMI2_DISABLE, dev);
+        rslt = abort_bmi2(BMI2_DISABLE, dev);
     }
 
     return rslt;
 }
 
 /*!
- * @brief This API is to update the CRT or gyro self test final result.
+ * @brief This API is to update the CRT or gyro self-test final result.
  */
 static int8_t crt_gyro_st_update_result(struct bmi2_dev *dev)
 {
@@ -17508,8 +18433,9 @@ static int8_t crt_gyro_st_update_result(struct bmi2_dev *dev)
                 break;
             case BMI2_G_TRIGGER_ABORT_ERROR:
 
-                /* Command is aborted either by host via the block bit or due to motion detection.
-                 * Keep non zero value for Max Burst Length*/
+                /* Command is aborted either by host via the block bit or due to motion
+                 * detection. Keep non zero value for Max Burst Length
+                 */
                 rslt = set_maxburst_len(dev->read_write_len, dev);
                 if (rslt == BMI2_OK)
                 {
@@ -17673,9 +18599,9 @@ static int8_t set_maxburst_len(const uint16_t write_len_byte, struct bmi2_dev *d
 }
 
 /*!
- *  @brief This api is used to trigger the preparation for system for NVM programming.
+ * @brief This api is used to trigger the preparation for system for NVM programming.
  */
-static int8_t bmi2_set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev)
+static int8_t set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
@@ -17693,13 +18619,14 @@ static int8_t bmi2_set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev)
     /* Initialize feature configuration for nvm preparation*/
     struct bmi2_feature_config nvm_config = { 0, 0, 0 };
 
-    /* Search for bmi2 gyro self offset correction feature as nvm program preparation feature is present in the same
-     * Word
-     *  and extract its configuration details */
+    /* Search for bmi2 gyro self offset correction feature as nvm program preparation feature is
+     * present in the same Word and extract its configuration details
+     */
     feat_found = extract_input_feat_config(&nvm_config, BMI2_NVM_PROG_PREP, dev);
     if (feat_found)
     {
-        /* Get the configuration from the page where nvm preparation feature enable feature resides */
+        /* Get the configuration from the page where nvm preparation feature enable feature
+         * resides */
         rslt = get_feat_config(nvm_config.page, feat_config, dev);
         if (rslt == BMI2_OK)
         {
@@ -17725,9 +18652,9 @@ static int8_t bmi2_set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This api is used to enable the CRT
+ * @brief This api is used to enable the CRT.
  */
-static int8_t bmi2_select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
+static int8_t select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
 {
     int8_t rslt;
 
@@ -17738,23 +18665,22 @@ static int8_t bmi2_select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
     uint8_t feat_found;
     uint8_t reg_addr = 0;
 
-    uint8_t crt_gyro_self_test_sel = gyro_st_crt;
-
     struct bmi2_feature_config gyro_self_test_crt_config = { 0, 0, 0 };
 
-    /* Search for bmi2 crt gyro self test feature and extract its configuration details */
+    /* Search for bmi2 crt gyro self-test feature and extract its configuration details */
     feat_found = extract_input_feat_config(&gyro_self_test_crt_config, BMI2_CRT_GYRO_SELF_TEST, dev);
     if (feat_found)
     {
-        /* Get the configuration from the page where gyro self test and crt enable feature resides */
+        /* Get the configuration from the page where gyro self-test and crt enable feature
+         * resides */
         rslt = get_feat_config(gyro_self_test_crt_config.page, feat_config, dev);
         if (rslt == BMI2_OK)
         {
             /* Define the offset in bytes */
             idx = gyro_self_test_crt_config.start_addr;
 
-            /* update the gyro self test crt enable bit */
-            feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], GYRO_SELF_TEST_CRT_EN, crt_gyro_self_test_sel);
+            /* update the gyro self-test crt enable bit */
+            feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], GYRO_SELF_TEST_CRT_EN, gyro_st_crt);
 
             /* Update the register address */
             reg_addr = BMI2_FEATURES_REG_ADDR + (gyro_self_test_crt_config.start_addr - 1);
@@ -17772,7 +18698,7 @@ static int8_t bmi2_select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This api is used to abort ongoing crt or gyro self test.
+ * @brief This api is used to abort ongoing crt or gyro self-test.
  */
 int8_t bmi2_abort_crt_gyro_st(struct bmi2_dev *dev)
 {
@@ -17804,7 +18730,7 @@ int8_t bmi2_abort_crt_gyro_st(struct bmi2_dev *dev)
     }
     if (rslt == BMI2_OK)
     {
-        rslt = bmi2_abort(BMI2_ENABLE, dev);
+        rslt = abort_bmi2(BMI2_ENABLE, dev);
     }
 
     /* send the g trigger command */
@@ -17846,7 +18772,7 @@ int8_t bmi2_abort_crt_gyro_st(struct bmi2_dev *dev)
 /*!
  * @brief This api is used to enable/disable abort.
  */
-static int8_t bmi2_abort(uint8_t abort_enable, struct bmi2_dev *dev)
+static int8_t abort_bmi2(uint8_t abort_enable, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -17875,7 +18801,7 @@ static int8_t bmi2_abort(uint8_t abort_enable, struct bmi2_dev *dev)
             /* Define the offset in bytes */
             idx = block_config.start_addr;
 
-            /* update the gyro self test crt abort enable bit */
+            /* update the gyro self-test crt abort enable bit */
             feat_config[idx] = BMI2_SET_BITS(feat_config[idx], ABORT_FEATURE_EN, abort_enable);
 
             /* Update the register address */
@@ -17894,7 +18820,8 @@ static int8_t bmi2_abort(uint8_t abort_enable, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This api is use to wait till  gyro self test is completed and update the status of gyro self test.
+ * @brief This api is use to wait till  gyro self-test is completed and update the status of gyro
+ * self-test.
  */
 static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_st_result, const struct bmi2_dev *dev)
 {
@@ -17920,7 +18847,9 @@ static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_s
     return rslt;
 }
 
-/*!   @brief This api validates accel foc position as per the range */
+/*!
+ * @brief This api validates accel foc position as per the range
+ */
 static int8_t validate_foc_position(uint8_t sens_list,
                                     const struct accel_foc_g_value *accel_g_axis,
                                     struct bmi2_sens_axes_data avg_foc_data,
@@ -17960,7 +18889,9 @@ static int8_t validate_foc_position(uint8_t sens_list,
     return rslt;
 }
 
-/*!   @brief This api validates depends on accel foc access input */
+/*!
+ * @brief This api validates depends on accel foc access input
+ */
 static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev)
 {
     struct bmi2_sens_config sens_cfg = { 0 };
@@ -18031,12 +18962,13 @@ int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
         cmd_rdy = BMI2_GET_BITS(status, BMI2_CMD_RDY);
         if (cmd_rdy)
         {
-            rslt = bmi2_set_nvm_prep_prog(BMI2_ENABLE, dev);
+            rslt = set_nvm_prep_prog(BMI2_ENABLE, dev);
             if (rslt == BMI2_OK)
             {
                 dev->delay_us(40000);
 
-                /* Set the NVM_CONF.nvm_prog_en bit in order to enable the NVM programming */
+                /* Set the NVM_CONF.nvm_prog_en bit in order to enable the NVM
+                 * programming */
                 reg_data = BMI2_NVM_UNLOCK_ENABLE;
                 rslt = bmi2_set_regs(BMI2_NVM_CONF_ADDR, &reg_data, 1, dev);
                 if (rslt == BMI2_OK)
@@ -18062,7 +18994,8 @@ int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
                                 break;
                             }
 
-                            /* Wait till cmd_rdy becomes 1 indicating nvm process completes */
+                            /* Wait till cmd_rdy becomes 1 indicating
+                             * nvm process completes */
                             dev->delay_us(20000);
                         }
                     }
@@ -18084,8 +19017,7 @@ int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
         rslt = bmi2_soft_reset(dev);
     }
 
-    /* Enable Advance power save if disabled while configuring and
-     * not when already disabled */
+    /* Enable Advance power save if disabled while configuring and not when already disabled */
     if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
     {
         rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
@@ -18111,7 +19043,6 @@ static int8_t get_average_of_sensor_data(uint8_t sens_list, struct foc_temp_valu
     if (sens_list == BMI2_ACCEL)
     {
         sensor_drdy = BMI2_DRDY_ACC;
-
     }
     else
     {
@@ -18162,6 +19093,522 @@ static int8_t get_average_of_sensor_data(uint8_t sens_list, struct foc_temp_valu
         temp_foc_data->x = (temp_foc_data->x / BMI2_FOC_SAMPLE_LIMIT);
         temp_foc_data->y = (temp_foc_data->y / BMI2_FOC_SAMPLE_LIMIT);
         temp_foc_data->z = (temp_foc_data->z / BMI2_FOC_SAMPLE_LIMIT);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API sets primary OIS configurations for
+ * selecting filter cut-off frequency .
+ */
+static int8_t set_primary_ois_config(const struct bmi2_primary_ois_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define count */
+    uint8_t i = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for primary OIS */
+    struct bmi2_feature_config primary_ois_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *)(void *)feat_config;
+
+    /* Search for priamry OIS feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&primary_ois_config, BMI2_PRIMARY_OIS, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where primary OIS feature resides */
+        rslt = get_feat_config(primary_ois_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for priamry OIS select */
+            idx = primary_ois_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Enable lp filter */
+            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), LP_FILTER_EN, config->lp_filter_enable);
+
+            /* Set lp filter cut-off frequency */
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), LP_FILTER_CONFIG, config->lp_filter_config);
+
+            /* Enable Gyro on OIS */
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), PRIMARY_OIS_GYR_EN, config->primary_ois_gyro_en);
+
+            /* Enable Accel on OIS */
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), PRIMARY_OIS_ACC_EN, config->primary_ois_accel_en);
+
+            /* Increment offset by 1 more word to get the total length in words */
+            idx++;
+
+            /* Get total length in bytes to copy from local pointer to the array */
+            idx = (uint8_t)(idx * 2) - primary_ois_config.start_addr;
+
+            /* Copy the bytes to be set back to the array */
+            for (i = 0; i < idx; i++)
+            {
+                feat_config[primary_ois_config.start_addr +
+                            i] = *((uint8_t *)data_p + primary_ois_config.start_addr + i);
+            }
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gets priamry OIS configurations for
+ * low pass cut-off frequency.
+ */
+static int8_t get_primary_ois_config(struct bmi2_primary_ois_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define LSB */
+    uint16_t lsb;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for primary OIS */
+    struct bmi2_feature_config primary_ois_config = { 0, 0, 0 };
+
+    /* Search for primary OIS feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&primary_ois_config, BMI2_PRIMARY_OIS, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where primary OIS feature resides */
+        rslt = get_feat_config(primary_ois_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset for feature enable for primary OIS */
+            idx = primary_ois_config.start_addr;
+
+            /* Get word to calculate filter state, cut-off frequency, gyro-OIS,
+             * accel-OIS select */
+            lsb = (uint16_t)feat_config[idx++];
+
+            /* Get low pass filter state */
+            config->lp_filter_enable = lsb & LP_FILTER_EN_MASK;
+
+            /* Get lp filter cut-off frequency */
+            config->lp_filter_config = (lsb & LP_FILTER_CONFIG_MASK) >> LP_FILTER_CONFIG_POS;
+
+            /* Get primary OIS gyro on ois state */
+            config->primary_ois_gyro_en = (lsb & PRIMARY_OIS_GYR_EN_MASK) >> PRIMARY_OIS_GYR_EN_POS;
+
+            /* Get primary OIS accel on ois state */
+            config->primary_ois_accel_en = (lsb & PRIMARY_OIS_ACC_EN_MASK) >> PRIMARY_OIS_ACC_EN_POS;
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API extract the identification feature from the DMR page
+ * and retrieve the config file major and minor version.
+ */
+static int8_t extract_config_file(uint16_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev)
+{
+    /* Variable to define the result */
+    int8_t rslt = BMI2_OK;
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define LSB */
+    uint16_t lsb = 0;
+
+    /* Variable to define MSB */
+    uint16_t msb = 0;
+
+    /* Variable to define a word */
+    uint16_t lsb_msb = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Variable to define advance power save mode status */
+    uint8_t aps_stat;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Initialize feature configuration for config file identification */
+    struct bmi2_feature_config config_id = { 0, 0, 0 };
+
+    /* Check the power mode status */
+    aps_stat = dev->aps_status;
+    if (aps_stat == BMI2_ENABLE)
+    {
+        /* Disable advance power save if enabled */
+        rslt = bmi2_set_adv_power_save(BMI2_DISABLE, dev);
+    }
+    if (rslt == BMI2_OK)
+    {
+        /* Search for config file identification feature and extract its configuration
+         * details */
+        feat_found = extract_input_feat_config(&config_id, BMI2_CONFIG_ID, dev);
+        if (feat_found)
+        {
+            /* Get the configuration from the page where config file identification
+             * feature resides */
+            rslt = get_feat_config(config_id.page, feat_config, dev);
+            if (rslt == BMI2_OK)
+            {
+                /* Define the offset for config file identification */
+                idx = config_id.start_addr;
+
+                /* Get word to calculate config file identification */
+                lsb = (uint16_t) feat_config[idx++];
+                msb = ((uint16_t) feat_config[idx++] << 8);
+                lsb_msb = lsb | msb;
+
+                /* Get major and minor version */
+                *config_major = BMI2_GET_BITS(lsb_msb, BMI2_CONFIG_MAJOR);
+                *config_minor = BMI2_GET_BIT_POS0(lsb, BMI2_CONFIG_MINOR);
+            }
+        }
+
+        /* Enable Advance power save if disabled while configuring and
+         * not when already disabled
+         */
+        if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
+        {
+            rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gets the output data of OIS.
+ */
+static int8_t get_ois_output(struct bmi2_ois_output *ois_output, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variables to store MSB value */
+    uint8_t msb = 0;
+
+    /* Variables to store LSB value */
+    uint8_t lsb = 0;
+
+    /* Variables to store both MSB and LSB value */
+    uint16_t lsb_msb = 0;
+
+    /* Variables to define index */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature output for OIS */
+    struct bmi2_feature_config ois_config = { 0, 0, 0 };
+
+    /* Search for OIS output feature and extract its configuration details */
+    feat_found = extract_output_feat_config(&ois_config, BMI2_OIS_OUTPUT, dev);
+    if (feat_found)
+    {
+        /* Get the feature output configuration for OIS */
+        rslt = get_feat_config(ois_config.page, feat_config, dev);
+
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for OIS output start address */
+            idx = ois_config.start_addr;
+
+            /* Read OIS accel x axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_acc_x = (int16_t)lsb_msb;
+
+            /* Read OIS accel y axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_acc_y = (int16_t)lsb_msb;
+
+            /* Read OIS accel z axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_acc_z = (int16_t)lsb_msb;
+
+            /* Read OIS gyro x axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_gyro_x = (int16_t)lsb_msb;
+
+            /* Read OIS gyro y axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_gyro_y = (int16_t)lsb_msb;
+
+            /* Read OIS gyro z axis */
+            lsb = feat_config[idx++];
+            msb = feat_config[idx++];
+            lsb_msb = (uint16_t)lsb | (uint16_t)msb << 8;
+            ois_output->ois_gyro_z = (int16_t)lsb_msb;
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to enable/disable free-fall detection feature.
+ */
+static int8_t set_free_fall_det(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for free-fall detection */
+    struct bmi2_feature_config freefall_config = { 0, 0, 0 };
+
+    /* Search for free-fall detection feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&freefall_config, BMI2_FREE_FALL_DET, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where free-fall detection feature resides */
+        rslt = get_feat_config(freefall_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Assign the offset address for free-fall detection */
+            idx = freefall_config.start_addr;
+
+            /* Set the feature enable bit */
+            feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], FREE_FALL_DET_FEAT_EN, enable);
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API sets free-fall detection configurations like
+ * free-fall accel settings, and output configuration.
+ */
+static int8_t set_free_fall_det_config(const struct bmi2_free_fall_det_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define index */
+    uint8_t i = 0;
+
+    /* Variable to define set accel settings in loop */
+    uint8_t indx;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for free-fall */
+    struct bmi2_feature_config freefall_config = { 0, 0, 0 };
+
+    /* Copy the feature configuration address to a local pointer */
+    uint16_t *data_p = (uint16_t *) (void *)feat_config;
+
+    /* Search for free-fall detection feature and extract its configuration details  */
+    feat_found = extract_input_feat_config(&freefall_config, BMI2_FREE_FALL_DET, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where low-g feature resides */
+        rslt = get_feat_config(freefall_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for free-fall detection select */
+            idx = freefall_config.start_addr;
+
+            /* Get offset in words since all the features are set in words length */
+            idx = idx / 2;
+
+            /* Set output configuration */
+            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), FREE_FALL_OUT_CONF, config->out_conf);
+
+            /* Increment offset by 1 more word to set free-fall detection accel settings 1 configuration */
+            idx++;
+
+            /* Set the free-fall accel param settings */
+            for (indx = 0; indx < BMI2_FREE_FALL_ACCEL_SET_PARAMS; indx++)
+            {
+                /* Set free-fall detection accel settings */
+                *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx),
+                                                    FREE_FALL_ACCEL_SETT,
+                                                    config->freefall_accel_settings[indx]);
+
+                /* Increment offset by 1 more word to set free-fall detection accel settings configuration */
+                idx++;
+            }
+
+            /* Get total length in bytes to copy from local pointer to the array */
+            idx = (uint8_t)(idx * 2) - freefall_config.start_addr;
+
+            /* Copy the bytes to be set back to the array */
+            for (i = 0; i < idx; i++)
+            {
+                feat_config[freefall_config.start_addr + i] = *((uint8_t *) data_p + freefall_config.start_addr + i);
+            }
+
+            /* Set the configuration back to the page */
+            rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+            if (rslt == BMI2_OK)
+            {
+                /* Copy out_conf value to a local copy in device structure */
+                dev->int_map.freefall_out_conf = (uint8_t) config->out_conf;
+            }
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gets free-fall detection configurations like
+ * free-fall detection accel settings, and output configuration.
+ */
+static int8_t get_free_fall_det_config(struct bmi2_free_fall_det_config *config, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Array to define the feature configuration */
+    uint8_t feat_config[BMI2_FEAT_SIZE_IN_BYTES] = { 0 };
+
+    /* Variable to define the array offset */
+    uint8_t idx = 0;
+
+    /* Variable to define get accel settings in loop */
+    uint8_t indx;
+
+    /* Variable to define LSB */
+    uint16_t lsb = 0;
+
+    /* Variable to define MSB */
+    uint16_t msb = 0;
+
+    /* Variable to define a word */
+    uint16_t lsb_msb = 0;
+
+    /* Variable to set flag */
+    uint8_t feat_found;
+
+    /* Initialize feature configuration for free-fall detection */
+    struct bmi2_feature_config freefall_config = { 0, 0, 0 };
+
+    /* Search for free-fall detection feature and extract its configuration details */
+    feat_found = extract_input_feat_config(&freefall_config, BMI2_FREE_FALL_DET, dev);
+    if (feat_found)
+    {
+        /* Get the configuration from the page where free-fall detection feature resides */
+        rslt = get_feat_config(freefall_config.page, feat_config, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Define the offset in bytes for free-fall detection select */
+            idx = freefall_config.start_addr;
+
+            /* Get word to calculate out conf */
+            lsb = (uint16_t) feat_config[idx++];
+            msb = ((uint16_t) feat_config[idx++] << 8);
+            lsb_msb = lsb | msb;
+
+            /* Get out conf */
+            config->out_conf = (lsb_msb & FREE_FALL_OUT_CONF_MASK) >> FREE_FALL_OUT_CONF_POS;
+
+            /* Get the free-fall accel param settings */
+            for (indx = 0; indx < BMI2_FREE_FALL_ACCEL_SET_PARAMS; indx++)
+            {
+                /* Get word to calculate free-fall detection accel settings */
+                lsb = (uint16_t) feat_config[idx++];
+                msb = ((uint16_t) feat_config[idx++] << 8);
+                lsb_msb = lsb | msb;
+
+                /* Get free-fall detection accel settings */
+                config->freefall_accel_settings[indx] = lsb_msb & FREE_FALL_ACCEL_SETT_MASK;
+            }
+
+            /* Copy out_conf value to a local copy in device structure */
+            dev->int_map.freefall_out_conf = (uint8_t) config->out_conf;
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
     }
 
     return rslt;

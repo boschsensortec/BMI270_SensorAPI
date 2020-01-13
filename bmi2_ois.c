@@ -1,51 +1,40 @@
 /**
- * Copyright (C) 2019 Bosch Sensortec GmbH
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * Neither the name of the copyright holder nor the names of the
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDER
- * OR CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
- * OR CONSEQUENTIAL DAMAGES(INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
- *
- * The information provided is believed to be accurate and reliable.
- * The copyright holder assumes no responsibility
- * for the consequences of use
- * of such information nor for any infringement of patents or
- * other rights of third parties which may result from its use.
- * No license is granted by implication or otherwise under any patent or
- * patent rights of the copyright holder.
- *
- * @file	bmi2_ois.c
- * @date	2019-07-24
- * @version	v2.34.0
- *
- */
-
-/******************************************************************************/
+* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+*
+* BSD-3-Clause
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its
+*    contributors may be used to endorse or promote products derived from
+*    this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+* POSSIBILITY OF SUCH DAMAGE.
+*
+* @file	bmi2_ois.c
+* @date	2020-01-10
+* @version	v2.46.1
+*
+*//******************************************************************************/
 
 /*!  @name          Header Files                                  */
 /******************************************************************************/
@@ -93,8 +82,7 @@ static int8_t null_ptr_check(const struct bmi2_ois_dev *ois_dev);
  * refer the example ois_accel_gyro.c for more info"
  *
  */
-static void bmi2_ois_comp_gyro_cross_axis_sensitivity(struct bmi2_ois_sens_axes_data *ois_data,
-                                                      int16_t ois_gyr_cross_sens_zx);
+static void comp_gyro_cross_axis_sensitivity(struct bmi2_ois_sens_axes_data *ois_data, int16_t ois_gyr_cross_sens_zx);
 
 /******************************************************************************/
 /*!  @name      User Interface Definitions                            */
@@ -104,7 +92,7 @@ static void bmi2_ois_comp_gyro_cross_axis_sensitivity(struct bmi2_ois_sens_axes_
  * @brief This API reads the data from the given OIS register address of bmi2
  * sensor.
  */
-int8_t bmi2_get_ois_regs(uint8_t ois_reg_addr,
+int8_t bmi2_ois_get_regs(uint8_t ois_reg_addr,
                          uint8_t *ois_reg_data,
                          uint16_t data_len,
                          const struct bmi2_ois_dev *ois_dev)
@@ -158,7 +146,7 @@ int8_t bmi2_get_ois_regs(uint8_t ois_reg_addr,
 /*!
  * @brief This API writes data to the given OIS register address of bmi2 sensor.
  */
-int8_t bmi2_set_ois_regs(uint8_t ois_reg_addr,
+int8_t bmi2_ois_set_regs(uint8_t ois_reg_addr,
                          uint8_t *ois_reg_data,
                          uint16_t data_len,
                          const struct bmi2_ois_dev *ois_dev)
@@ -192,7 +180,7 @@ int8_t bmi2_set_ois_regs(uint8_t ois_reg_addr,
  * @brief This API enables/disables accelerometer/gyroscope data read through
  * OIS interface.
  */
-int8_t bmi2_set_ois_config(const struct bmi2_ois_dev *ois_dev)
+int8_t bmi2_ois_set_config(const struct bmi2_ois_dev *ois_dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -204,17 +192,26 @@ int8_t bmi2_set_ois_config(const struct bmi2_ois_dev *ois_dev)
     rslt = null_ptr_check(ois_dev);
     if (rslt == BMI2_OIS_OK)
     {
-        rslt = bmi2_get_ois_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
+        rslt = bmi2_ois_get_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
         if (rslt == BMI2_OIS_OK)
         {
-            /* Enable/Disable accelerometer */
+            /* Enable/Disable Low pass filter */
+            reg_data = BMI2_SET_BIT_POS0(reg_data, BMI2_OIS_LP_FILTER_EN, ois_dev->lp_filter_en);
+
+            /* Configures Low pass filter cut-off frequency */
+            reg_data = BMI2_OIS_SET_BITS(reg_data, BMI2_OIS_LP_FILTER_CONFIG, ois_dev->lp_filter_config);
+
+            /* Low pass filter - mute on secondary interface */
+            reg_data = BMI2_OIS_SET_BITS(reg_data, BMI2_OIS_LP_FILTER_MUTE, ois_dev->lp_filter_mute);
+
+            /* Enable/Disable ois on accelerometer */
             reg_data = BMI2_OIS_SET_BITS(reg_data, BMI2_OIS_ACC_EN, ois_dev->acc_en);
 
-            /* Enable/Disable gyroscope */
+            /* Enable/Disable ois on gyroscope */
             reg_data = BMI2_OIS_SET_BITS(reg_data, BMI2_OIS_GYR_EN, ois_dev->gyr_en);
 
             /* Set the OIS configurations */
-            rslt = bmi2_set_ois_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
+            rslt = bmi2_ois_set_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
         }
     }
 
@@ -225,7 +222,7 @@ int8_t bmi2_set_ois_config(const struct bmi2_ois_dev *ois_dev)
  * @brief This API gets the status of accelerometer/gyroscope enable for data
  * read through OIS interface.
  */
-int8_t bmi2_get_ois_config(struct bmi2_ois_dev *ois_dev)
+int8_t bmi2_ois_get_config(struct bmi2_ois_dev *ois_dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -237,9 +234,18 @@ int8_t bmi2_get_ois_config(struct bmi2_ois_dev *ois_dev)
     rslt = null_ptr_check(ois_dev);
     if (rslt == BMI2_OIS_OK)
     {
-        rslt = bmi2_get_ois_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
+        rslt = bmi2_ois_get_regs(BMI2_OIS_CONFIG_ADDR, &reg_data, 1, ois_dev);
         if (rslt == BMI2_OIS_OK)
         {
+            /* Get the status of Low pass filter enable */
+            ois_dev->lp_filter_en = BMI2_GET_BIT_POS0(reg_data, BMI2_OIS_LP_FILTER_EN);
+
+            /* Get the status of Low pass filter cut-off frequency */
+            ois_dev->lp_filter_config = BMI2_OIS_GET_BITS(reg_data, BMI2_OIS_LP_FILTER_CONFIG);
+
+            /* Get the status of Low pass filter mute */
+            ois_dev->lp_filter_mute = BMI2_OIS_GET_BITS(reg_data, BMI2_OIS_LP_FILTER_MUTE);
+
             /* Get the status of accelerometer enable */
             ois_dev->acc_en = BMI2_OIS_GET_BITS(reg_data, BMI2_OIS_ACC_EN);
 
@@ -254,7 +260,7 @@ int8_t bmi2_get_ois_config(struct bmi2_ois_dev *ois_dev)
 /*!
  * @brief This API reads accelerometer/gyroscope data through OIS interface.
  */
-int8_t bmi2_read_ois_data(const uint8_t *sens_sel,
+int8_t bmi2_ois_read_data(const uint8_t *sens_sel,
                           uint8_t n_sens,
                           struct bmi2_ois_dev *ois_dev,
                           int16_t gyr_cross_sens_zx)
@@ -345,7 +351,7 @@ static int8_t get_ois_acc_gyr_data(struct bmi2_ois_sens_axes_data *ois_data,
     uint8_t reg_data[BMI2_OIS_ACC_GYR_NUM_BYTES] = { 0 };
 
     /* Read the sensor data */
-    rslt = bmi2_get_ois_regs(reg_addr, reg_data, BMI2_OIS_ACC_GYR_NUM_BYTES, ois_dev);
+    rslt = bmi2_ois_get_regs(reg_addr, reg_data, BMI2_OIS_ACC_GYR_NUM_BYTES, ois_dev);
     if (rslt == BMI2_OIS_OK)
     {
         /* Read x-axis data */
@@ -366,7 +372,7 @@ static int8_t get_ois_acc_gyr_data(struct bmi2_ois_sens_axes_data *ois_data,
         msb_lsb = ((uint16_t)msb << 8) | (uint16_t)lsb;
         ois_data->z = (int16_t)msb_lsb;
 
-        bmi2_ois_comp_gyro_cross_axis_sensitivity(ois_data, ois_gyr_cross_sens_zx);
+        comp_gyro_cross_axis_sensitivity(ois_data, ois_gyr_cross_sens_zx);
     }
 
     return rslt;
@@ -395,8 +401,7 @@ static int8_t null_ptr_check(const struct bmi2_ois_dev *ois_dev)
  * @brief This internal API corrects the gyroscope cross-axis sensitivity
  * between the z and the x axis.
  */
-static void bmi2_ois_comp_gyro_cross_axis_sensitivity(struct bmi2_ois_sens_axes_data *ois_data,
-                                                      int16_t ois_gyr_cross_sens_zx)
+static void comp_gyro_cross_axis_sensitivity(struct bmi2_ois_sens_axes_data *ois_data, int16_t ois_gyr_cross_sens_zx)
 {
 
     /* Get the compensated gyroscope x-axis */
