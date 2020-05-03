@@ -4688,8 +4688,8 @@ int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
             /* Disable Advance power save if enabled for auxiliary
              * and feature configurations
              */
-            if ((sens_cfg[loop].type != BMI2_ACCEL) || (sens_cfg[loop].type != BMI2_GYRO) ||
-                (sens_cfg[loop].type != BMI2_TEMP) || (sens_cfg[loop].type != BMI2_AUX))
+            if ((sens_cfg[loop].type != BMI2_ACCEL) && (sens_cfg[loop].type != BMI2_GYRO) &&
+                (sens_cfg[loop].type != BMI2_TEMP) && (sens_cfg[loop].type != BMI2_AUX))
             {
 
                 if (aps_stat == BMI2_ENABLE)
