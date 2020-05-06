@@ -1,40 +1,42 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
-*
-* BSD-3-Clause
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* 3. Neither the name of the copyright holder nor the names of its
-*    contributors may be used to endorse or promote products derived from
-*    this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-* POSSIBILITY OF SUCH DAMAGE.
-*
-* @file	bmi2_defs.h
-* @date	2020-01-10
-* @version	v2.46.1
-*
-*/#ifndef BMI2_DEFS_H_
+ * Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+ *
+ * BSD-3-Clause
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @file       bmi2_defs.h
+ * @date       2020-04-29
+ * @version    v2.53.0
+ *
+ */
+
+#ifndef BMI2_DEFS_H_
 #define BMI2_DEFS_H_
 
 /******************************************************************************/
@@ -105,8 +107,12 @@
 #define BMI2_GET_LSB(var)                    (uint8_t)(var & BMI2_SET_LOW_BYTE)
 #define BMI2_GET_MSB(var)                    (uint8_t)((var & BMI2_SET_HIGH_BYTE) >> 8)
 
+#ifndef BMI2_INTF_RETURN_TYPE
+#define BMI2_INTF_RETURN_TYPE int8_t
+#endif
+
 /*! @name For defining absolute values */
-#define BMI2_ABS(a)                          ((a) > 0 ? (a) : -(a))
+#define BMI2_ABS(a) ((a) > 0 ? (a) : -(a))
 
 /*! @name LSB and MSB mask definitions */
 #define BMI2_SET_LOW_BYTE                        UINT16_C(0x00FF)
@@ -120,6 +126,9 @@
 /*! @name To define TRUE or FALSE */
 #define BMI2_TRUE                                UINT8_C(1)
 #define BMI2_FALSE                               UINT8_C(0)
+
+/*! @name To define sensor interface success code */
+#define BMI2_INTF_RET_SUCCESS                    INT8_C(0)
 
 /*! @name To define success code */
 #define BMI2_OK                                  INT8_C(0)
@@ -200,6 +209,7 @@
 #define BMI2_AUX_WR_DATA_ADDR                    UINT8_C(0x4F)
 #define BMI2_INT1_IO_CTRL_ADDR                   UINT8_C(0x53)
 #define BMI2_INT2_IO_CTRL_ADDR                   UINT8_C(0x54)
+#define BMI2_INT_LATCH_ADDR                      UINT8_C(0x55)
 #define BMI2_INT1_MAP_FEAT_ADDR                  UINT8_C(0x56)
 #define BMI2_INT2_MAP_FEAT_ADDR                  UINT8_C(0x57)
 #define BMI2_INT_MAP_DATA_ADDR                   UINT8_C(0x58)
@@ -207,6 +217,7 @@
 #define BMI2_INIT_ADDR_0                         UINT8_C(0x5B)
 #define BMI2_INIT_ADDR_1                         UINT8_C(0x5C)
 #define BMI2_INIT_DATA_ADDR                      UINT8_C(0x5E)
+#define BMI2_AUX_IF_TRIM                         UINT8_C(0x68)
 #define BMI2_GYR_CRT_CONF_ADDR                   UINT8_C(0X69)
 #define BMI2_NVM_CONF_ADDR                       UINT8_C(0x6A)
 #define BMI2_IF_CONF_ADDR                        UINT8_C(0X6B)
@@ -390,31 +401,36 @@
 #define BMI2_WRIST_GESTURE_WH              UINT8_C(22)
 #define BMI2_PRIMARY_OIS                   UINT8_C(23)
 #define BMI2_FREE_FALL_DET                 UINT8_C(24)
+#define BMI2_SINGLE_TAP                    UINT8_C(25)
+#define BMI2_DOUBLE_TAP                    UINT8_C(26)
+#define BMI2_TRIPLE_TAP                    UINT8_C(27)
 
 /* Non virtual sensor features */
-#define BMI2_STEP_COUNTER_PARAMS           UINT8_C(25)
-#define BMI2_TEMP                          UINT8_C(26)
-#define BMI2_ACCEL_SELF_TEST               UINT8_C(27)
-#define BMI2_GYRO_SELF_OFF                 UINT8_C(28)
-#define BMI2_ACTIVITY_RECOGNITION          UINT8_C(29)
-#define BMI2_MAX_BURST_LEN                 UINT8_C(30)
-#define BMI2_SENS_MAX_NUM                  UINT8_C(31)
-#define BMI2_AXIS_MAP                      UINT8_C(32)
-#define BMI2_NVM_STATUS                    UINT8_C(33)
-#define BMI2_VFRM_STATUS                   UINT8_C(34)
-#define BMI2_GYRO_CROSS_SENSE              UINT8_C(35)
-#define BMI2_CRT_GYRO_SELF_TEST            UINT8_C(36)
-#define BMI2_ABORT_CRT_GYRO_SELF_TEST      UINT8_C(37)
-#define BMI2_NVM_PROG_PREP                 UINT8_C(38)
-#define BMI2_ACTIVITY_RECOGNITION_SETTINGS UINT8_C(39)
-#define BMI2_OIS_OUTPUT                    UINT8_C(40)
-#define BMI2_CONFIG_ID                     UINT8_C(41)
+#define BMI2_STEP_COUNTER_PARAMS           UINT8_C(28)
+#define BMI2_TAP_DETECTOR_1                UINT8_C(29)
+#define BMI2_TAP_DETECTOR_2                UINT8_C(30)
+#define BMI2_TEMP                          UINT8_C(31)
+#define BMI2_ACCEL_SELF_TEST               UINT8_C(32)
+#define BMI2_GYRO_SELF_OFF                 UINT8_C(33)
+#define BMI2_ACTIVITY_RECOGNITION          UINT8_C(34)
+#define BMI2_MAX_BURST_LEN                 UINT8_C(35)
+#define BMI2_SENS_MAX_NUM                  UINT8_C(36)
+#define BMI2_AXIS_MAP                      UINT8_C(37)
+#define BMI2_NVM_STATUS                    UINT8_C(38)
+#define BMI2_VFRM_STATUS                   UINT8_C(39)
+#define BMI2_GYRO_CROSS_SENSE              UINT8_C(40)
+#define BMI2_CRT_GYRO_SELF_TEST            UINT8_C(41)
+#define BMI2_ABORT_CRT_GYRO_SELF_TEST      UINT8_C(42)
+#define BMI2_NVM_PROG_PREP                 UINT8_C(43)
+#define BMI2_ACTIVITY_RECOGNITION_SETTINGS UINT8_C(44)
+#define BMI2_OIS_OUTPUT                    UINT8_C(45)
+#define BMI2_CONFIG_ID                     UINT8_C(46)
 
 /*! @name Bit wise for selecting BMI2 sensors/features */
 #define BMI2_ACCEL_SENS_SEL                (1)
 #define BMI2_GYRO_SENS_SEL                 (1 << BMI2_GYRO)
 #define BMI2_AUX_SENS_SEL                  (1 << BMI2_AUX)
-#define BMI2_TEMP_SENS_SEL                 (1 << BMI2_TEMP)
+#define BMI2_TEMP_SENS_SEL                 ((uint64_t)1 << BMI2_TEMP)
 #define BMI2_ANY_MOT_SEL                   (1 << BMI2_ANY_MOTION)
 #define BMI2_NO_MOT_SEL                    (1 << BMI2_NO_MOTION)
 #define BMI2_TILT_SEL                      (1 << BMI2_TILT)
@@ -431,15 +447,44 @@
 #define BMI2_LOW_G_SEL                     (1 << BMI2_LOW_G)
 #define BMI2_FLAT_SEL                      (1 << BMI2_FLAT)
 #define BMI2_EXT_SENS_SEL                  (1 << BMI2_EXT_SENS_SYNC)
-#define BMI2_GYRO_SELF_OFF_SEL             (1 << BMI2_GYRO_SELF_OFF)
+#define BMI2_SINGLE_TAP_SEL                (1 << BMI2_SINGLE_TAP)
+#define BMI2_DOUBLE_TAP_SEL                (1 << BMI2_DOUBLE_TAP)
+#define BMI2_TRIPLE_TAP_SEL                (1 << BMI2_TRIPLE_TAP)
+#define BMI2_GYRO_SELF_OFF_SEL             ((uint64_t)1 << BMI2_GYRO_SELF_OFF)
 #define BMI2_WRIST_GEST_SEL                (1 << BMI2_WRIST_GESTURE)
 #define BMI2_WRIST_WEAR_WAKE_UP_SEL        (1 << BMI2_WRIST_WEAR_WAKE_UP)
-#define BMI2_ACTIVITY_RECOGNITION_SEL      (1 << BMI2_ACTIVITY_RECOGNITION)
-#define BMI2_ACCEL_SELF_TEST_SEL           (1 << BMI2_ACCEL_SELF_TEST)
+#define BMI2_ACTIVITY_RECOGNITION_SEL      ((uint64_t)1 << BMI2_ACTIVITY_RECOGNITION)
+#define BMI2_ACCEL_SELF_TEST_SEL           ((uint64_t)1 << BMI2_ACCEL_SELF_TEST)
 #define BMI2_WRIST_GEST_W_SEL              (1 << BMI2_WRIST_GESTURE_WH)
 #define BMI2_WRIST_WEAR_WAKE_UP_WH_SEL     (1 << BMI2_WRIST_WEAR_WAKE_UP_WH)
 #define BMI2_PRIMARY_OIS_SEL               (1 << BMI2_PRIMARY_OIS)
 #define BMI2_FREE_FALL_DET_SEL             (1 << BMI2_FREE_FALL_DET)
+
+/*! @name Mask definitions for BMI2 wake-up feature configuration for bmi260 */
+#define BMI2_WAKEUP_SENSITIVITY_MASK       UINT8_C(0x0E)
+#define BMI2_WAKEUP_SINGLE_TAP_EN_MASK     UINT8_C(0x01)
+#define BMI2_WAKEUP_DOUBLE_TAP_EN_MASK     UINT8_C(0x02)
+#define BMI2_WAKEUP_TRIPLE_TAP_EN_MASK     UINT8_C(0x04)
+#define BMI2_WAKEUP_DATA_REG_EN_MASK       UINT8_C(0x08)
+#define BMI2_WAKEUP_OUT_CONF_MASK          UINT8_C(0xF0)
+#define BMI2_WAKEUP_AXIS_SEL_MASK          UINT8_C(0x03)
+
+/*! @name Bit position definitions for BMI2 wake-up feature configuration for bmi260 */
+#define BMI2_WAKEUP_SENSITIVITY_POS        UINT8_C(0x01)
+#define BMI2_WAKEUP_DOUBLE_TAP_EN_POS      UINT8_C(0x01)
+#define BMI2_WAKEUP_TRIPLE_TAP_EN_POS      UINT8_C(0x02)
+#define BMI2_WAKEUP_DATA_REG_EN_POS        UINT8_C(0x03)
+#define BMI2_WAKEUP_OUT_CONF_POS           UINT8_C(0x04)
+
+/*! @name Mask definitions for BMI2 wake-up feature configuration for other than bmi261 */
+#define BMI2_WAKE_UP_SENSITIVITY_MASK      UINT16_C(0x000E)
+#define BMI2_WAKE_UP_SINGLE_TAP_EN_MASK    UINT16_C(0x0010)
+#define BMI2_WAKE_UP_OUT_CONF_MASK         UINT16_C(0x01E0)
+
+/*! @name Bit position definitions for BMI2 wake-up feature configuration for other than bmi261 */
+#define BMI2_WAKE_UP_SENSITIVITY_POS       UINT8_C(0x01)
+#define BMI2_WAKE_UP_SINGLE_TAP_EN_POS     UINT8_C(0x04)
+#define BMI2_WAKE_UP_OUT_CONF_POS          UINT8_C(0x05)
 
 /*! @name Bit wise selection of BMI2 sensors */
 #define BMI2_MAIN_SENSORS \
@@ -454,10 +499,6 @@
 
 /*! @name Macro to specify the number of free-fall accel setting parameters */
 #define BMI2_FREE_FALL_ACCEL_SET_PARAMS UINT8_C(7)
-
-/*!  @name Macro to select between single and double tap */
-#define BMI2_DOUBLE_TAP_SEL             UINT8_C(0)
-#define BMI2_SINGLE_TAP_SEL             UINT8_C(1)
 
 #define BMI2_SELECT_GYRO_SELF_TEST      UINT8_C(0)
 #define BMI2_SELECT_CRT                 UINT8_C(1)
@@ -883,31 +924,100 @@
 /******************************************************************************/
 #define BMI2_CRT_RTOSK_ENABLE       UINT8_C(0x01)
 #define BMI2_GYRO_CROSS_SENS_ENABLE UINT8_C(0x02)
-#define BMI_GYRO_USER_GAIN_ENABLE   UINT8_C(0x08)
+#define BMI2_GYRO_USER_GAIN_ENABLE  UINT8_C(0x08)
 #define BMI2_NO_FEATURE_ENABLE      UINT8_C(0x00)
 #define BMI2_CRT_IN_FIFO_NOT_REQ    UINT8_C(0x10)
-#define BMI2_MINIMAL_VARIANT        UINT8_C(0x20)
+#define BMI2_MAXIMUM_FIFO_VARIANT   UINT8_C(0x20)
+
+/*! Pull-up configuration for ASDA               */
+#define BMI2_ASDA_PUPSEL_OFF        UINT8_C(0x00)
+#define BMI2_ASDA_PUPSEL_40K        UINT8_C(0x01)
+#define BMI2_ASDA_PUPSEL_10K        UINT8_C(0x02)
+#define BMI2_ASDA_PUPSEL_2K         UINT8_C(0x03)
+
+/******************************************************************************/
+/*!  @name         CHIP ID MACROS                                        */
+/******************************************************************************/
+
+/*! @name BMI260 chip identifier */
+#define BMI260_CHIP_IDENTIFIER UINT8_C(0x27)
+
+/*! @name BMI261 chip identifier */
+#define BMI261_CHIP_IDENTIFIER UINT8_C(0x21)
 
 /******************************************************************************/
 /*! @name           Function Pointers                             */
 /******************************************************************************/
-/*! For interfacing to the I2C or SPI read functions */
-typedef int8_t (*bmi2_read_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
 
-/*! For interfacing to the I2C or SPI write functions */
-typedef int8_t (*bmi2_write_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, const uint8_t *data, uint16_t len);
+/*!
+ * @brief Bus communication function pointer which should be mapped to
+ * the platform specific read functions of the user
+ *
+ * @param[in] reg_addr       : Register address from which data is read.
+ * @param[out] reg_data     : Pointer to data buffer where read data is stored.
+ * @param[in] len            : Number of bytes of data to be read.
+ * @param[in, out] intf_ptr  : Void pointer that can enable the linking of descriptors
+ *                                  for interface related call backs.
+ *
+ *  retval =  BMA4_INTF_RET_SUCCESS -> Success
+ *  retval != BMA4_INTF_RET_SUCCESS -> Failure
+ *
+ */
+typedef BMI2_INTF_RETURN_TYPE (*bmi2_read_fptr_t)(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
 
-/*! For interfacing to the delay function */
-typedef void (*bmi2_delay_fptr_t)(uint32_t period);
+/*!
+ * @brief Bus communication function pointer which should be mapped to
+ * the platform specific write functions of the user
+ *
+ * @param[in] reg_addr      : Register address to which the data is written.
+ * @param[in] reg_data     : Pointer to data buffer in which data to be written
+ *                            is stored.
+ * @param[in] len           : Number of bytes of data to be written.
+ * @param[in, out] intf_ptr : Void pointer that can enable the linking of descriptors
+ *                            for interface related call backs
+ *
+ * retval  = BMA4_INTF_RET_SUCCESS -> Success
+ * retval != BMA4_INTF_RET_SUCCESS -> Failure
+ *
+ */
+typedef BMI2_INTF_RETURN_TYPE (*bmi2_write_fptr_t)(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len,
+                                                   void *intf_ptr);
+
+/*!
+ * @brief Delay function pointer which should be mapped to
+ * delay function of the user
+ *
+ * @param[in] period              : Delay in microseconds.
+ * @param[in, out] intf_ptr       : Void pointer that can enable the linking of descriptors
+ *                                  for interface related call backs
+ *
+ */
+typedef void (*bmi2_delay_fptr_t)(uint32_t period, void *intf_ptr);
+
+/*!
+ * @brief To get the configurations for wake_up feature, since wakeup feature is different for bmi260 and bmi261.
+ *
+ * @param[out]      wake_up    : Void pointer to store bmi2_wake_up_config structure.
+ * @param[in, out]  bmi2_dev   : Void pointer to store bmi2_dev structure.
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_NULL_PTR - Error: Null pointer error
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ *
+ */
+typedef int8_t (*bmi2_wake_up_fptr_t)(void *wake_up, void *bmi2_dev);
 
 /******************************************************************************/
 /*!  @name         Enum Declarations                                  */
 /******************************************************************************/
 /*!  @name Enum to define BMI2 sensor interfaces */
-enum bmi2_intf_type {
-    BMI2_SPI_INTERFACE = 1,
-    BMI2_I2C_INTERFACE,
-    BMI2_I3C_INTERFACE
+enum bmi2_intf {
+    BMI2_SPI_INTF = 0,
+    BMI2_I2C_INTF,
+    BMI2_I3C_INTF
 };
 
 /*!  @name Enum to define BMI2 sensor configuration errors for accelerometer
@@ -1562,13 +1672,34 @@ struct bmi2_glance_det_config
 /*! @name Structure to define wake-up configuration */
 struct bmi2_wake_up_config
 {
-    /*!  Wake-up sensitivity */
+    /*! Wake-up sensitivity for bmi261 */
     uint16_t sensitivity;
 
-    /*!  Enable -> Single Tap; Disable -> Double Tap */
+    /*! Tap feature for BMI261
+     * For Single tap, single_tap_en = 1
+     * For Double tap, single_tap_en = 0
+     */
     uint16_t single_tap_en;
 
-    /*! Enable bits for enabling output into the register status bits */
+    /*! Enable -> Filtered tap data, Disable -> Unfiltered data */
+    uint16_t data_reg_en;
+
+    /*! Scaling factor of threshold */
+    uint16_t tap_sens_thres;
+
+    /*! Maximum duration between each taps */
+    uint16_t max_gest_dur;
+
+    /*! Minimum quite time between the two gesture detection */
+    uint16_t quite_time_after_gest;
+
+    /*! Wait time */
+    uint16_t wait_for_timeout;
+
+    /*! Axis selection */
+    uint16_t axis_sel;
+
+    /*! Enable bits for enabling output into the register status bits for bmi260 and bmi261 */
     uint16_t out_conf;
 };
 
@@ -1942,14 +2073,21 @@ struct bmi2_dev
     /*! Chip id of BMI2 */
     uint8_t chip_id;
 
-    /*! Device id of BMI2 */
-    uint8_t dev_id;
+    /*! The interface pointer is used to enable the user
+     * to link their interface descriptors for reference during the
+     * implementation of the read and write interfaces to the
+     * hardware.
+     */
+    void *intf_ptr;
 
     /*! To store warnings */
     uint8_t info;
 
     /*! Type of Interface  */
-    enum bmi2_intf_type intf;
+    enum bmi2_intf intf;
+
+    /*! To store interface pointer error */
+    BMI2_INTF_RETURN_TYPE intf_rslt;
 
     /*! For switching from I2C to SPI */
     uint8_t dummy_byte;
@@ -1991,7 +2129,7 @@ struct bmi2_dev
     struct bmi2_axes_remap remap;
 
     /*! Flag to hold enable status of sensors */
-    uint32_t sens_en_stat;
+    uint64_t sens_en_stat;
 
     /*! Read function pointer */
     bmi2_read_fptr_t read;
@@ -2016,10 +2154,16 @@ struct bmi2_dev
 
     /* To store hold the size of config file */
     uint16_t config_size;
+
+    /*! Function pointer to get wakeup configurations */
+    bmi2_wake_up_fptr_t get_wakeup_config;
+
+    /*! Function pointer to set wakeup configurations */
+    bmi2_wake_up_fptr_t set_wakeup_config;
 };
 
 /*!  @name Structure to enable an accel axis for foc */
-struct accel_foc_g_value
+struct bmi2_accel_foc_g_value
 {
     /* '0' to disable x axis and '1' to enable x axis */
     uint8_t x;
@@ -2035,7 +2179,7 @@ struct accel_foc_g_value
 };
 
 /*! @name Structure to configure activity recognition settings */
-struct act_recg_sett
+struct bmi2_act_recg_sett
 {
     /* 1 to enable & 0 to disable post processing */
     uint8_t act_rec_1 : 1;
