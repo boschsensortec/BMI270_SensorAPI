@@ -4411,15 +4411,6 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, const struct
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to define temporary length */
-    uint16_t temp_len = len + dev->dummy_byte;
-
-    /* Variable to define temporary buffer */
-    uint8_t temp_buf[temp_len];
-
-    /* Variable to define loop */
-    uint16_t index = 0;
-
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (data != NULL))
@@ -4431,23 +4422,17 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, const struct
         }
         if (dev->aps_status == BMI2_ENABLE)
         {
-            rslt = dev->read(dev->dev_id, reg_addr, temp_buf, temp_len);
+            rslt = dev->read(dev->dev_id, reg_addr, data, len);
             dev->delay_us(450);
         }
         else
         {
-            rslt = dev->read(dev->dev_id, reg_addr, temp_buf, temp_len);
+            rslt = dev->read(dev->dev_id, reg_addr, data, len);
             dev->delay_us(20);
         }
 
         if (rslt == BMI2_OK)
         {
-            /* Read the data from the position next to dummy byte */
-            while (index < len)
-            {
-                data[index] = temp_buf[index + dev->dummy_byte];
-                index++;
-            }
         }
         else
         {
@@ -15263,7 +15248,9 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
             case BMI2_FIFO_VIRT_ACT_RECOG_FRM:
                 rslt = move_next_frame(&data_index, BMI2_FIFO_VIRT_ACT_DATA_LENGTH, fifo);
                 break;
+
             default:
+
 
                 /* Move the data index to the last byte in case of invalid values */
                 data_index = fifo->length;
