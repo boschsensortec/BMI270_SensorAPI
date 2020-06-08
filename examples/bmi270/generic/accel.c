@@ -15,7 +15,7 @@
 /*!                Macro definition                                           */
 
 /*! Earth's gravity in m/s^2 */
-#define GRAVITY_EARTH (9.80665f)
+#define GRAVITY_EARTH  (9.80665f)
 
 /******************************************************************************/
 /*!           Static Function Declaration                                     */

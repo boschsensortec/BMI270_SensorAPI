@@ -32,7 +32,7 @@
  *
  * @file       bmi2_ois.c
  * @date       2020-05-05
- * @version    v2.53.0
+ * @version    v2.53.2
  *
  */
 

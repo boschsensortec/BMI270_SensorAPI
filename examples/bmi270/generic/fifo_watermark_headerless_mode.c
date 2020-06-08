@@ -15,10 +15,10 @@
 /*!                  Macros                                                   */
 
 /*! Buffer size allocated to store raw FIFO data */
-#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE  UINT16_C(2048)
 
 /*! Length of data to be read from FIFO */
-#define BMI270_FIFO_RAW_DATA_USER_LENGTH UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_USER_LENGTH  UINT16_C(2048)
 
 /*! Number of accel frames to be extracted from FIFO */
 
@@ -27,13 +27,13 @@
  * fifo_watermark_level = 650, accel_frame_len = 6, gyro_frame_len = 6.
  * fifo_accel_frame_count = (650 / (6 + 6 )) = 50 frames
  */
-#define BMI270_FIFO_ACCEL_FRAME_COUNT    UINT8_C(50)
+#define BMI270_FIFO_ACCEL_FRAME_COUNT     UINT8_C(50)
 
 /*! Number of gyro frames to be extracted from FIFO */
-#define BMI270_FIFO_GYRO_FRAME_COUNT     UINT8_C(50)
+#define BMI270_FIFO_GYRO_FRAME_COUNT      UINT8_C(50)
 
 /*! Setting a watermark level in FIFO */
-#define BMI270_FIFO_WATERMARK_LEVEL      UINT16_C(650)
+#define BMI270_FIFO_WATERMARK_LEVEL       UINT16_C(650)
 
 /******************************************************************************/
 /*!           Static Function Declaration                                     */

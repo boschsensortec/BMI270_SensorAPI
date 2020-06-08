@@ -13,7 +13,7 @@
 /*!                Macro definition                                           */
 
 /*! Macro that holds the total number of accel x,y and z axes sample counts to be printed */
-#define ACCEL_GYRO_SAMPLE_COUNT UINT8_C(50)
+#define ACCEL_GYRO_SAMPLE_COUNT  UINT8_C(50)
 
 /******************************************************************************/
 /*!                         Functions                                         */

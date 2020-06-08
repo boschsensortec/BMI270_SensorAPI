@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file       bmi2.c
- * @date       2020-04-29
- * @version    v2.53.0
+ * @date       2020-06-05
+ * @version    v2.53.2
  *
  */
 
@@ -41,348 +41,6 @@
 /*!  @name          Header Files                                  */
 /******************************************************************************/
 #include "bmi2.h"
-
-/******************************************************************************/
-/*!  @name          Macros                                        */
-/******************************************************************************/
-/*! @name Offsets from feature start address for BMI2 feature enable/disable */
-#define BMI2_ANY_MOT_FEAT_EN_OFFSET           UINT8_C(0x03)
-#define BMI2_NO_MOT_FEAT_EN_OFFSET            UINT8_C(0x03)
-#define BMI2_SIG_MOT_FEAT_EN_OFFSET           UINT8_C(0x0A)
-#define BMI2_STEP_COUNT_FEAT_EN_OFFSET        UINT8_C(0x01)
-#define BMI2_GYR_USER_GAIN_FEAT_EN_OFFSET     UINT8_C(0x05)
-#define BMI2_HIGH_G_FEAT_EN_OFFSET            UINT8_C(0x03)
-#define BMI2_LOW_G_FEAT_EN_OFFSET             UINT8_C(0x03)
-
-/*! @name Mask definitions for BMI2 feature enable/disable */
-#define BMI2_ANY_NO_MOT_EN_MASK               UINT8_C(0x80)
-#define BMI2_TILT_FEAT_EN_MASK                UINT8_C(0x01)
-#define BMI2_ORIENT_FEAT_EN_MASK              UINT8_C(0x01)
-#define BMI2_SIG_MOT_FEAT_EN_MASK             UINT8_C(0x01)
-#define BMI2_STEP_DET_FEAT_EN_MASK            UINT8_C(0x08)
-#define BMI2_STEP_COUNT_FEAT_EN_MASK          UINT8_C(0x10)
-#define BMI2_STEP_ACT_FEAT_EN_MASK            UINT8_C(0x20)
-#define BMI2_GYR_USER_GAIN_FEAT_EN_MASK       UINT8_C(0x08)
-#define BMI2_UP_HOLD_TO_WAKE_FEAT_EN_MASK     UINT8_C(0x01)
-#define BMI2_GLANCE_FEAT_EN_MASK              UINT8_C(0x01)
-#define BMI2_WAKE_UP_FEAT_EN_MASK             UINT8_C(0x01)
-#define BMI2_HIGH_G_FEAT_EN_MASK              UINT8_C(0x80)
-#define BMI2_LOW_G_FEAT_EN_MASK               UINT8_C(0x10)
-#define BMI2_FLAT_FEAT_EN_MASK                UINT8_C(0x01)
-#define BMI2_EXT_SENS_SYNC_FEAT_EN_MASK       UINT8_C(0x01)
-#define BMI2_GYR_SELF_OFF_CORR_FEAT_EN_MASK   UINT8_C(0x02)
-#define BMI2_WRIST_GEST_FEAT_EN_MASK          UINT8_C(0x20)
-#define BMI2_WRIST_WEAR_WAKE_UP_FEAT_EN_MASK  UINT8_C(0x10)
-#define BMI2_ACTIVITY_RECOG_EN_MASK           UINT8_C(0x01)
-#define BMI2_ACC_SELF_TEST_FEAT_EN_MASK       UINT8_C(0x02)
-#define BMI2_GYRO_SELF_TEST_CRT_EN_MASK       UINT8_C(0x01)
-#define BMI2_ABORT_FEATURE_EN_MASK            UINT8_C(0x02)
-#define BMI2_NVM_PREP_FEATURE_EN_MASK         UINT8_C(0x04)
-#define BMI2_FREE_FALL_DET_FEAT_EN_MASK       UINT8_C(0x01)
-
-/*! @name Bit position definitions for BMI2 feature enable/disable */
-#define BMI2_ANY_NO_MOT_EN_POS                UINT8_C(0x07)
-#define BMI2_STEP_DET_FEAT_EN_POS             UINT8_C(0x03)
-#define BMI2_STEP_COUNT_FEAT_EN_POS           UINT8_C(0x04)
-#define BMI2_STEP_ACT_FEAT_EN_POS             UINT8_C(0x05)
-#define BMI2_GYR_USER_GAIN_FEAT_EN_POS        UINT8_C(0x03)
-#define BMI2_HIGH_G_FEAT_EN_POS               UINT8_C(0x07)
-#define BMI2_LOW_G_FEAT_EN_POS                UINT8_C(0x04)
-#define BMI2_GYR_SELF_OFF_CORR_FEAT_EN_POS    UINT8_C(0x01)
-#define BMI2_WRIST_GEST_FEAT_EN_POS           UINT8_C(0x05)
-#define BMI2_WRIST_WEAR_WAKE_UP_FEAT_EN_POS   UINT8_C(0x04)
-#define BMI2_ACC_SELF_TEST_FEAT_EN_POS        UINT8_C(0x01)
-#define BMI2_ABORT_FEATURE_EN_POS             UINT8_C(0x1)
-#define BMI2_NVM_PREP_FEATURE_EN_POS          UINT8_C(0x02)
-
-/*! Primary OIS low pass filter configuration position and mask */
-#define BMI2_LP_FILTER_EN_MASK                UINT8_C(0x01)
-
-#define BMI2_LP_FILTER_CONFIG_POS             UINT8_C(0x01)
-#define BMI2_LP_FILTER_CONFIG_MASK            UINT8_C(0x06)
-
-#define BMI2_PRIMARY_OIS_GYR_EN_POS           UINT8_C(0x06)
-#define BMI2_PRIMARY_OIS_GYR_EN_MASK          UINT8_C(0x40)
-
-#define BMI2_PRIMARY_OIS_ACC_EN_POS           UINT8_C(0x07)
-#define BMI2_PRIMARY_OIS_ACC_EN_MASK          UINT8_C(0x80)
-
-/*! @name Mask definitions for BMI2 any and no-motion feature configuration */
-#define BMI2_ANY_NO_MOT_DUR_MASK              UINT16_C(0x1FFF)
-#define BMI2_ANY_NO_MOT_X_SEL_MASK            UINT16_C(0x2000)
-#define BMI2_ANY_NO_MOT_Y_SEL_MASK            UINT16_C(0x4000)
-#define BMI2_ANY_NO_MOT_Z_SEL_MASK            UINT16_C(0x8000)
-#define BMI2_ANY_NO_MOT_THRES_MASK            UINT16_C(0x07FF)
-#define BMI2_ANY_NO_MOT_OUT_CONF_MASK         UINT16_C(0x7800)
-
-/*! @name Bit position definitions for BMI2 any and no-motion feature
- * configuration
- */
-#define BMI2_ANY_NO_MOT_X_SEL_POS             UINT8_C(0x0D)
-#define BMI2_ANY_NO_MOT_Y_SEL_POS             UINT8_C(0x0E)
-#define BMI2_ANY_NO_MOT_Z_SEL_POS             UINT8_C(0x0F)
-#define BMI2_ANY_NO_MOT_OUT_CONF_POS          UINT8_C(0x0B)
-
-/*! @name Mask definitions for BMI2 tilt feature configuration */
-#define BMI2_TILT_OUT_CONF_MASK               UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 tilt feature configuration */
-#define BMI2_TILT_OUT_CONF_POS                UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 orientation feature configuration */
-#define BMI2_ORIENT_UP_DOWN_MASK              UINT16_C(0x0002)
-#define BMI2_ORIENT_SYMM_MODE_MASK            UINT16_C(0x000C)
-#define BMI2_ORIENT_BLOCK_MODE_MASK           UINT16_C(0x0030)
-#define BMI2_ORIENT_THETA_MASK                UINT16_C(0x0FC0)
-#define BMI2_ORIENT_HYST_MASK                 UINT16_C(0x07FF)
-#define BMI2_ORIENT_OUT_CONF_MASK             UINT16_C(0x7800)
-
-/*! @name Bit position definitions for BMI2 orientation feature configuration */
-#define BMI2_ORIENT_UP_DOWN_POS               UINT8_C(0x01)
-#define BMI2_ORIENT_SYMM_MODE_POS             UINT8_C(0x02)
-#define BMI2_ORIENT_BLOCK_MODE_POS            UINT8_C(0x04)
-#define BMI2_ORIENT_THETA_POS                 UINT8_C(0x06)
-#define BMI2_ORIENT_OUT_CONF_POS              UINT8_C(0x0B)
-
-/*! @name Mask definitions for BMI2 sig-motion feature configuration */
-#define BMI2_SIG_MOT_PARAM_1_MASK             UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_PARAM_2_MASK             UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_PARAM_3_MASK             UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_PARAM_4_MASK             UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_PARAM_5_MASK             UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_OUT_CONF_MASK            UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 sig-motion feature configuration */
-#define BMI2_SIG_MOT_OUT_CONF_POS             UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 parameter configurations */
-#define BMI2_STEP_COUNT_PARAMS_MASK           UINT16_C(0xFFFF)
-
-/*! @name Mask definitions for BMI2 step-counter/detector feature configuration */
-#define BMI2_STEP_COUNT_WM_LEVEL_MASK         UINT16_C(0x03FF)
-#define BMI2_STEP_COUNT_RST_CNT_MASK          UINT16_C(0x0400)
-#define BMI2_STEP_DET_OUT_CONF_MASK           UINT16_C(0x000F)
-#define BMI2_STEP_ACT_OUT_CONF_MASK           UINT16_C(0x00F0)
-#define BMI2_STEP_BUFFER_SIZE_MASK            UINT16_C(0XFF00)
-
-/*! @name Bit position definitions for BMI2 step-counter/detector feature
- * configuration
- */
-#define BMI2_STEP_COUNT_RST_CNT_POS           UINT8_C(0x0A)
-#define BMI2_STEP_ACT_OUT_CONF_POS            UINT8_C(0x04)
-#define BMI2_STEP_BUFFER_SIZE_POS             UINT8_C(0X08)
-
-/*! @name Mask definitions for BMI2 gyroscope user gain feature
- * configuration
- */
-#define BMI2_GYR_USER_GAIN_RATIO_X_MASK       UINT16_C(0x07FF)
-#define BMI2_GYR_USER_GAIN_RATIO_Y_MASK       UINT16_C(0x07FF)
-#define BMI2_GYR_USER_GAIN_RATIO_Z_MASK       UINT16_C(0x07FF)
-
-/*! @name Mask definitions for BMI2 gyroscope user gain saturation status */
-#define BMI2_GYR_USER_GAIN_SAT_STAT_X_MASK    UINT8_C(0x01)
-#define BMI2_GYR_USER_GAIN_SAT_STAT_Y_MASK    UINT8_C(0x02)
-#define BMI2_GYR_USER_GAIN_SAT_STAT_Z_MASK    UINT8_C(0x04)
-#define BMI2_G_TRIGGER_STAT_MASK              UINT8_C(0x38)
-
-/*! @name Bit position definitions for BMI2 gyroscope user gain saturation status */
-#define BMI2_GYR_USER_GAIN_SAT_STAT_Y_POS     UINT8_C(0x01)
-#define BMI2_GYR_USER_GAIN_SAT_STAT_Z_POS     UINT8_C(0x02)
-#define BMI2_G_TRIGGER_STAT_POS               UINT8_C(0x03)
-
-/*! @name Mask definitions for MSB values of BMI2 gyroscope compensation */
-#define BMI2_GYR_OFF_COMP_MSB_X_MASK          UINT8_C(0x03)
-#define BMI2_GYR_OFF_COMP_MSB_Y_MASK          UINT8_C(0x0C)
-#define BMI2_GYR_OFF_COMP_MSB_Z_MASK          UINT8_C(0x30)
-
-/*! @name Bit positions for MSB values of BMI2 gyroscope compensation */
-#define BMI2_GYR_OFF_COMP_MSB_Y_POS           UINT8_C(0x02)
-#define BMI2_GYR_OFF_COMP_MSB_Z_POS           UINT8_C(0x04)
-
-/*! @name Mask definitions for MSB values of BMI2 gyroscope compensation from user input */
-#define BMI2_GYR_OFF_COMP_MSB_MASK            UINT16_C(0x0300)
-#define BMI2_GYR_OFF_COMP_LSB_MASK            UINT16_C(0x00FF)
-
-/*! @name Mask definitions for BMI2 orientation status */
-#define BMI2_ORIENT_DETECT_MASK               UINT8_C(0x03)
-#define BMI2_ORIENT_FACE_UP_DWN_MASK          UINT8_C(0x04)
-
-/*! @name Bit position definitions for BMI2 orientation status */
-#define BMI2_ORIENT_FACE_UP_DWN_POS           UINT8_C(0x02)
-
-/*! @name Mask definitions for NVM-VFRM error status */
-#define BMI2_NVM_LOAD_ERR_STATUS_MASK         UINT8_C(0x01)
-#define BMI2_NVM_PROG_ERR_STATUS_MASK         UINT8_C(0x02)
-#define BMI2_NVM_ERASE_ERR_STATUS_MASK        UINT8_C(0x04)
-#define BMI2_NVM_END_EXCEED_STATUS_MASK       UINT8_C(0x08)
-#define BMI2_NVM_PRIV_ERR_STATUS_MASK         UINT8_C(0x10)
-#define BMI2_VFRM_LOCK_ERR_STATUS_MASK        UINT8_C(0x20)
-#define BMI2_VFRM_WRITE_ERR_STATUS_MASK       UINT8_C(0x40)
-#define BMI2_VFRM_FATAL_ERR_STATUS_MASK       UINT8_C(0x80)
-
-/*! @name Bit positions for NVM-VFRM error status */
-#define BMI2_NVM_PROG_ERR_STATUS_POS          UINT8_C(0x01)
-#define BMI2_NVM_ERASE_ERR_STATUS_POS         UINT8_C(0x02)
-#define BMI2_NVM_END_EXCEED_STATUS_POS        UINT8_C(0x03)
-#define BMI2_NVM_PRIV_ERR_STATUS_POS          UINT8_C(0x04)
-#define BMI2_VFRM_LOCK_ERR_STATUS_POS         UINT8_C(0x05)
-#define BMI2_VFRM_WRITE_ERR_STATUS_POS        UINT8_C(0x06)
-#define BMI2_VFRM_FATAL_ERR_STATUS_POS        UINT8_C(0x07)
-
-/*! @name Mask definitions for accelerometer self-test status */
-#define BMI2_ACC_SELF_TEST_DONE_MASK          UINT8_C(0x01)
-#define BMI2_ACC_X_OK_MASK                    UINT8_C(0x02)
-#define BMI2_ACC_Y_OK_MASK                    UINT8_C(0x04)
-#define BMI2_ACC_Z_OK_MASK                    UINT8_C(0x08)
-
-/*! @name Bit Positions for accelerometer self-test status */
-#define BMI2_ACC_X_OK_POS                     UINT8_C(0x01)
-#define BMI2_ACC_Y_OK_POS                     UINT8_C(0x02)
-#define BMI2_ACC_Z_OK_POS                     UINT8_C(0x03)
-
-/*! @name Mask definitions for BMI2 uphold to wake feature configuration */
-#define BMI2_UP_HOLD_TO_WAKE_OUT_CONF_MASK    UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 uphold to wake feature configuration */
-#define BMI2_UP_HOLD_TO_WAKE_OUT_CONF_POS     UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 glance detector feature configuration */
-#define BMI2_GLANCE_DET_OUT_CONF_MASK         UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 glance detector feature
- * configuration
- */
-#define BMI2_GLANCE_DET_OUT_CONF_POS          UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 high-g feature configuration */
-#define BMI2_HIGH_G_THRES_MASK                UINT16_C(0x7FFF)
-#define BMI2_HIGH_G_HYST_MASK                 UINT16_C(0x0FFF)
-#define BMI2_HIGH_G_X_SEL_MASK                UINT16_C(0x1000)
-#define BMI2_HIGH_G_Y_SEL_MASK                UINT16_C(0x2000)
-#define BMI2_HIGH_G_Z_SEL_MASK                UINT16_C(0x4000)
-#define BMI2_HIGH_G_DUR_MASK                  UINT16_C(0x0FFF)
-#define BMI2_HIGH_G_OUT_CONF_MASK             UINT16_C(0xF000)
-
-/*! @name Bit position definitions for BMI2 high-g feature configuration */
-#define BMI2_HIGH_G_OUT_CONF_POS              UINT8_C(0x0C)
-#define BMI2_HIGH_G_X_SEL_POS                 UINT8_C(0x0C)
-#define BMI2_HIGH_G_Y_SEL_POS                 UINT8_C(0x0D)
-#define BMI2_HIGH_G_Z_SEL_POS                 UINT8_C(0x0E)
-
-/*! @name Mask definitions for BMI2 low-g feature configuration */
-#define BMI2_LOW_G_THRES_MASK                 UINT16_C(0x7FFF)
-#define BMI2_LOW_G_HYST_MASK                  UINT16_C(0x0FFF)
-#define BMI2_LOW_G_DUR_MASK                   UINT16_C(0x0FFF)
-#define BMI2_LOW_G_OUT_CONF_MASK              UINT16_C(0xF000)
-
-/*! @name Mask definitions for BMI2 free-fall detection feature configuration */
-#define BMI2_FREE_FALL_OUT_CONF_MASK          UINT16_C(0x001E)
-#define BMI2_FREE_FALL_ACCEL_SETT_MASK        UINT16_C(0xFFFF)
-
-/*! @name Bit position definitions for BMI2 free-fall detection feature configuration */
-#define BMI2_FREE_FALL_OUT_CONF_POS           UINT8_C(0x01)
-
-/*! @name Bit position definitions for BMI2 low-g feature configuration */
-#define BMI2_LOW_G_OUT_CONF_POS               UINT8_C(0x0C)
-
-/*! @name Mask definitions for BMI2 flat feature configuration */
-#define BMI2_FLAT_THETA_MASK                  UINT16_C(0x007E)
-#define BMI2_FLAT_BLOCK_MASK                  UINT16_C(0x0180)
-#define BMI2_FLAT_OUT_CONF_MASK               UINT16_C(0x1E00)
-#define BMI2_FLAT_HYST_MASK                   UINT16_C(0x003F)
-#define BMI2_FLAT_HOLD_TIME_MASK              UINT16_C(0x3FC0)
-
-/*! @name Bit position definitions for BMI2 flat feature configuration */
-#define BMI2_FLAT_THETA_POS                   UINT8_C(0x01)
-#define BMI2_FLAT_BLOCK_POS                   UINT8_C(0x07)
-#define BMI2_FLAT_OUT_CONF_POS                UINT8_C(0x09)
-#define BMI2_FLAT_HOLD_TIME_POS               UINT8_C(0x06)
-
-/*! @name Mask definitions for BMI2 external sensor sync configuration */
-#define BMI2_EXT_SENS_SYNC_OUT_CONF_MASK      UINT16_C(0x001E)
-
-/*! @name Bit position definitions for external sensor sync configuration */
-#define BMI2_EXT_SENS_SYNC_OUT_CONF_POS       UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 wrist gesture configuration */
-#define BMI2_WRIST_GEST_WEAR_ARM_MASK         UINT16_C(0x0010)
-#define BMI2_WRIST_GEST_OUT_CONF_MASK         UINT16_C(0x000F)
-
-/*! @name Bit position definitions for wrist gesture configuration */
-#define BMI2_WRIST_GEST_WEAR_ARM_POS          UINT8_C(0x04)
-
-/*! @name Mask definitions for BMI2 wrist wear wake-up configuration */
-#define BMI2_WRIST_WAKE_UP_OUT_CONF_MASK      UINT16_C(0x000F)
-
-/*! @name Mask definition for BMI2 wrist wear wake-up configuration for wearable variant */
-#define BMI2_WRIST_WAKE_UP_ANGLE_LR_MASK      UINT16_C(0x00FF)
-#define BMI2_WRIST_WAKE_UP_ANGLE_LL_MASK      UINT16_C(0xFF00)
-#define BMI2_WRIST_WAKE_UP_ANGLE_PD_MASK      UINT16_C(0x00FF)
-#define BMI2_WRIST_WAKE_UP_ANGLE_PU_MASK      UINT16_C(0xFF00)
-#define BMI2_WRIST_WAKE_UP_MIN_DUR_MOVED_MASK UINT16_C(0x00FF)
-#define BMI2_WRIST_WAKE_UP_MIN_DUR_QUITE_MASK UINT16_C(0xFF00)
-
-/*! @name Bit position definition for BMI2 wrist wear wake-up configuration for wearable variant */
-#define BMI2_WRIST_WAKE_UP_ANGLE_LL_POS       UINT16_C(0x0008)
-#define BMI2_WRIST_WAKE_UP_ANGLE_PU_POS       UINT16_C(0x0008)
-#define BMI2_WRIST_WAKE_UP_MIN_DUR_QUITE_POS  UINT16_C(0x0008)
-
-/*! @name Macros to define values of BMI2 axis and its sign for re-map
- * settings
- */
-#define BMI2_MAP_X_AXIS                       UINT8_C(0x00)
-#define BMI2_MAP_Y_AXIS                       UINT8_C(0x01)
-#define BMI2_MAP_Z_AXIS                       UINT8_C(0x02)
-#define BMI2_MAP_POSITIVE                     UINT8_C(0x00)
-#define BMI2_MAP_NEGATIVE                     UINT8_C(0x01)
-
-/*! @name Mask definitions of BMI2 axis re-mapping */
-#define BMI2_X_AXIS_MASK                      UINT8_C(0x03)
-#define BMI2_X_AXIS_SIGN_MASK                 UINT8_C(0x04)
-#define BMI2_Y_AXIS_MASK                      UINT8_C(0x18)
-#define BMI2_Y_AXIS_SIGN_MASK                 UINT8_C(0x20)
-#define BMI2_Z_AXIS_MASK                      UINT8_C(0xC0)
-#define BMI2_Z_AXIS_SIGN_MASK                 UINT8_C(0x01)
-
-/*! @name Bit position definitions of BMI2 axis re-mapping */
-#define BMI2_X_AXIS_SIGN_POS                  UINT8_C(0x02)
-#define BMI2_Y_AXIS_POS                       UINT8_C(0x03)
-#define BMI2_Y_AXIS_SIGN_POS                  UINT8_C(0x05)
-#define BMI2_Z_AXIS_POS                       UINT8_C(0x06)
-
-/*! @name Macros to define polarity */
-#define BMI2_NEG_SIGN                         INT16_C(-1)
-#define BMI2_POS_SIGN                         INT16_C(1)
-
-/*! @name Macro to define related to CRT */
-#define BMI2_CRT_READY_FOR_DOWNLOAD_US        UINT16_C(2000)
-#define BMI2_CRT_READY_FOR_DOWNLOAD_RETRY     UINT8_C(100)
-
-#define BMI2_CRT_WAIT_RUNNING_US              UINT16_C(10000)
-#define BMI2_CRT_WAIT_RUNNING_RETRY_EXECUTION UINT8_C(200)
-
-#define BMI2_CRT_MIN_BURST_WORD_LENGTH        UINT8_C(2)
-#define BMI2_CRT_MAX_BURST_WORD_LENGTH        UINT16_C(255)
-
-#define BMI2_ACC_FOC_2G_REF                   UINT16_C(16384)
-#define BMI2_ACC_FOC_4G_REF                   UINT16_C(8192)
-#define BMI2_ACC_FOC_8G_REF                   UINT16_C(4096)
-#define BMI2_ACC_FOC_16G_REF                  UINT16_C(2048)
-
-#define BMI2_GYRO_FOC_NOISE_LIMIT_NEGATIVE    INT8_C(-20)
-#define BMI2_GYRO_FOC_NOISE_LIMIT_POSITIVE    INT8_C(20)
-
-/* reference value with positive and negative noise range in lsb */
-#define BMI2_ACC_2G_MAX_NOISE_LIMIT           (BMI2_ACC_FOC_2G_REF + UINT16_C(255))
-#define BMI2_ACC_2G_MIN_NOISE_LIMIT           (BMI2_ACC_FOC_2G_REF - UINT16_C(255))
-#define BMI2_ACC_4G_MAX_NOISE_LIMIT           (BMI2_ACC_FOC_4G_REF + UINT16_C(255))
-#define BMI2_ACC_4G_MIN_NOISE_LIMIT           (BMI2_ACC_FOC_4G_REF - UINT16_C(255))
-#define BMI2_ACC_8G_MAX_NOISE_LIMIT           (BMI2_ACC_FOC_8G_REF + UINT16_C(255))
-#define BMI2_ACC_8G_MIN_NOISE_LIMIT           (BMI2_ACC_FOC_8G_REF - UINT16_C(255))
-#define BMI2_ACC_16G_MAX_NOISE_LIMIT          (BMI2_ACC_FOC_16G_REF + UINT16_C(255))
-#define BMI2_ACC_16G_MIN_NOISE_LIMIT          (BMI2_ACC_FOC_16G_REF - UINT16_C(255))
-
-#define BMI2_FOC_SAMPLE_LIMIT                 UINT8_C(128)
 
 /***************************************************************************/
 
@@ -400,30 +58,6 @@ struct bmi2_selftest_delta_limit
 
     /*! Z  data */
     int32_t z;
-};
-
-/*! @name Structure to store the local copy of the re-mapped axis and
- * the value of its sign for register settings
- */
-struct axes_remap
-{
-    /*! Re-mapped x-axis */
-    uint8_t x_axis;
-
-    /*! Re-mapped y-axis */
-    uint8_t y_axis;
-
-    /*! Re-mapped z-axis */
-    uint8_t z_axis;
-
-    /*! Re-mapped x-axis sign */
-    uint8_t x_axis_sign;
-
-    /*! Re-mapped y-axis sign */
-    uint8_t y_axis_sign;
-
-    /*! Re-mapped z-axis sign */
-    uint8_t z_axis_sign;
 };
 
 /*! @name Structure to store temporary accelerometer/gyroscope values */
@@ -3496,7 +3130,7 @@ static int8_t validate_self_test(const struct bmi2_selftest_delta_limit *accel_d
  * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
  * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
  */
-static int8_t get_remap_axes(struct axes_remap *remap, struct bmi2_dev *dev);
+static int8_t get_remap_axes(struct bmi2_axes_remap *remap, struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API sets the re-mapped x, y and z axes in the sensor.
@@ -3511,7 +3145,7 @@ static int8_t get_remap_axes(struct axes_remap *remap, struct bmi2_dev *dev);
  * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
  * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
  */
-static int8_t set_remap_axes(const struct axes_remap *remap, struct bmi2_dev *dev);
+static int8_t set_remap_axes(const struct bmi2_axes_remap *remap, struct bmi2_dev *dev);
 
 /*!
  * @brief Interface to get max burst length
@@ -4436,12 +4070,6 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to define temporary length */
-    uint16_t temp_len = len + dev->dummy_byte;
-
-    /* Variable to define temporary buffer */
-    uint8_t temp_buf[temp_len];
-
     /* Variable to define loop */
     uint16_t index = 0;
 
@@ -4449,6 +4077,12 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (data != NULL))
     {
+        /* Variable to define temporary length */
+        uint16_t temp_len = len + dev->dummy_byte;
+
+        /* Variable to define temporary buffer */
+        uint8_t temp_buf[temp_len];
+
         /* Configuring reg_addr for SPI Interface */
         if (dev->intf == BMI2_SPI_INTF)
         {
@@ -4710,22 +4344,18 @@ int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
     {
         /* Get status of advance power save mode */
         aps_stat = dev->aps_status;
+
         for (loop = 0; loop < n_sens; loop++)
         {
             /* Disable Advance power save if enabled for auxiliary
              * and feature configurations
              */
-            if ((sens_cfg[loop].type != BMI2_ACCEL) || (sens_cfg[loop].type != BMI2_GYRO) ||
-                (sens_cfg[loop].type != BMI2_TEMP) || (sens_cfg[loop].type != BMI2_AUX))
+            if (aps_stat == BMI2_ENABLE)
             {
-
-                if (aps_stat == BMI2_ENABLE)
-                {
-                    /* Disable advance power save if
-                     * enabled
-                     */
-                    rslt = bmi2_set_adv_power_save(BMI2_DISABLE, dev);
-                }
+                /* Disable advance power save if
+                 * enabled
+                 */
+                rslt = bmi2_set_adv_power_save(BMI2_DISABLE, dev);
             }
 
             if (rslt == BMI2_OK)
@@ -6927,7 +6557,7 @@ int8_t bmi2_get_remap_axes(struct bmi2_remap *remapped_axis, struct bmi2_dev *de
     int8_t rslt;
 
     /* Initialize the local structure for axis re-mapping */
-    struct axes_remap remap = { 0, 0, 0, 0, 0, 0 };
+    struct bmi2_axes_remap remap = { 0, 0, 0, 0, 0, 0 };
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
@@ -7091,7 +6721,7 @@ int8_t bmi2_set_remap_axes(const struct bmi2_remap *remapped_axis, struct bmi2_d
     uint8_t remap_z = 0;
 
     /* Initialize the local structure for axis re-mapping */
-    struct axes_remap remap = { 0, 0, 0, 0, 0, 0 };
+    struct bmi2_axes_remap remap = { 0, 0, 0, 0, 0, 0 };
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
@@ -14846,16 +14476,43 @@ static void get_remapped_data(struct bmi2_sens_axes_data *data, const struct bmi
 {
     /* Array to defined the re-mapped sensor data */
     int16_t remap_data[3] = { 0 };
+    int16_t pos_multiplier = INT16_C(1);
+    int16_t neg_multiplier = INT16_C(-1);
 
     /* Fill the array with the un-mapped sensor data */
     remap_data[0] = data->x;
     remap_data[1] = data->y;
     remap_data[2] = data->z;
 
-    /* Get the re-mapped x, y and z axes data */
-    data->x = (int16_t)(remap_data[dev->remap.x_axis] * dev->remap.x_axis_sign);
-    data->y = (int16_t)(remap_data[dev->remap.y_axis] * dev->remap.y_axis_sign);
-    data->z = (int16_t)(remap_data[dev->remap.z_axis] * dev->remap.z_axis_sign);
+    /* Get the re-mapped x axis data */
+    if (dev->remap.x_axis_sign == BMI2_POS_SIGN)
+    {
+        data->x = (int16_t)(remap_data[dev->remap.x_axis] * pos_multiplier);
+    }
+    else
+    {
+        data->x = (int16_t)(remap_data[dev->remap.x_axis] * neg_multiplier);
+    }
+
+    /* Get the re-mapped y axis data */
+    if (dev->remap.y_axis_sign == BMI2_POS_SIGN)
+    {
+        data->y = (int16_t)(remap_data[dev->remap.y_axis] * pos_multiplier);
+    }
+    else
+    {
+        data->y = (int16_t)(remap_data[dev->remap.y_axis] * neg_multiplier);
+    }
+
+    /* Get the re-mapped z axis data */
+    if (dev->remap.z_axis_sign == BMI2_POS_SIGN)
+    {
+        data->z = (int16_t)(remap_data[dev->remap.z_axis] * pos_multiplier);
+    }
+    else
+    {
+        data->z = (int16_t)(remap_data[dev->remap.z_axis] * neg_multiplier);
+    }
 }
 
 /*!
@@ -15975,9 +15632,6 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
     /* Variables to store MSB value */
     uint16_t data_msb;
 
-    /* Array to defined the re-mapped accelerometer data */
-    int16_t remap_data[3] = { 0 };
-
     /* Accelerometer raw x data */
     data_lsb = fifo->data[data_start_index++];
     data_msb = fifo->data[data_start_index++];
@@ -15993,15 +15647,8 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
     data_msb = fifo->data[data_start_index++];
     acc->z = (int16_t)((data_msb << 8) | data_lsb);
 
-    /* Fill the array with the un-mapped accelerometer data */
-    remap_data[0] = acc->x;
-    remap_data[1] = acc->y;
-    remap_data[2] = acc->z;
-
-    /* Get the re-mapped x, y and z accelerometer data */
-    acc->x = (int16_t)(remap_data[dev->remap.x_axis] * dev->remap.x_axis_sign);
-    acc->y = (int16_t)(remap_data[dev->remap.y_axis] * dev->remap.y_axis_sign);
-    acc->z = (int16_t)(remap_data[dev->remap.z_axis] * dev->remap.z_axis_sign);
+    /* Get the re-mapped accelerometer data */
+    get_remapped_data(acc, dev);
 }
 
 /*!
@@ -16389,9 +16036,6 @@ static void unpack_gyro_data(struct bmi2_sens_axes_data *gyr,
     /* Variables to store MSB value */
     uint16_t data_msb;
 
-    /* Array to defined the re-mapped gyroscope data */
-    int16_t remap_data[3] = { 0 };
-
     /* Gyroscope raw x data */
     data_lsb = fifo->data[data_start_index++];
     data_msb = fifo->data[data_start_index++];
@@ -16410,15 +16054,8 @@ static void unpack_gyro_data(struct bmi2_sens_axes_data *gyr,
     /* Get the compensated gyroscope data */
     comp_gyro_cross_axis_sensitivity(gyr, dev);
 
-    /* Fill the array with the un-mapped gyroscope data */
-    remap_data[0] = gyr->x;
-    remap_data[1] = gyr->y;
-    remap_data[2] = gyr->z;
-
-    /* Get the re-mapped x, y and z gyroscope data */
-    gyr->x = (int16_t)(remap_data[dev->remap.x_axis] * dev->remap.x_axis_sign);
-    gyr->y = (int16_t)(remap_data[dev->remap.y_axis] * dev->remap.y_axis_sign);
-    gyr->z = (int16_t)(remap_data[dev->remap.z_axis] * dev->remap.z_axis_sign);
+    /* Get the re-mapped gyroscope data */
+    get_remapped_data(gyr, dev);
 }
 
 /*!
@@ -17460,7 +17097,7 @@ static int8_t validate_self_test(const struct bmi2_selftest_delta_limit *accel_d
 /*!
  * @brief This internal API gets the re-mapped x, y and z axes from the sensor.
  */
-static int8_t get_remap_axes(struct axes_remap *remap, struct bmi2_dev *dev)
+static int8_t get_remap_axes(struct bmi2_axes_remap *remap, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
@@ -17542,7 +17179,7 @@ static int8_t get_remap_axes(struct axes_remap *remap, struct bmi2_dev *dev)
 /*!
  * @brief This internal API sets the re-mapped x, y and z axes in the sensor.
  */
-static int8_t set_remap_axes(const struct axes_remap *remap, struct bmi2_dev *dev)
+static int8_t set_remap_axes(const struct bmi2_axes_remap *remap, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;

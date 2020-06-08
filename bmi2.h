@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file       bmi2.h
- * @date       2020-04-29
- * @version    v2.53.0
+ * @date       2020-06-05
+ * @version    v2.53.2
  *
  */
 

@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file       bmi270.h
- * @date       2020-04-29
- * @version    v2.53.0
+ * @date       2020-06-05
+ * @version    v2.53.2
  *
  */
 
@@ -62,49 +62,49 @@ extern "C" {
  ****************************************************************************/
 
 /*! @name BMI270 Chip identifier */
-#define BMI270_CHIP_ID                      UINT8_C(0x24)
+#define BMI270_CHIP_ID                       UINT8_C(0x24)
 
 /*! @name BMI270 feature input start addresses */
-#define BMI270_MAX_BURST_LEN_STRT_ADDR      UINT8_C(0x02)
-#define BMI270_CRT_GYRO_SELF_TEST_STRT_ADDR UINT8_C(0x03)
-#define BMI270_ABORT_STRT_ADDR              UINT8_C(0x03)
-#define BMI270_AXIS_MAP_STRT_ADDR           UINT8_C(0x04)
-#define BMI270_GYRO_SELF_OFF_STRT_ADDR      UINT8_C(0x05)
-#define BMI270_NVM_PROG_PREP_STRT_ADDR      UINT8_C(0x05)
-#define BMI270_GYRO_GAIN_UPDATE_STRT_ADDR   UINT8_C(0x06)
-#define BMI270_ANY_MOT_STRT_ADDR            UINT8_C(0x0C)
-#define BMI270_NO_MOT_STRT_ADDR             UINT8_C(0x00)
-#define BMI270_SIG_MOT_STRT_ADDR            UINT8_C(0x04)
-#define BMI270_STEP_CNT_1_STRT_ADDR         UINT8_C(0x00)
-#define BMI270_STEP_CNT_4_STRT_ADDR         UINT8_C(0x02)
-#define BMI270_WRIST_GEST_STRT_ADDR         UINT8_C(0x06)
-#define BMI270_WRIST_WEAR_WAKE_UP_STRT_ADDR UINT8_C(0x00)
+#define BMI270_MAX_BURST_LEN_STRT_ADDR       UINT8_C(0x02)
+#define BMI270_CRT_GYRO_SELF_TEST_STRT_ADDR  UINT8_C(0x03)
+#define BMI270_ABORT_STRT_ADDR               UINT8_C(0x03)
+#define BMI270_AXIS_MAP_STRT_ADDR            UINT8_C(0x04)
+#define BMI270_GYRO_SELF_OFF_STRT_ADDR       UINT8_C(0x05)
+#define BMI270_NVM_PROG_PREP_STRT_ADDR       UINT8_C(0x05)
+#define BMI270_GYRO_GAIN_UPDATE_STRT_ADDR    UINT8_C(0x06)
+#define BMI270_ANY_MOT_STRT_ADDR             UINT8_C(0x0C)
+#define BMI270_NO_MOT_STRT_ADDR              UINT8_C(0x00)
+#define BMI270_SIG_MOT_STRT_ADDR             UINT8_C(0x04)
+#define BMI270_STEP_CNT_1_STRT_ADDR          UINT8_C(0x00)
+#define BMI270_STEP_CNT_4_STRT_ADDR          UINT8_C(0x02)
+#define BMI270_WRIST_GEST_STRT_ADDR          UINT8_C(0x06)
+#define BMI270_WRIST_WEAR_WAKE_UP_STRT_ADDR  UINT8_C(0x00)
 
 /*! @name BMI270 feature output start addresses */
-#define BMI270_STEP_CNT_OUT_STRT_ADDR       UINT8_C(0x00)
-#define BMI270_STEP_ACT_OUT_STRT_ADDR       UINT8_C(0x04)
-#define BMI270_WRIST_GEST_OUT_STRT_ADDR     UINT8_C(0x06)
-#define BMI270_GYR_USER_GAIN_OUT_STRT_ADDR  UINT8_C(0x08)
-#define BMI270_GYRO_CROSS_SENSE_STRT_ADDR   UINT8_C(0x0C)
-#define BMI270_NVM_VFRM_OUT_STRT_ADDR       UINT8_C(0x0E)
+#define BMI270_STEP_CNT_OUT_STRT_ADDR        UINT8_C(0x00)
+#define BMI270_STEP_ACT_OUT_STRT_ADDR        UINT8_C(0x04)
+#define BMI270_WRIST_GEST_OUT_STRT_ADDR      UINT8_C(0x06)
+#define BMI270_GYR_USER_GAIN_OUT_STRT_ADDR   UINT8_C(0x08)
+#define BMI270_GYRO_CROSS_SENSE_STRT_ADDR    UINT8_C(0x0C)
+#define BMI270_NVM_VFRM_OUT_STRT_ADDR        UINT8_C(0x0E)
 
 /*! @name Defines maximum number of pages */
-#define BMI270_MAX_PAGE_NUM                 UINT8_C(8)
+#define BMI270_MAX_PAGE_NUM                  UINT8_C(8)
 
 /*! @name Defines maximum number of feature input configurations */
-#define BMI270_MAX_FEAT_IN                  UINT8_C(16)
+#define BMI270_MAX_FEAT_IN                   UINT8_C(16)
 
 /*! @name Defines maximum number of feature outputs */
-#define BMI270_MAX_FEAT_OUT                 UINT8_C(7)
+#define BMI270_MAX_FEAT_OUT                  UINT8_C(7)
 
 /*! @name Mask definitions for feature interrupt status bits */
-#define BMI270_SIG_MOT_STATUS_MASK          UINT8_C(0x01)
-#define BMI270_STEP_CNT_STATUS_MASK         UINT8_C(0x02)
-#define BMI270_STEP_ACT_STATUS_MASK         UINT8_C(0x04)
-#define BMI270_WRIST_WAKE_UP_STATUS_MASK    UINT8_C(0x08)
-#define BMI270_WRIST_GEST_STATUS_MASK       UINT8_C(0x10)
-#define BMI270_NO_MOT_STATUS_MASK           UINT8_C(0x20)
-#define BMI270_ANY_MOT_STATUS_MASK          UINT8_C(0x40)
+#define BMI270_SIG_MOT_STATUS_MASK           UINT8_C(0x01)
+#define BMI270_STEP_CNT_STATUS_MASK          UINT8_C(0x02)
+#define BMI270_STEP_ACT_STATUS_MASK          UINT8_C(0x04)
+#define BMI270_WRIST_WAKE_UP_STATUS_MASK     UINT8_C(0x08)
+#define BMI270_WRIST_GEST_STATUS_MASK        UINT8_C(0x10)
+#define BMI270_NO_MOT_STATUS_MASK            UINT8_C(0x20)
+#define BMI270_ANY_MOT_STATUS_MASK           UINT8_C(0x40)
 
 /***************************************************************************/
 

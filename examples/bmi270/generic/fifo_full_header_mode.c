@@ -15,23 +15,23 @@
 /*!                  Macros                                                   */
 
 /*! Buffer size allocated to store raw FIFO data. */
-#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE  UINT16_C(2048)
 
 /*! Length of data to be read from FIFO. */
-#define BMI270_FIFO_RAW_DATA_USER_LENGTH UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_USER_LENGTH  UINT16_C(2048)
 
 /*! Number of accel frames to be extracted from FIFO. */
 
 /*! Calculation for frame count: Total frame count = Fifo buffer size(2048)/ Total frames(6 Accel, 6 Gyro and 1 header,
  * totaling to 13) which equals to 157.
  */
-#define BMI270_FIFO_ACCEL_FRAME_COUNT    UINT8_C(157)
+#define BMI270_FIFO_ACCEL_FRAME_COUNT     UINT8_C(157)
 
 /*! Number of gyro frames to be extracted from FIFO. */
-#define BMI270_FIFO_GYRO_FRAME_COUNT     UINT8_C(157)
+#define BMI270_FIFO_GYRO_FRAME_COUNT      UINT8_C(157)
 
 /*! Macro to read sensortime byte in FIFO. */
-#define SENSORTIME_OVERHEAD_BYTE         UINT8_C(3)
+#define SENSORTIME_OVERHEAD_BYTE          UINT8_C(3)
 
 /******************************************************************************/
 /*!           Static Function Declaration                                     */

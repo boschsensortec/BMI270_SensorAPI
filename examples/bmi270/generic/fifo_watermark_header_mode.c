@@ -15,10 +15,10 @@
 /*!                  Macros                                                   */
 
 /*! Buffer size allocated to store raw FIFO data */
-#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_BUFFER_SIZE  UINT16_C(2048)
 
 /*! Length of data to be read from FIFO */
-#define BMI270_FIFO_RAW_DATA_USER_LENGTH UINT16_C(2048)
+#define BMI270_FIFO_RAW_DATA_USER_LENGTH  UINT16_C(2048)
 
 /*! Number of accel frames to be extracted from FIFO */
 
@@ -28,16 +28,16 @@
  * fifo_accel_frame_count = (650 / (6 + 6 + 1 )) = 50 frames
  * NOTE: Extra frames are read in order to get sensor time
  */
-#define BMI270_FIFO_ACCEL_FRAME_COUNT    UINT8_C(55)
+#define BMI270_FIFO_ACCEL_FRAME_COUNT     UINT8_C(55)
 
 /*! Number of gyro frames to be extracted from FIFO */
-#define BMI270_FIFO_GYRO_FRAME_COUNT     UINT8_C(55)
+#define BMI270_FIFO_GYRO_FRAME_COUNT      UINT8_C(55)
 
 /*! Setting a watermark level in FIFO */
-#define BMI270_FIFO_WATERMARK_LEVEL      UINT16_C(650)
+#define BMI270_FIFO_WATERMARK_LEVEL       UINT16_C(650)
 
 /*! Macro to read sensortime byte in FIFO */
-#define SENSORTIME_OVERHEAD_BYTE         UINT8_C(3)
+#define SENSORTIME_OVERHEAD_BYTE          UINT8_C(3)
 
 /******************************************************************************/
 /*!           Static Function Declaration                                     */

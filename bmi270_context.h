@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file       bmi270_context.h
- * @date       2020-04-29
- * @version    v2.53.0
+ * @date       2020-06-05
+ * @version    v2.53.2
  *
  */
 
@@ -62,35 +62,35 @@ extern "C" {
  ****************************************************************************/
 
 /*! @name BMI270_CONTEXT Chip identifier */
-#define BMI270_CONTEXT_CHIP_ID                      UINT8_C(0x24)
+#define BMI270_CONTEXT_CHIP_ID                       UINT8_C(0x24)
 
 /*! @name BMI270_CONTEXT feature input start addresses */
-#define BMI270_CONTEXT_STEP_CNT_1_STRT_ADDR         UINT8_C(0x00)
-#define BMI270_CONTEXT_STEP_CNT_4_STRT_ADDR         UINT8_C(0x02)
-#define BMI270_CONTEXT_MAX_BURST_LEN_STRT_ADDR      UINT8_C(0x08)
-#define BMI270_CONTEXT_CRT_GYRO_SELF_TEST_STRT_ADDR UINT8_C(0x09)
-#define BMI270_CONTEXT_ABORT_STRT_ADDR              UINT8_C(0x09)
-#define BMI270_CONTEXT_NVM_PROG_PREP_STRT_ADDR      UINT8_C(0x0A)
-#define BMI270_CONTEXT_ACT_RGN_SETT_STRT_ADDR       UINT8_C(0x00)
-#define BMI270_CONTEXT_ACT_RGN_STRT_ADDR            UINT8_C(0x0A)
+#define BMI270_CONTEXT_STEP_CNT_1_STRT_ADDR          UINT8_C(0x00)
+#define BMI270_CONTEXT_STEP_CNT_4_STRT_ADDR          UINT8_C(0x02)
+#define BMI270_CONTEXT_MAX_BURST_LEN_STRT_ADDR       UINT8_C(0x08)
+#define BMI270_CONTEXT_CRT_GYRO_SELF_TEST_STRT_ADDR  UINT8_C(0x09)
+#define BMI270_CONTEXT_ABORT_STRT_ADDR               UINT8_C(0x09)
+#define BMI270_CONTEXT_NVM_PROG_PREP_STRT_ADDR       UINT8_C(0x0A)
+#define BMI270_CONTEXT_ACT_RGN_SETT_STRT_ADDR        UINT8_C(0x00)
+#define BMI270_CONTEXT_ACT_RGN_STRT_ADDR             UINT8_C(0x0A)
 
 /*! @name BMI270_CONTEXT feature output start addresses */
-#define BMI270_CONTEXT_STEP_CNT_OUT_STRT_ADDR       UINT8_C(0x00)
-#define BMI270_CONTEXT_GYR_USER_GAIN_OUT_STRT_ADDR  UINT8_C(0x04)
-#define BMI270_CONTEXT_GYRO_CROSS_SENSE_STRT_ADDR   UINT8_C(0x0C)
-#define BMI270_CONTEXT_NVM_VFRM_OUT_STRT_ADDR       UINT8_C(0x0E)
+#define BMI270_CONTEXT_STEP_CNT_OUT_STRT_ADDR        UINT8_C(0x00)
+#define BMI270_CONTEXT_GYR_USER_GAIN_OUT_STRT_ADDR   UINT8_C(0x04)
+#define BMI270_CONTEXT_GYRO_CROSS_SENSE_STRT_ADDR    UINT8_C(0x0C)
+#define BMI270_CONTEXT_NVM_VFRM_OUT_STRT_ADDR        UINT8_C(0x0E)
 
 /*! @name Defines maximum number of pages */
-#define BMI270_CONTEXT_MAX_PAGE_NUM                 UINT8_C(8)
+#define BMI270_CONTEXT_MAX_PAGE_NUM                  UINT8_C(8)
 
 /*! @name Defines maximum number of feature input configurations */
-#define BMI270_CONTEXT_MAX_FEAT_IN                  UINT8_C(9)
+#define BMI270_CONTEXT_MAX_FEAT_IN                   UINT8_C(9)
 
 /*! @name Defines maximum number of feature outputs */
-#define BMI270_CONTEXT_MAX_FEAT_OUT                 UINT8_C(5)
+#define BMI270_CONTEXT_MAX_FEAT_OUT                  UINT8_C(5)
 
 /*! @name Mask definitions for feature interrupt status bits */
-#define BMI270_CONTEXT_STEP_CNT_STATUS_MASK         UINT8_C(0x01)
+#define BMI270_CONTEXT_STEP_CNT_STATUS_MASK          UINT8_C(0x01)
 
 /***************************************************************************/
 
