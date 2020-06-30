@@ -30,7 +30,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file       bmi270.h
+ * @file       bmi270_context.h
  * @date       2020-06-05
  * @version    v2.53.2
  *
@@ -38,12 +38,12 @@
 
 /**
  * \ingroup bmi2xy
- * \defgroup bmi270 BMI270
- * @brief Sensor driver for BMI270 sensor
+ * \defgroup bmi270_context BMI270_CONTEXT
+ * @brief Sensor driver for BMI270_CONTEXT sensor
  */
 
-#ifndef BMI270_H_
-#define BMI270_H_
+#ifndef BMI270_CONTEXT_H_
+#define BMI270_CONTEXT_H_
 
 /*! CPP guard */
 #ifdef __cplusplus
@@ -61,71 +61,57 @@ extern "C" {
 /*!               Macro definitions
  ****************************************************************************/
 
-/*! @name BMI270 Chip identifier */
-#define BMI270_CHIP_ID                       UINT8_C(0x24)
+/*! @name BMI270_CONTEXT Chip identifier */
+#define BMI270_CONTEXT_CHIP_ID                       UINT8_C(0x24)
 
-/*! @name BMI270 feature input start addresses */
-#define BMI270_MAX_BURST_LEN_STRT_ADDR       UINT8_C(0x02)
-#define BMI270_CRT_GYRO_SELF_TEST_STRT_ADDR  UINT8_C(0x03)
-#define BMI270_ABORT_STRT_ADDR               UINT8_C(0x03)
-#define BMI270_AXIS_MAP_STRT_ADDR            UINT8_C(0x04)
-#define BMI270_GYRO_SELF_OFF_STRT_ADDR       UINT8_C(0x05)
-#define BMI270_NVM_PROG_PREP_STRT_ADDR       UINT8_C(0x05)
-#define BMI270_GYRO_GAIN_UPDATE_STRT_ADDR    UINT8_C(0x06)
-#define BMI270_ANY_MOT_STRT_ADDR             UINT8_C(0x0C)
-#define BMI270_NO_MOT_STRT_ADDR              UINT8_C(0x00)
-#define BMI270_SIG_MOT_STRT_ADDR             UINT8_C(0x04)
-#define BMI270_STEP_CNT_1_STRT_ADDR          UINT8_C(0x00)
-#define BMI270_STEP_CNT_4_STRT_ADDR          UINT8_C(0x02)
-#define BMI270_WRIST_GEST_STRT_ADDR          UINT8_C(0x06)
-#define BMI270_WRIST_WEAR_WAKE_UP_STRT_ADDR  UINT8_C(0x00)
+/*! @name BMI270_CONTEXT feature input start addresses */
+#define BMI270_CONTEXT_STEP_CNT_1_STRT_ADDR          UINT8_C(0x00)
+#define BMI270_CONTEXT_STEP_CNT_4_STRT_ADDR          UINT8_C(0x02)
+#define BMI270_CONTEXT_MAX_BURST_LEN_STRT_ADDR       UINT8_C(0x08)
+#define BMI270_CONTEXT_CRT_GYRO_SELF_TEST_STRT_ADDR  UINT8_C(0x09)
+#define BMI270_CONTEXT_ABORT_STRT_ADDR               UINT8_C(0x09)
+#define BMI270_CONTEXT_NVM_PROG_PREP_STRT_ADDR       UINT8_C(0x0A)
+#define BMI270_CONTEXT_ACT_RGN_SETT_STRT_ADDR        UINT8_C(0x00)
+#define BMI270_CONTEXT_ACT_RGN_STRT_ADDR             UINT8_C(0x0A)
 
-/*! @name BMI270 feature output start addresses */
-#define BMI270_STEP_CNT_OUT_STRT_ADDR        UINT8_C(0x00)
-#define BMI270_STEP_ACT_OUT_STRT_ADDR        UINT8_C(0x04)
-#define BMI270_WRIST_GEST_OUT_STRT_ADDR      UINT8_C(0x06)
-#define BMI270_GYR_USER_GAIN_OUT_STRT_ADDR   UINT8_C(0x08)
-#define BMI270_GYRO_CROSS_SENSE_STRT_ADDR    UINT8_C(0x0C)
-#define BMI270_NVM_VFRM_OUT_STRT_ADDR        UINT8_C(0x0E)
+/*! @name BMI270_CONTEXT feature output start addresses */
+#define BMI270_CONTEXT_STEP_CNT_OUT_STRT_ADDR        UINT8_C(0x00)
+#define BMI270_CONTEXT_GYR_USER_GAIN_OUT_STRT_ADDR   UINT8_C(0x04)
+#define BMI270_CONTEXT_GYRO_CROSS_SENSE_STRT_ADDR    UINT8_C(0x0C)
+#define BMI270_CONTEXT_NVM_VFRM_OUT_STRT_ADDR        UINT8_C(0x0E)
 
 /*! @name Defines maximum number of pages */
-#define BMI270_MAX_PAGE_NUM                  UINT8_C(8)
+#define BMI270_CONTEXT_MAX_PAGE_NUM                  UINT8_C(8)
 
 /*! @name Defines maximum number of feature input configurations */
-#define BMI270_MAX_FEAT_IN                   UINT8_C(16)
+#define BMI270_CONTEXT_MAX_FEAT_IN                   UINT8_C(9)
 
 /*! @name Defines maximum number of feature outputs */
-#define BMI270_MAX_FEAT_OUT                  UINT8_C(7)
+#define BMI270_CONTEXT_MAX_FEAT_OUT                  UINT8_C(5)
 
 /*! @name Mask definitions for feature interrupt status bits */
-#define BMI270_SIG_MOT_STATUS_MASK           UINT8_C(0x01)
-#define BMI270_STEP_CNT_STATUS_MASK          UINT8_C(0x02)
-#define BMI270_STEP_ACT_STATUS_MASK          UINT8_C(0x04)
-#define BMI270_WRIST_WAKE_UP_STATUS_MASK     UINT8_C(0x08)
-#define BMI270_WRIST_GEST_STATUS_MASK        UINT8_C(0x10)
-#define BMI270_NO_MOT_STATUS_MASK            UINT8_C(0x20)
-#define BMI270_ANY_MOT_STATUS_MASK           UINT8_C(0x40)
+#define BMI270_CONTEXT_STEP_CNT_STATUS_MASK          UINT8_C(0x01)
 
 /***************************************************************************/
 
-/*!     BMI270 User Interface function prototypes
+/*!     BMI270_CONTEXT User Interface function prototypes
  ****************************************************************************/
 
 /**
- * \ingroup bmi270
- * \defgroup bmi270ApiInit Initialization
+ * \ingroup bmi270_context
+ * \defgroup bmi270_contextApiInit Initialization
  * @brief Initialize the sensor and device structure
  */
 
 /*!
- * \ingroup bmi270ApiInit
- * \page bmi270_api_bmi270_init bmi270_init
+ * \ingroup bmi270_contextApiInit
+ * \page bmi270_context_api_bmi270_context_init bmi270_context_init
  * \code
- * int8_t bmi270_init(struct bmi2_dev *dev);
+ * int8_t bmi270_context_init(struct bmi2_dev *dev);
  * \endcode
  * @details This API:
  *  1) updates the device structure with address of the configuration file.
- *  2) Initializes BMI270 sensor.
+ *  2) Initializes BMI270_CONTEXT sensor.
  *  3) Writes the configuration file.
  *  4) Updates the feature offset parameters in the device structure.
  *  5) Updates the maximum number of pages, in the device structure.
@@ -139,7 +125,7 @@ extern "C" {
  * @retval BMI2_E_COM_FAIL - Error: Communication fail
  * @retval BMI2_E_DEV_NOT_FOUND - Invalid device
  */
-int8_t bmi270_init(struct bmi2_dev *dev);
+int8_t bmi270_context_init(struct bmi2_dev *dev);
 
 /******************************************************************************/
 /*! @name       C++ Guard Macros                                      */
@@ -148,4 +134,4 @@ int8_t bmi270_init(struct bmi2_dev *dev);
 }
 #endif /* End of CPP guard */
 
-#endif /* BMI270_H_ */
+#endif /* BMI270_CONTEXT_H_ */
