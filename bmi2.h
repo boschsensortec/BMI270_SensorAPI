@@ -1,40 +1,40 @@
 /**
- * Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
- *
- * BSD-3-Clause
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- * @file       bmi2.h
- * @date       2020-06-05
- * @version    v2.53.2
- *
- */
+* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+*
+* BSD-3-Clause
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its
+*    contributors may be used to endorse or promote products derived from
+*    this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+* POSSIBILITY OF SUCH DAMAGE.
+*
+* @file       bmi2.h
+* @date       2020-11-04
+* @version    v2.63.1
+*
+*/
 
 /*!
  * @defgroup bmi2xy BMI2XY
@@ -84,11 +84,8 @@ extern "C" {
  * @param[in,out] dev  : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_DEV_NOT_FOUND - Invalid device
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_sec_init(struct bmi2_dev *dev);
 
@@ -117,10 +114,8 @@ int8_t bmi2_sec_init(struct bmi2_dev *dev);
  * Register address - 0x26, 0x5E.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_dev *dev);
 
@@ -139,10 +134,8 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
  * @param[in] dev       : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct bmi2_dev *dev);
 
@@ -167,10 +160,8 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
  * @param[in] dev : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_soft_reset(struct bmi2_dev *dev);
 
@@ -184,7 +175,7 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev);
  * \ingroup bmi2ApiConfig
  * \page bmi2_api_bmi2_get_config_file_version bmi2_get_config_file_version
  * \code
- * int8_t bmi2_get_config_file_version(uint16_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev);
+ * int8_t bmi2_get_config_file_version(uint8_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev);
  * \endcode
  * @details This API is used to get the config file major and minor information.
  *
@@ -192,321 +183,11 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev);
  * @param[out] config_major    : pointer to data buffer to store the config major.
  * @param[out] config_minor    : pointer to data buffer to store the config minor.
  *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- */
-int8_t bmi2_get_config_file_version(uint16_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev);
-
-/*! @cond DOXYGEN_SUPRESS */
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiSensor Feature Set
- * @brief Enable / Disable features of the sensor
- */
-
-/*!
- * \ingroup bmi2ApiSensor
- * \page bmi2_api_bmi2_sensor_enable bmi2_sensor_enable
- * \code
- * int8_t bmi2_sensor_enable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
- * \endcode
- * @details This API selects the sensors/features to be enabled.
- *
- * @param[in]       sens_list   : Pointer to select the sensor/feature.
- * @param[in]       n_sens      : Number of sensors selected.
- * @param[in, out]  dev         : Structure instance of bmi2_dev.
- *
- * @note Sensors/features that can be enabled.
- *
- *@verbatim
- *    sens_list             |  Values
- * -------------------------|-----------
- * BMI2_ACCEL                  |  0
- * BMI2_GYRO                   |  1
- * BMI2_AUX                    |  2
- * BMI2_SIG_MOTION             |  3
- * BMI2_ANY_MOTION             |  4
- * BMI2_NO_MOTION              |  5
- * BMI2_STEP_DETECTOR          |  6
- * BMI2_STEP_COUNTER           |  7
- * BMI2_STEP_ACTIVITY          |  8
- * BMI2_GYRO_GAIN_UPDATE       |  9
- * BMI2_TILT                   |  10
- * BMI2_UP_HOLD_TO_WAKE        |  11
- * BMI2_GLANCE_DETECTOR        |  12
- * BMI2_WAKE_UP                |  13
- * BMI2_ORIENTATION            |  14
- * BMI2_HIGH_G                 |  15
- * BMI2_LOW_G                  |  16
- * BMI2_FLAT                   |  17
- * BMI2_EXT_SENS_SYNC          |  18
- * BMI2_WRIST_GESTURE          |  19
- * BMI2_WRIST_WEAR_WAKE_UP     |  20
- * BMI2_WRIST_WEAR_WAKE_UP_WH  |  21
- * BMI2_WRIST_GESTURE_WH       |  22
- * BMI2_PRIMARY_OIS            |  23
- * BMI2_FREE_FALL_DET          |  24
- * BMI2_SINGLE_TAP             |  25
- * BMI2_DOUBLE_TAP             |  26
- * BMI2_TRIPLE_TAP             |  27
- * BMI2_TEMP                   |  31
- * BMI2_GYRO_SELF_OFF          |  33
- * BMI2_ACTIVITY_RECOGNITION   |  34
- *@endverbatim
- *
- * @example  uint8_t sens_list[2]  = {BMI2_ACCEL, BMI2_GYRO};
- *           uint8_t n_sens        = 2;
- *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
-int8_t bmi2_sensor_enable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
-
-/*!
- * \ingroup bmi2ApiSensor
- * \page bmi2_api_bmi2_sensor_disable bmi2_sensor_disable
- * \code
- * int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
- * \endcode
- * @details This API selects the sensors/features to be disabled.
- *
- * @param[in]       sens_list   : Pointer to select the sensor/feature.
- * @param[in]       n_sens      : Number of sensors selected.
- * @param[in, out]  dev         : Structure instance of bmi2_dev.
- *
- * @note Sensors/features that can be disabled.
- *
- *@verbatim
- *    sens_list                |  Values
- * ----------------------------|-----------
- * BMI2_ACCEL                  |  0
- * BMI2_GYRO                   |  1
- * BMI2_AUX                    |  2
- * BMI2_SIG_MOTION             |  3
- * BMI2_ANY_MOTION             |  4
- * BMI2_NO_MOTION              |  5
- * BMI2_STEP_DETECTOR          |  6
- * BMI2_STEP_COUNTER           |  7
- * BMI2_STEP_ACTIVITY          |  8
- * BMI2_GYRO_GAIN_UPDATE       |  9
- * BMI2_TILT                   |  10
- * BMI2_UP_HOLD_TO_WAKE        |  11
- * BMI2_GLANCE_DETECTOR        |  12
- * BMI2_WAKE_UP                |  13
- * BMI2_ORIENTATION            |  14
- * BMI2_HIGH_G                 |  15
- * BMI2_LOW_G                  |  16
- * BMI2_FLAT                   |  17
- * BMI2_EXT_SENS_SYNC          |  18
- * BMI2_WRIST_GESTURE          |  19
- * BMI2_WRIST_WEAR_WAKE_UP     |  20
- * BMI2_WRIST_WEAR_WAKE_UP_WH  |  21
- * BMI2_WRIST_GESTURE_WH       |  22
- * BMI2_PRIMARY_OIS            |  23
- * BMI2_FREE_FALL_DET          |  24
- * BMI2_SINGLE_TAP             |  25
- * BMI2_DOUBLE_TAP             |  26
- * BMI2_TRIPLE_TAP             |  27
- * BMI2_TEMP                   |  31
- * BMI2_GYRO_SELF_OFF          |  33
- * BMI2_ACTIVITY_RECOGNITION   |  34
- *@endverbatim
- *
- * @example  uint8_t sens_list[2]  = {BMI2_ACCEL, BMI2_GYRO};
- *           uint8_t n_sens        = 2;
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- */
-int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
-
-/*! @endcond */
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiSensorC Sensor Configuration
- * @brief Enable / Disable feature configuration of the sensor
- */
-
-/*!
- * \ingroup bmi2ApiSensorC
- * \page bmi2_api_bmi2_set_sensor_config bmi2_set_sensor_config
- * \code
- * int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
- * \endcode
- * @details This API sets the sensor/feature configuration.
- *
- * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
- * @param[in]       n_sens       : Number of sensors selected.
- * @param[in, out]  dev          : Structure instance of bmi2_dev.
- *
- * @note Sensors/features that can be configured
- *
- *@verbatim
- *    sens_list                |  Values
- * ----------------------------|-----------
- * BMI2_ACCEL                  |  0
- * BMI2_GYRO                   |  1
- * BMI2_AUX                    |  2
- * BMI2_SIG_MOTION             |  3
- * BMI2_ANY_MOTION             |  4
- * BMI2_NO_MOTION              |  5
- * BMI2_STEP_DETECTOR          |  6
- * BMI2_STEP_COUNTER           |  7
- * BMI2_STEP_ACTIVITY          |  8
- * BMI2_GYRO_GAIN_UPDATE       |  9
- * BMI2_TILT                   |  10
- * BMI2_UP_HOLD_TO_WAKE        |  11
- * BMI2_GLANCE_DETECTOR        |  12
- * BMI2_WAKE_UP                |  13
- * BMI2_ORIENTATION            |  14
- * BMI2_HIGH_G                 |  15
- * BMI2_LOW_G                  |  16
- * BMI2_FLAT                   |  17
- * BMI2_EXT_SENS_SYNC          |  18
- * BMI2_WRIST_GESTURE          |  19
- * BMI2_WRIST_WEAR_WAKE_UP     |  20
- * BMI2_WRIST_WEAR_WAKE_UP_WH  |  21
- * BMI2_WRIST_GESTURE_WH       |  22
- * BMI2_PRIMARY_OIS            |  23
- * BMI2_FREE_FALL_DET          |  24
- * BMI2_SINGLE_TAP             |  25
- * BMI2_DOUBLE_TAP             |  26
- * BMI2_TRIPLE_TAP             |  27
- * BMI2_TEMP                   |  31
- * BMI2_GYRO_SELF_OFF          |  33
- * BMI2_ACTIVITY_RECOGNITION   |  34
- *@endverbatim
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
- */
-int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
-
-/*!
- * \ingroup bmi2ApiSensorC
- * \page bmi2_api_bmi2_get_sensor_config bmi2_get_sensor_config
- * \code
- * int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
- * \endcode
- * @details This API gets the sensor/feature configuration.
- *
- * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
- * @param[in]       n_sens       : Number of sensors selected.
- * @param[in, out]  dev          : Structure instance of bmi2_dev.
- *
- * @note Sensors/features whose configurations can be read.
- *
- *@verbatim
- *  sens_list               |  Values
- * -------------------------|-----------
- * BMI2_ACCEL                  |  0
- * BMI2_GYRO                   |  1
- * BMI2_AUX                    |  2
- * BMI2_SIG_MOTION             |  3
- * BMI2_ANY_MOTION             |  4
- * BMI2_NO_MOTION              |  5
- * BMI2_STEP_DETECTOR          |  6
- * BMI2_STEP_COUNTER           |  7
- * BMI2_STEP_ACTIVITY          |  8
- * BMI2_GYRO_GAIN_UPDATE       |  9
- * BMI2_TILT                   |  10
- * BMI2_UP_HOLD_TO_WAKE        |  11
- * BMI2_GLANCE_DETECTOR        |  12
- * BMI2_WAKE_UP                |  13
- * BMI2_ORIENTATION            |  14
- * BMI2_HIGH_G                 |  15
- * BMI2_LOW_G                  |  16
- * BMI2_FLAT                   |  17
- * BMI2_EXT_SENS_SYNC          |  18
- * BMI2_WRIST_GESTURE          |  19
- * BMI2_WRIST_WEAR_WAKE_UP     |  20
- * BMI2_WRIST_WEAR_WAKE_UP_WH  |  21
- * BMI2_WRIST_GESTURE_WH       |  22
- * BMI2_PRIMARY_OIS            |  23
- * BMI2_FREE_FALL_DET          |  24
- * BMI2_SINGLE_TAP             |  25
- * BMI2_DOUBLE_TAP             |  26
- * BMI2_TRIPLE_TAP             |  27
- * BMI2_TEMP                   |  31
- * BMI2_GYRO_SELF_OFF          |  33
- * BMI2_ACTIVITY_RECOGNITION   |  34
- *@endverbatim
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
- */
-int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiSensorD Sensor Data
- * @brief Get sensor data
- */
-
-/*!
- * \ingroup bmi2ApiSensorD
- * \page bmi2_api_bmi2_get_sensor_data bmi2_get_sensor_data
- * \code
- * int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
- * \endcode
- * @details This API gets the sensor/feature data for accelerometer, gyroscope,
- * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
- * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
- *
- * @param[out] sensor_data   : Structure instance of bmi2_sensor_data.
- * @param[in]  n_sens        : Number of sensors selected.
- * @param[in]  dev           : Structure instance of bmi2_dev.
- *
- * @note Sensors/features whose data can be read
- *
- *@verbatim
- *  sens_list           |  Values
- * ---------------------|-----------
- * BMI2_ACCEL           |  0
- * BMI2_GYRO            |  1
- * BMI2_AUX             |  2
- * BMI2_ORIENTATION     |  7
- * BMI2_STEP_COUNTER    |  10
- * BMI2_GYRO_GAIN_UPDATE|  12
- * BMI2_HIGH_G          |  16
- * BMI2_NVM_STATUS      |  26
- * BMI2_VFRM_STATUS     |  27
- * BMI2_GYRO_CROSS_SENSE|  28
- *@endverbatim
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
- */
-int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+int8_t bmi2_get_config_file_version(uint8_t *config_major, uint8_t *config_minor, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -533,11 +214,8 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_adv_power_save(uint8_t enable, struct bmi2_dev *dev);
 
@@ -579,12 +257,8 @@ int8_t bmi2_get_adv_power_save(uint8_t *aps_status, struct bmi2_dev *dev);
  * @param[in] dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_CONFIG_LOAD -  Configuration load fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_write_config_file(struct bmi2_dev *dev);
 
@@ -609,11 +283,8 @@ int8_t bmi2_write_config_file(struct bmi2_dev *dev);
  * @param[in] dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_INT_PIN - Error: Invalid interrupt pin
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct bmi2_dev *dev);
 
@@ -632,11 +303,8 @@ int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct
  * @param[in]     dev      : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_INT_PIN - Error: Invalid interrupt pin
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_int_pin_config(struct bmi2_int_pin_config *int_cfg, struct bmi2_dev *dev);
 
@@ -666,12 +334,184 @@ int8_t bmi2_get_int_pin_config(struct bmi2_int_pin_config *int_cfg, struct bmi2_
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_int_status(uint16_t *int_status, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2ApiSensorC Sensor Configuration
+ * @brief Enable / Disable feature configuration of the sensor
+ */
+
+/*!
+ * \ingroup bmi2ApiSensorC
+ * \page bmi2_api_bmi2_set_sensor_config bmi2_set_sensor_config
+ * \code
+ * int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets the sensor/feature configuration.
+ *
+ * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
+ * @param[in]       n_sens       : Number of sensors selected.
+ * @param[in, out]  dev          : Structure instance of bmi2_dev.
+ *
+ * @note Sensors/features that can be configured
+ *
+ *@verbatim
+ *    sens_list                |  Values
+ * ----------------------------|-----------
+ * BMI2_ACCEL                  |  0
+ * BMI2_GYRO                   |  1
+ * BMI2_AUX                    |  2
+ * BMI2_GYRO_GAIN_UPDATE       |  9
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiSensorC
+ * \page bmi2_api_bmi2_get_sensor_config bmi2_get_sensor_config
+ * \code
+ * int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the sensor/feature configuration.
+ *
+ * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
+ * @param[in]       n_sens       : Number of sensors selected.
+ * @param[in, out]  dev          : Structure instance of bmi2_dev.
+ *
+ * @note Sensors/features whose configurations can be read.
+ *
+ *@verbatim
+ *  sens_list               |  Values
+ * -------------------------|-----------
+ * BMI2_ACCEL                  |  0
+ * BMI2_GYRO                   |  1
+ * BMI2_AUX                    |  2
+ * BMI2_GYRO_GAIN_UPDATE       |  9
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2ApiSensor Feature Set
+ * @brief Enable / Disable features of the sensor
+ */
+
+/*!
+ * \ingroup bmi2ApiSensor
+ * \page bmi2_api_bmi2_sensor_enable bmi2_sensor_enable
+ * \code
+ * int8_t bmi2_sensor_enable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API selects the sensors/features to be enabled.
+ *
+ * @param[in]       sens_list   : Pointer to select the sensor/feature.
+ * @param[in]       n_sens      : Number of sensors selected.
+ * @param[in, out]  dev         : Structure instance of bmi2_dev.
+ *
+ * @note Sensors/features that can be enabled.
+ *
+ *@verbatim
+ *    sens_list             |  Values
+ * -------------------------|-----------
+ * BMI2_ACCEL                  |  0
+ * BMI2_GYRO                   |  1
+ * BMI2_AUX                    |  2
+ * BMI2_TEMP                   |  31
+ *@endverbatim
+ *
+ * @note :
+ * example  uint8_t sens_list[2]  = {BMI2_ACCEL, BMI2_GYRO};
+ *           uint8_t n_sens        = 2;
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_sensor_enable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiSensor
+ * \page bmi2_api_bmi2_sensor_disable bmi2_sensor_disable
+ * \code
+ * int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API selects the sensors/features to be disabled.
+ *
+ * @param[in]       sens_list   : Pointer to select the sensor/feature.
+ * @param[in]       n_sens      : Number of sensors selected.
+ * @param[in, out]  dev         : Structure instance of bmi2_dev.
+ *
+ * @note Sensors/features that can be disabled.
+ *
+ *@verbatim
+ *    sens_list                |  Values
+ * ----------------------------|-----------
+ * BMI2_ACCEL                  |  0
+ * BMI2_GYRO                   |  1
+ * BMI2_AUX                    |  2
+ * BMI2_TEMP                   |  31
+ *@endverbatim
+ *
+ * @note :
+ * example   uint8_t sens_list[2]  = {BMI2_ACCEL, BMI2_GYRO};
+ *           uint8_t n_sens        = 2;
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2ApiSensorD Sensor Data
+ * @brief Get sensor data
+ */
+
+/*!
+ * \ingroup bmi2ApiSensorD
+ * \page bmi2_api_bmi2_get_sensor_data bmi2_get_sensor_data
+ * \code
+ * int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the sensor/feature data for accelerometer, gyroscope,
+ * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
+ * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
+ *
+ * @param[out] sensor_data   : Structure instance of bmi2_sensor_data.
+ * @param[in]  n_sens        : Number of sensors selected.
+ * @param[in]  dev           : Structure instance of bmi2_dev.
+ *
+ * @note Sensors/features whose data can be read
+ *
+ *@verbatim
+ *  sens_list           |  Values
+ * ---------------------|-----------
+ * BMI2_ACCEL           |  0
+ * BMI2_GYRO            |  1
+ * BMI2_AUX             |  2
+ * BMI2_GYRO_GAIN_UPDATE|  12
+ * BMI2_GYRO_CROSS_SENSE|  28
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -699,10 +539,8 @@ int8_t bmi2_get_int_status(uint16_t *int_status, struct bmi2_dev *dev);
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_fifo_config(uint16_t config, uint8_t enable, struct bmi2_dev *dev);
 
@@ -718,10 +556,8 @@ int8_t bmi2_set_fifo_config(uint16_t config, uint8_t enable, struct bmi2_dev *de
  * @param[in]  dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_config(uint16_t *fifo_config, struct bmi2_dev *dev);
 
@@ -739,10 +575,8 @@ int8_t bmi2_get_fifo_config(uint16_t *fifo_config, struct bmi2_dev *dev);
  * @note APS has to be disabled before calling this function.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev);
 
@@ -766,11 +600,8 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev);
  * @param[in]     dev          : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_W_FIFO_EMPTY - Warning : FIFO is empty
- * @retval BMI2_W_PARTIAL_READ - Warning : There are more frames to be read
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
                           uint16_t *accel_length,
@@ -797,11 +628,8 @@ int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
  * @param[in]     dev          : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_W_FIFO_EMPTY - Warning : FIFO is empty
- * @retval BMI2_W_PARTIAL_READ - Warning : There are more frames to be read
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_extract_aux(struct bmi2_aux_fifo_data *aux,
                         uint16_t *aux_length,
@@ -828,11 +656,8 @@ int8_t bmi2_extract_aux(struct bmi2_aux_fifo_data *aux,
  * @param[in]     dev          : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_W_FIFO_EMPTY - Warning : FIFO is empty
- * @retval BMI2_W_PARTIAL_READ - Warning : There are more frames to be read
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
                          uint16_t *gyro_length,
@@ -865,10 +690,8 @@ int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_command_register(uint8_t command, struct bmi2_dev *dev);
 
@@ -891,10 +714,8 @@ int8_t bmi2_set_command_register(uint8_t command, struct bmi2_dev *dev);
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_fifo_self_wake_up(uint8_t fifo_self_wake_up, struct bmi2_dev *dev);
 
@@ -918,10 +739,8 @@ int8_t bmi2_set_fifo_self_wake_up(uint8_t fifo_self_wake_up, struct bmi2_dev *de
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_self_wake_up(uint8_t *fifo_self_wake_up, struct bmi2_dev *dev);
 
@@ -937,10 +756,8 @@ int8_t bmi2_get_fifo_self_wake_up(uint8_t *fifo_self_wake_up, struct bmi2_dev *d
  * @param[in] dev              : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_fifo_wm(uint16_t fifo_wm, struct bmi2_dev *dev);
 
@@ -956,10 +773,8 @@ int8_t bmi2_set_fifo_wm(uint16_t fifo_wm, struct bmi2_dev *dev);
  * @param[in]  dev            : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_wm(uint16_t *fifo_wm, struct bmi2_dev *dev);
 
@@ -992,12 +807,8 @@ int8_t bmi2_get_fifo_wm(uint16_t *fifo_wm, struct bmi2_dev *dev);
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_OUT_OF_RANGE - Error: Out of range
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_fifo_filter_data(uint8_t sens_sel, uint8_t fifo_filter_data, struct bmi2_dev *dev);
 
@@ -1029,11 +840,8 @@ int8_t bmi2_set_fifo_filter_data(uint8_t sens_sel, uint8_t fifo_filter_data, str
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_filter_data(uint8_t sens_sel, uint8_t *fifo_filter_data, struct bmi2_dev *dev);
 
@@ -1059,12 +867,8 @@ int8_t bmi2_get_fifo_filter_data(uint8_t sens_sel, uint8_t *fifo_filter_data, st
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_OUT_OF_RANGE - Error: Out of range
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_fifo_down_sample(uint8_t sens_sel, uint8_t fifo_down_samp, struct bmi2_dev *dev);
 
@@ -1090,11 +894,8 @@ int8_t bmi2_set_fifo_down_sample(uint8_t sens_sel, uint8_t fifo_down_samp, struc
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_down_sample(uint8_t sens_sel, uint8_t *fifo_down_samp, struct bmi2_dev *dev);
 
@@ -1115,10 +916,8 @@ int8_t bmi2_get_fifo_down_sample(uint8_t sens_sel, uint8_t *fifo_down_samp, stru
  * written.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_fifo_length(uint16_t *fifo_length, struct bmi2_dev *dev);
 
@@ -1147,10 +946,8 @@ int8_t bmi2_get_fifo_length(uint16_t *fifo_length, struct bmi2_dev *dev);
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_ois_interface(uint8_t enable, struct bmi2_dev *dev);
 
@@ -1177,12 +974,8 @@ int8_t bmi2_set_ois_interface(uint8_t enable, struct bmi2_dev *dev);
  * @note Change of BMI2_AUX_RD_ADDR is only allowed if AUX is not busy.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_AUX_INVALID_CFG - Error: Invalid auxiliary configuration.
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_read_aux_man_mode(uint8_t reg_addr, uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
 
@@ -1203,12 +996,8 @@ int8_t bmi2_read_aux_man_mode(uint8_t reg_addr, uint8_t *aux_data, uint16_t len,
  * @note Change of BMI2_AUX_WR_ADDR is only allowed if AUX is not busy.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_AUX_INVALID_CFG - Error: Invalid auxiliary configuration.
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_write_aux_man_mode(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
 
@@ -1230,12 +1019,8 @@ int8_t bmi2_write_aux_man_mode(uint8_t reg_addr, const uint8_t *aux_data, uint16
  * @note Change of BMI2_AUX_WR_ADDR is only allowed if AUX is not busy.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
- * @retval BMI2_E_AUX_INVALID_CFG - Error: Invalid auxiliary configuration.
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_write_aux_interleaved(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
 
@@ -1268,10 +1053,8 @@ int8_t bmi2_write_aux_interleaved(uint8_t reg_addr, const uint8_t *aux_data, uin
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_status(uint8_t *status, struct bmi2_dev *dev);
 
@@ -1295,10 +1078,8 @@ int8_t bmi2_get_status(uint8_t *status, struct bmi2_dev *dev);
  * @param[in]  dev        : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_write_sync_commands(const uint8_t *command, uint8_t n_comm, struct bmi2_dev *dev);
 
@@ -1320,11 +1101,8 @@ int8_t bmi2_write_sync_commands(const uint8_t *command, uint8_t n_comm, struct b
  * @param[in]  dev       : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_SELF_TEST_FAIL - Error: Self test fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_perform_accel_self_test(struct bmi2_dev *dev);
 
@@ -1332,23 +1110,18 @@ int8_t bmi2_perform_accel_self_test(struct bmi2_dev *dev);
  * \ingroup bmi2ApiInt
  * \page bmi2_api_bmi2_map_feat_int bmi2_map_feat_int
  * \code
- * int8_t bbmi2_map_feat_int(const struct bmi2_sens_int_config *sens_int, uint8_t n_sens, struct bmi2_dev *dev);
+ * int8_t bmi2_map_feat_int(const struct bmi2_sens_int_config *sens_int, struct bmi2_dev *dev);
  * \endcode
  * @details This API maps/unmaps feature interrupts to that of interrupt pins.
  *
  * @param[in] sens_int     : Structure instance of bmi2_sens_int_config.
- * @param[in] n_sens       : Number of features to be mapped.
  * @param[in] dev          : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_INVALID_FEAT_INT -  Error: Invalid feature Interrupt
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
-int8_t bmi2_map_feat_int(const struct bmi2_sens_int_config *sens_int, uint8_t n_sens, struct bmi2_dev *dev);
+int8_t bmi2_map_feat_int(uint8_t type, enum bmi2_hw_int_pin hw_int_pin, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi2ApiInt
@@ -1372,11 +1145,8 @@ int8_t bmi2_map_feat_int(const struct bmi2_sens_int_config *sens_int, uint8_t n_
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_INT_PIN -  Error: Invalid interrupt pin
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_map_data_int(uint8_t data_int, enum bmi2_hw_int_pin int_pin, struct bmi2_dev *dev);
 
@@ -1399,12 +1169,8 @@ int8_t bmi2_map_data_int(uint8_t data_int, enum bmi2_hw_int_pin int_pin, struct 
  * @param[in] dev            : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_remap_axes(struct bmi2_remap *remapped_axis, struct bmi2_dev *dev);
 
@@ -1421,59 +1187,10 @@ int8_t bmi2_get_remap_axes(struct bmi2_remap *remapped_axis, struct bmi2_dev *de
  * @param[in] dev            : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_remap_axes(const struct bmi2_remap *remapped_axis, struct bmi2_dev *dev);
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiGyroUG Gyro User Gain
- * @brief Set / Get Gyro User Gain of the sensor
- */
-
-/*!
- * \ingroup bmi2ApiGyroUG
- * \page bmi2_api_bmi2_update_gyro_user_gain bmi2_update_gyro_user_gain
- * \code
- * int8_t bmi2_update_gyro_user_gain(const struct bmi2_gyro_user_gain_config *user_gain, struct bmi2_dev *dev);
- * \endcode
- * @details This API updates the gyroscope user-gain.
- *
- * @param[in] user_gain      : Structure that stores user-gain configurations.
- * @param[in] dev            : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_GYR_USER_GAIN_UPD_FAIL - Gyroscope user gain update fail
- */
-int8_t bmi2_update_gyro_user_gain(const struct bmi2_gyro_user_gain_config *user_gain, struct bmi2_dev *dev);
-
-/*!
- * \ingroup bmi2ApiGyroUG
- * \page bmi2_api_bmi2_read_gyro_user_gain bmi2_read_gyro_user_gain
- * \code
- * int8_t bmi2_read_gyro_user_gain(struct bmi2_gyro_user_gain_data *gyr_usr_gain, const struct bmi2_dev *dev);
- * \endcode
- * @details This API reads the compensated gyroscope user-gain values.
- *
- * @param[out] gyr_usr_gain   : Structure that stores gain values.
- * @param[in]  dev            : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- */
-int8_t bmi2_read_gyro_user_gain(struct bmi2_gyro_user_gain_data *gyr_usr_gain, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -1501,10 +1218,8 @@ int8_t bmi2_read_gyro_user_gain(struct bmi2_gyro_user_gain_data *gyr_usr_gain, s
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_gyro_offset_comp(uint8_t enable, struct bmi2_dev *dev);
 
@@ -1522,10 +1237,8 @@ int8_t bmi2_set_gyro_offset_comp(uint8_t enable, struct bmi2_dev *dev);
  * @param[in]  dev              : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_read_gyro_offset_comp_axes(struct bmi2_sens_axes_data *gyr_off_comp_axes, struct bmi2_dev *dev);
 
@@ -1543,82 +1256,10 @@ int8_t bmi2_read_gyro_offset_comp_axes(struct bmi2_sens_axes_data *gyr_off_comp_
  * @param[in]  dev              : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_write_gyro_offset_comp_axes(const struct bmi2_sens_axes_data *gyr_off_comp_axes, struct bmi2_dev *dev);
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiactOut Activity Output
- * @brief Activity output operations of the sensor
- */
-
-/*!
- * \ingroup bmi2ApiactOut
- * \page bmi2_api_bmi2_get_act_recog_output bmi2_get_act_recog_output
- * \code
- * int8_t bmi2_get_act_recog_output(struct bmi2_act_recog_output *act_recog,
- *                                uint16_t *act_frm_len,
- *                                struct bmi2_fifo_frame *fifo,
- *                                const struct bmi2_dev *dev);
- *
- * \endcode
- * @details This internal API is used to parse the activity output from the
- * FIFO in header mode.
- *
- * @param[out] act_recog    : Pointer to buffer where the parsed activity data
- *                           bytes are stored.
- * @param[in] act_frm_len   : Number of activity frames parsed.
- * @param[in] fifo          : Structure instance of bmi2_fifo_frame.
- * @param[in] dev           : Structure instance of bmi2_dev.
- *
- * @verbatim
- * ----------------------------------------------------------------------------
- *  bmi2_act_rec_output     |
- *  Structure parameters    |               Description
- *--------------------------|--------------------------------------------------
- *      time_stamp          |  time-stamp (expressed in 50Hz ticks)
- * -------------------------|---------------------------------------------------
- *      type                |           Type of activity
- * -------------------------|---------------------------------------------------
- *      stat                |           Activity status
- * -------------------------|---------------------------------------------------
- * @endverbatim
- *
- *@verbatim
- *  type    |  Activities
- *----------|---------------------
- *  0       |  UNKNOWN
- *  1       |  STILL
- *  2       |  WALK
- *  3       |  RUN
- *  4       |  BIKE
- *  5       | VEHICLE
- *  6       | TILTED
- *@endverbatim
- *
- *
- *@verbatim
- *  stat    |  Activity status
- *----------|---------------------
- *  1       |  START
- *  2       |  END
- *@endverbatim
- *
- * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_W_FIFO_EMPTY - Warning : FIFO is empty
- * @retval BMI2_W_PARTIAL_READ - Warning : There are more frames to be read
- */
-int8_t bmi2_get_act_recog_output(struct bmi2_act_recog_output *act_recog,
-                                 uint16_t *act_frm_len,
-                                 struct bmi2_fifo_frame *fifo,
-                                 const struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -1638,10 +1279,8 @@ int8_t bmi2_get_act_recog_output(struct bmi2_act_recog_output *act_recog,
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev);
 
@@ -1681,10 +1320,8 @@ int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev);
  *@endverbatim
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev);
 
@@ -1714,12 +1351,8 @@ int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev);
  * @param[in]  dev              : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_value, struct bmi2_dev *dev);
 
@@ -1734,12 +1367,8 @@ int8_t bmi2_perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_value
  * @param[in]  dev              : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_INVALID_SENSOR - Error: Invalid sensor
- * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_perform_gyro_foc(struct bmi2_dev *dev);
 
@@ -1761,9 +1390,8 @@ int8_t bmi2_perform_gyro_foc(struct bmi2_dev *dev);
  * @param[in]  dev  : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_CRT_ERROR - Error in CRT download
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  *
  * @note CRT calibration takes approximately 500ms & maximum time out configured as 2 seconds
  */
@@ -1789,10 +1417,8 @@ int8_t bmi2_do_crt(struct bmi2_dev *dev);
  * @param[in] dev                 : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_set_gyro_self_test_crt(uint8_t *gyro_self_test_crt, struct bmi2_dev *dev);
 
@@ -1807,12 +1433,9 @@ int8_t bmi2_set_gyro_self_test_crt(uint8_t *gyro_self_test_crt, struct bmi2_dev 
  * @param[in] dev        : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
-
 int8_t bmi2_abort_crt_gyro_st(struct bmi2_dev *dev);
 
 /*!
@@ -1826,9 +1449,8 @@ int8_t bmi2_abort_crt_gyro_st(struct bmi2_dev *dev);
  * @param[in] dev   :   Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval < 0  - Fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_do_gyro_st(struct bmi2_dev *dev);
 
@@ -1849,63 +1471,10 @@ int8_t bmi2_do_gyro_st(struct bmi2_dev *dev);
  * @param[in] dev   :   Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval < 0  - Fail
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_nvm_prog(struct bmi2_dev *dev);
-
-/**
- * \ingroup bmi2
- * \defgroup bmi2ApiARecog Activity recognition settings
- * @brief Set / Get activity recognition settings of the sensor
- */
-
-/*!
- * \ingroup bmi2ApiARecog
- * \page bmi2_api_bmi2_get_act_recg_sett bmi2_get_act_recg_sett
- * \code
- * int8_t bmi2_get_act_recg_sett(struct bmi2_act_recg_sett *sett, struct bmi2_dev *dev);
- * \endcode
- * @details This api is used for retrieving the following activity recognition settings currently set.
- * enable/disable post processing(0/1) by default -> 1(enable),
- * Setting the min & max Gini's diversity index (GDI) threshold. min_GDI_tres(0-0XFFFF) by default ->(0x06e1)
- * max_GDI_tres(0-0xFFFF) by default ->(0x0A66)
- * buffer size for post processing. range (1-0x0A) default -> (0x0A)
- * min segment confidence.  range (1-0x0A) default -> (0x0A)
- *
- * @param[in] sett  : Structure instance of bmi2_act_recg_sett.
- * @param[in] dev   : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status.
- *
- * @retval BMI2_OK - Success.
- * @retval < 0  - Fail
- */
-int8_t bmi2_get_act_recg_sett(struct bmi2_act_recg_sett *sett, struct bmi2_dev *dev);
-
-/*!
- * \ingroup bmi2ApiARecog
- * \page bmi2_api_bmi2_set_act_recg_sett bmi2_set_act_recg_sett
- * \code
- * int8_t bmi2_set_act_recg_sett(const struct bmi2_act_recg_sett *sett, struct bmi2_dev *dev);
- * \endcode
- * @details This api is used for setting the following activity recognition settings
- * enable/disable post processing(0/1) by default -> 1(enable),
- * Setting the min & max Gini's diversity index (GDI) threshold. min_GDI_tres(0-0XFFFF) by default ->(0x06e1)
- * max_GDI_tres(0-0xFFFF) by default ->(0x0A66)
- * buffer size for post processing. range (1-0x0A) default -> (0x0A)
- * min segment confidence.  range (1-0x0A) default -> (0x0A)
- *
- * @param[in] sett  : Structure instance of bmi2_act_recg_sett.
- * @param[in] dev   : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status.
- *
- * @retval BMI2_OK - Success.
- * @retval < 0  - Fail
- */
-int8_t bmi2_set_act_recg_sett(const struct bmi2_act_recg_sett *sett, struct bmi2_dev *dev);
 
 /*!
  * @brief This API extracts the input feature configuration
@@ -1932,11 +1501,8 @@ uint8_t bmi2_extract_input_feat_config(struct bmi2_feature_config *feat_config, 
  * @param[in]  dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
- *
- * @retval BMI2_OK - Success.
- * @retval BMI2_E_COM_FAIL - Error: Communication fail
- * @retval BMI2_E_NULL_PTR - Error: Null pointer error
- * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_get_feat_config(uint8_t sw_page, uint8_t *feat_config, struct bmi2_dev *dev);
 
