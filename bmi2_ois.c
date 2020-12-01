@@ -32,7 +32,7 @@
  *
  * @file       bmi2_ois.c
  * @date       2020-05-05
- * @version    v2.53.2
+ * @version    v2.23.2
  *
  */
 
@@ -57,7 +57,8 @@
  * bmi2xy_init(), refer the example ois_accel_gyro.c for more info"
  *
  * @return Result of API execution status
- * @retval zero -> Success / +ve value -> Warning / -ve value -> Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 static int8_t get_ois_acc_gyr_data(struct bmi2_ois_sens_axes_data *ois_data,
                                    uint8_t reg_addr,
@@ -71,7 +72,8 @@ static int8_t get_ois_acc_gyr_data(struct bmi2_ois_sens_axes_data *ois_data,
  * @param[in] ois_dev : Structure instance of bmi2_ois_dev.
  *
  * @return Result of API execution status
- * @retval zero -> Success / +ve value -> Warning / -ve value -> Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 static int8_t null_ptr_check(const struct bmi2_ois_dev *ois_dev);
 

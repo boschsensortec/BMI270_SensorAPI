@@ -32,7 +32,7 @@
  *
  * @file       bmi2_ois.h
  * @date       2020-05-05
- * @version    v2.53.2
+ * @version    v2.23.2
  *
  */
 
@@ -268,8 +268,8 @@ struct bmi2_ois_dev
  * @param[in]  ois_dev      : Structure instance of bmi2_ois_dev.
  *
  * @return Result of API execution status
- * @retval Zero Success
- * @retval Negative Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_ois_get_regs(uint8_t ois_reg_addr, uint8_t *ois_reg_data, uint16_t data_len, struct bmi2_ois_dev *ois_dev);
 
@@ -291,8 +291,8 @@ int8_t bmi2_ois_get_regs(uint8_t ois_reg_addr, uint8_t *ois_reg_data, uint16_t d
  * @param[in] ois_dev       : Structure instance of bmi2_ois_dev.
  *
  * @return Result of API execution status
- * @retval Zero Success
- * @retval Negative Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_ois_set_regs(uint8_t ois_reg_addr,
                          const uint8_t *ois_reg_data,
@@ -317,8 +317,8 @@ int8_t bmi2_ois_set_regs(uint8_t ois_reg_addr,
  * @param[in] ois_dev   : Structure instance of bmi2_ois_dev.
  *
  * @return Result of API execution status
- * @retval Zero Success
- * @retval Negative Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_ois_set_config(struct bmi2_ois_dev *ois_dev);
 
@@ -336,8 +336,8 @@ int8_t bmi2_ois_set_config(struct bmi2_ois_dev *ois_dev);
  * @note Enabling and disabling is done during OIS structure initialization.
  *
  * @return Result of API execution status
- * @retval Zero Success
- * @retval Negative Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_ois_get_config(struct bmi2_ois_dev *ois_dev);
 
@@ -372,8 +372,8 @@ int8_t bmi2_ois_get_config(struct bmi2_ois_dev *ois_dev);
  *@endverbatim
  *
  * @return Result of API execution status
- * @retval Zero Success
- * @retval Negative Error
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
 int8_t bmi2_ois_read_data(const uint8_t *sens_sel,
                           uint8_t n_sens,
