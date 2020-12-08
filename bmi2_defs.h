@@ -1,40 +1,40 @@
 /**
- * Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
- *
- * BSD-3-Clause
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- * @file       bmi2_defs.h
- * @date       2020-06-05
- * @version    v2.53.2
- *
- */
+* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+*
+* BSD-3-Clause
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its
+*    contributors may be used to endorse or promote products derived from
+*    this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+* STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+* IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+* POSSIBILITY OF SUCH DAMAGE.
+*
+* @file       bmi2_defs.h
+* @date       2020-11-04
+* @version    v2.63.1
+*
+*/
 
 #ifndef BMI2_DEFS_H_
 #define BMI2_DEFS_H_
@@ -315,6 +315,14 @@
 #define BMI2_ACT_RECG_BUFF_SIZE_MASK              UINT8_C(0x0F)
 #define BMI2_ACT_RECG_MIN_SEG_CONF_MASK           UINT8_C(0x0F)
 
+/*! @name mask and bit position for activity recognition hc settings */
+#define BMI2_HC_ACT_RECG_SEGMENT_SIZE_MASK        UINT8_C(0x03)
+#define BMI2_HC_ACT_RECG_PP_EN_MASK               UINT8_C(0x01)
+#define BMI2_HC_ACT_RECG_MIN_GDI_THRES_MASK       UINT16_C(0xFFFF)
+#define BMI2_HC_ACT_RECG_MAX_GDI_THRES_MASK       UINT16_C(0xFFFF)
+#define BMI2_HC_ACT_RECG_BUF_SIZE_MASK            UINT16_C(0xFFFF)
+#define BMI2_HC_ACT_RECG_MIN_SEG_CONF_MASK        UINT16_C(0xFFFF)
+
 #define BMI2_GYRO_CROSS_AXES_SENSE_MASK           UINT8_C(0x7F)
 #define BMI2_GYRO_CROSS_AXES_SENSE_SIGN_BIT_MASK  UINT8_C(0x40)
 
@@ -404,27 +412,28 @@
 #define BMI2_SINGLE_TAP                           UINT8_C(25)
 #define BMI2_DOUBLE_TAP                           UINT8_C(26)
 #define BMI2_TRIPLE_TAP                           UINT8_C(27)
+#define BMI2_TAP                                  UINT8_C(28)
 
 /* Non virtual sensor features */
-#define BMI2_STEP_COUNTER_PARAMS                  UINT8_C(28)
-#define BMI2_TAP_DETECTOR_1                       UINT8_C(29)
-#define BMI2_TAP_DETECTOR_2                       UINT8_C(30)
-#define BMI2_TEMP                                 UINT8_C(31)
-#define BMI2_ACCEL_SELF_TEST                      UINT8_C(32)
-#define BMI2_GYRO_SELF_OFF                        UINT8_C(33)
-#define BMI2_ACTIVITY_RECOGNITION                 UINT8_C(34)
-#define BMI2_MAX_BURST_LEN                        UINT8_C(35)
-#define BMI2_SENS_MAX_NUM                         UINT8_C(36)
-#define BMI2_AXIS_MAP                             UINT8_C(37)
-#define BMI2_NVM_STATUS                           UINT8_C(38)
-#define BMI2_VFRM_STATUS                          UINT8_C(39)
-#define BMI2_GYRO_CROSS_SENSE                     UINT8_C(40)
-#define BMI2_CRT_GYRO_SELF_TEST                   UINT8_C(41)
-#define BMI2_ABORT_CRT_GYRO_SELF_TEST             UINT8_C(42)
-#define BMI2_NVM_PROG_PREP                        UINT8_C(43)
-#define BMI2_ACTIVITY_RECOGNITION_SETTINGS        UINT8_C(44)
-#define BMI2_OIS_OUTPUT                           UINT8_C(45)
-#define BMI2_CONFIG_ID                            UINT8_C(46)
+#define BMI2_STEP_COUNTER_PARAMS                  UINT8_C(29)
+#define BMI2_TAP_DETECTOR_1                       UINT8_C(30)
+#define BMI2_TAP_DETECTOR_2                       UINT8_C(31)
+#define BMI2_TEMP                                 UINT8_C(32)
+#define BMI2_ACCEL_SELF_TEST                      UINT8_C(33)
+#define BMI2_GYRO_SELF_OFF                        UINT8_C(34)
+#define BMI2_ACTIVITY_RECOGNITION                 UINT8_C(35)
+#define BMI2_MAX_BURST_LEN                        UINT8_C(36)
+#define BMI2_SENS_MAX_NUM                         UINT8_C(37)
+#define BMI2_AXIS_MAP                             UINT8_C(38)
+#define BMI2_NVM_STATUS                           UINT8_C(39)
+#define BMI2_VFRM_STATUS                          UINT8_C(40)
+#define BMI2_GYRO_CROSS_SENSE                     UINT8_C(41)
+#define BMI2_CRT_GYRO_SELF_TEST                   UINT8_C(42)
+#define BMI2_ABORT_CRT_GYRO_SELF_TEST             UINT8_C(43)
+#define BMI2_NVM_PROG_PREP                        UINT8_C(44)
+#define BMI2_ACTIVITY_RECOGNITION_SETTINGS        UINT8_C(45)
+#define BMI2_OIS_OUTPUT                           UINT8_C(46)
+#define BMI2_CONFIG_ID                            UINT8_C(47)
 
 /*! @name Bit wise for selecting BMI2 sensors/features */
 #define BMI2_ACCEL_SENS_SEL                       (1)
@@ -443,6 +452,7 @@
 #define BMI2_UP_HOLD_TO_WAKE_SEL                  (1 << BMI2_UP_HOLD_TO_WAKE)
 #define BMI2_GLANCE_DET_SEL                       (1 << BMI2_GLANCE_DETECTOR)
 #define BMI2_WAKE_UP_SEL                          (1 << BMI2_WAKE_UP)
+#define BMI2_TAP_SEL                              (1 << BMI2_TAP)
 #define BMI2_HIGH_G_SEL                           (1 << BMI2_HIGH_G)
 #define BMI2_LOW_G_SEL                            (1 << BMI2_LOW_G)
 #define BMI2_FLAT_SEL                             (1 << BMI2_FLAT)
@@ -466,7 +476,6 @@
 #define BMI2_WAKEUP_DOUBLE_TAP_EN_MASK            UINT8_C(0x02)
 #define BMI2_WAKEUP_TRIPLE_TAP_EN_MASK            UINT8_C(0x04)
 #define BMI2_WAKEUP_DATA_REG_EN_MASK              UINT8_C(0x08)
-#define BMI2_WAKEUP_OUT_CONF_MASK                 UINT8_C(0xF0)
 #define BMI2_WAKEUP_AXIS_SEL_MASK                 UINT8_C(0x03)
 
 /*! @name Bit position definitions for BMI2 wake-up feature configuration for bmi260 */
@@ -474,17 +483,28 @@
 #define BMI2_WAKEUP_DOUBLE_TAP_EN_POS             UINT8_C(0x01)
 #define BMI2_WAKEUP_TRIPLE_TAP_EN_POS             UINT8_C(0x02)
 #define BMI2_WAKEUP_DATA_REG_EN_POS               UINT8_C(0x03)
-#define BMI2_WAKEUP_OUT_CONF_POS                  UINT8_C(0x04)
+
+/*! @name Mask definitions for BMI2 tap feature configuration for bmi260t */
+#define BMI2_TAP_SENSITIVITY_MASK                 UINT8_C(0x0E)
+#define BMI2_TAP_SINGLE_TAP_EN_MASK               UINT8_C(0x01)
+#define BMI2_TAP_DOUBLE_TAP_EN_MASK               UINT8_C(0x02)
+#define BMI2_TAP_TRIPLE_TAP_EN_MASK               UINT8_C(0x04)
+#define BMI2_TAP_DATA_REG_EN_MASK                 UINT8_C(0x08)
+#define BMI2_TAP_AXIS_SEL_MASK                    UINT8_C(0x03)
+
+/*! @name Bit position definitions for BMI2 tap feature configuration for bmi260t */
+#define BMI2_TAP_SENSITIVITY_POS                  UINT8_C(0x01)
+#define BMI2_TAP_DOUBLE_TAP_EN_POS                UINT8_C(0x01)
+#define BMI2_TAP_TRIPLE_TAP_EN_POS                UINT8_C(0x02)
+#define BMI2_TAP_DATA_REG_EN_POS                  UINT8_C(0x03)
 
 /*! @name Mask definitions for BMI2 wake-up feature configuration for other than bmi261 */
 #define BMI2_WAKE_UP_SENSITIVITY_MASK             UINT16_C(0x000E)
 #define BMI2_WAKE_UP_SINGLE_TAP_EN_MASK           UINT16_C(0x0010)
-#define BMI2_WAKE_UP_OUT_CONF_MASK                UINT16_C(0x01E0)
 
 /*! @name Bit position definitions for BMI2 wake-up feature configuration for other than bmi261 */
 #define BMI2_WAKE_UP_SENSITIVITY_POS              UINT8_C(0x01)
 #define BMI2_WAKE_UP_SINGLE_TAP_EN_POS            UINT8_C(0x04)
-#define BMI2_WAKE_UP_OUT_CONF_POS                 UINT8_C(0x05)
 
 /*! @name Offsets from feature start address for BMI2 feature enable/disable */
 #define BMI2_ANY_MOT_FEAT_EN_OFFSET               UINT8_C(0x03)
@@ -508,6 +528,7 @@
 #define BMI2_UP_HOLD_TO_WAKE_FEAT_EN_MASK         UINT8_C(0x01)
 #define BMI2_GLANCE_FEAT_EN_MASK                  UINT8_C(0x01)
 #define BMI2_WAKE_UP_FEAT_EN_MASK                 UINT8_C(0x01)
+#define BMI2_TAP_FEAT_EN_MASK                     UINT8_C(0x01)
 #define BMI2_HIGH_G_FEAT_EN_MASK                  UINT8_C(0x80)
 #define BMI2_LOW_G_FEAT_EN_MASK                   UINT8_C(0x10)
 #define BMI2_FLAT_FEAT_EN_MASK                    UINT8_C(0x01)
@@ -521,6 +542,7 @@
 #define BMI2_ABORT_FEATURE_EN_MASK                UINT8_C(0x02)
 #define BMI2_NVM_PREP_FEATURE_EN_MASK             UINT8_C(0x04)
 #define BMI2_FREE_FALL_DET_FEAT_EN_MASK           UINT8_C(0x01)
+#define BMI2_WRIST_GEST_WH_FEAT_EN_MASK           UINT8_C(0x02)
 
 /*! @name Bit position definitions for BMI2 feature enable/disable */
 #define BMI2_ANY_NO_MOT_EN_POS                    UINT8_C(0x07)
@@ -536,6 +558,7 @@
 #define BMI2_ACC_SELF_TEST_FEAT_EN_POS            UINT8_C(0x01)
 #define BMI2_ABORT_FEATURE_EN_POS                 UINT8_C(0x1)
 #define BMI2_NVM_PREP_FEATURE_EN_POS              UINT8_C(0x02)
+#define BMI2_WRIST_GEST_WH_FEAT_EN_POS            UINT8_C(0x01)
 
 /*! Primary OIS low pass filter configuration position and mask */
 #define BMI2_LP_FILTER_EN_MASK                    UINT8_C(0x01)
@@ -555,7 +578,10 @@
 #define BMI2_ANY_NO_MOT_Y_SEL_MASK                UINT16_C(0x4000)
 #define BMI2_ANY_NO_MOT_Z_SEL_MASK                UINT16_C(0x8000)
 #define BMI2_ANY_NO_MOT_THRES_MASK                UINT16_C(0x07FF)
-#define BMI2_ANY_NO_MOT_OUT_CONF_MASK             UINT16_C(0x7800)
+#define BMI2_ANY_MOT_INT_MASK                     UINT8_C(0x40)
+
+/*! @name Mask definitions for BMI2 no-motion interrupt mapping */
+#define BMI2_NO_MOT_INT_MASK                      UINT8_C(0x20)
 
 /*! @name Bit position definitions for BMI2 any and no-motion feature
  * configuration
@@ -563,13 +589,6 @@
 #define BMI2_ANY_NO_MOT_X_SEL_POS                 UINT8_C(0x0D)
 #define BMI2_ANY_NO_MOT_Y_SEL_POS                 UINT8_C(0x0E)
 #define BMI2_ANY_NO_MOT_Z_SEL_POS                 UINT8_C(0x0F)
-#define BMI2_ANY_NO_MOT_OUT_CONF_POS              UINT8_C(0x0B)
-
-/*! @name Mask definitions for BMI2 tilt feature configuration */
-#define BMI2_TILT_OUT_CONF_MASK                   UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 tilt feature configuration */
-#define BMI2_TILT_OUT_CONF_POS                    UINT8_C(0x01)
 
 /*! @name Mask definitions for BMI2 orientation feature configuration */
 #define BMI2_ORIENT_UP_DOWN_MASK                  UINT16_C(0x0002)
@@ -577,14 +596,12 @@
 #define BMI2_ORIENT_BLOCK_MODE_MASK               UINT16_C(0x0030)
 #define BMI2_ORIENT_THETA_MASK                    UINT16_C(0x0FC0)
 #define BMI2_ORIENT_HYST_MASK                     UINT16_C(0x07FF)
-#define BMI2_ORIENT_OUT_CONF_MASK                 UINT16_C(0x7800)
 
 /*! @name Bit position definitions for BMI2 orientation feature configuration */
 #define BMI2_ORIENT_UP_DOWN_POS                   UINT8_C(0x01)
 #define BMI2_ORIENT_SYMM_MODE_POS                 UINT8_C(0x02)
 #define BMI2_ORIENT_BLOCK_MODE_POS                UINT8_C(0x04)
 #define BMI2_ORIENT_THETA_POS                     UINT8_C(0x06)
-#define BMI2_ORIENT_OUT_CONF_POS                  UINT8_C(0x0B)
 
 /*! @name Mask definitions for BMI2 sig-motion feature configuration */
 #define BMI2_SIG_MOT_PARAM_1_MASK                 UINT16_C(0xFFFF)
@@ -592,10 +609,6 @@
 #define BMI2_SIG_MOT_PARAM_3_MASK                 UINT16_C(0xFFFF)
 #define BMI2_SIG_MOT_PARAM_4_MASK                 UINT16_C(0xFFFF)
 #define BMI2_SIG_MOT_PARAM_5_MASK                 UINT16_C(0xFFFF)
-#define BMI2_SIG_MOT_OUT_CONF_MASK                UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 sig-motion feature configuration */
-#define BMI2_SIG_MOT_OUT_CONF_POS                 UINT8_C(0x01)
 
 /*! @name Mask definitions for BMI2 parameter configurations */
 #define BMI2_STEP_COUNT_PARAMS_MASK               UINT16_C(0xFFFF)
@@ -603,15 +616,14 @@
 /*! @name Mask definitions for BMI2 step-counter/detector feature configuration */
 #define BMI2_STEP_COUNT_WM_LEVEL_MASK             UINT16_C(0x03FF)
 #define BMI2_STEP_COUNT_RST_CNT_MASK              UINT16_C(0x0400)
-#define BMI2_STEP_DET_OUT_CONF_MASK               UINT16_C(0x000F)
-#define BMI2_STEP_ACT_OUT_CONF_MASK               UINT16_C(0x00F0)
 #define BMI2_STEP_BUFFER_SIZE_MASK                UINT16_C(0XFF00)
+#define BMI2_STEP_COUNT_INT_MASK                  UINT8_C(0x02)
+#define BMI2_STEP_ACT_INT_MASK                    UINT8_C(0x04)
 
 /*! @name Bit position definitions for BMI2 step-counter/detector feature
  * configuration
  */
 #define BMI2_STEP_COUNT_RST_CNT_POS               UINT8_C(0x0A)
-#define BMI2_STEP_ACT_OUT_CONF_POS                UINT8_C(0x04)
 #define BMI2_STEP_BUFFER_SIZE_POS                 UINT8_C(0X08)
 
 /*! @name Mask definitions for BMI2 gyroscope user gain feature
@@ -682,20 +694,6 @@
 #define BMI2_ACC_Y_OK_POS                         UINT8_C(0x02)
 #define BMI2_ACC_Z_OK_POS                         UINT8_C(0x03)
 
-/*! @name Mask definitions for BMI2 uphold to wake feature configuration */
-#define BMI2_UP_HOLD_TO_WAKE_OUT_CONF_MASK        UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 uphold to wake feature configuration */
-#define BMI2_UP_HOLD_TO_WAKE_OUT_CONF_POS         UINT8_C(0x01)
-
-/*! @name Mask definitions for BMI2 glance detector feature configuration */
-#define BMI2_GLANCE_DET_OUT_CONF_MASK             UINT16_C(0x001E)
-
-/*! @name Bit position definitions for BMI2 glance detector feature
- * configuration
- */
-#define BMI2_GLANCE_DET_OUT_CONF_POS              UINT8_C(0x01)
-
 /*! @name Mask definitions for BMI2 high-g feature configuration */
 #define BMI2_HIGH_G_THRES_MASK                    UINT16_C(0x7FFF)
 #define BMI2_HIGH_G_HYST_MASK                     UINT16_C(0x0FFF)
@@ -703,10 +701,8 @@
 #define BMI2_HIGH_G_Y_SEL_MASK                    UINT16_C(0x2000)
 #define BMI2_HIGH_G_Z_SEL_MASK                    UINT16_C(0x4000)
 #define BMI2_HIGH_G_DUR_MASK                      UINT16_C(0x0FFF)
-#define BMI2_HIGH_G_OUT_CONF_MASK                 UINT16_C(0xF000)
 
 /*! @name Bit position definitions for BMI2 high-g feature configuration */
-#define BMI2_HIGH_G_OUT_CONF_POS                  UINT8_C(0x0C)
 #define BMI2_HIGH_G_X_SEL_POS                     UINT8_C(0x0C)
 #define BMI2_HIGH_G_Y_SEL_POS                     UINT8_C(0x0D)
 #define BMI2_HIGH_G_Z_SEL_POS                     UINT8_C(0x0E)
@@ -715,46 +711,34 @@
 #define BMI2_LOW_G_THRES_MASK                     UINT16_C(0x7FFF)
 #define BMI2_LOW_G_HYST_MASK                      UINT16_C(0x0FFF)
 #define BMI2_LOW_G_DUR_MASK                       UINT16_C(0x0FFF)
-#define BMI2_LOW_G_OUT_CONF_MASK                  UINT16_C(0xF000)
 
 /*! @name Mask definitions for BMI2 free-fall detection feature configuration */
-#define BMI2_FREE_FALL_OUT_CONF_MASK              UINT16_C(0x001E)
 #define BMI2_FREE_FALL_ACCEL_SETT_MASK            UINT16_C(0xFFFF)
-
-/*! @name Bit position definitions for BMI2 free-fall detection feature configuration */
-#define BMI2_FREE_FALL_OUT_CONF_POS               UINT8_C(0x01)
-
-/*! @name Bit position definitions for BMI2 low-g feature configuration */
-#define BMI2_LOW_G_OUT_CONF_POS                   UINT8_C(0x0C)
 
 /*! @name Mask definitions for BMI2 flat feature configuration */
 #define BMI2_FLAT_THETA_MASK                      UINT16_C(0x007E)
 #define BMI2_FLAT_BLOCK_MASK                      UINT16_C(0x0180)
-#define BMI2_FLAT_OUT_CONF_MASK                   UINT16_C(0x1E00)
 #define BMI2_FLAT_HYST_MASK                       UINT16_C(0x003F)
 #define BMI2_FLAT_HOLD_TIME_MASK                  UINT16_C(0x3FC0)
 
 /*! @name Bit position definitions for BMI2 flat feature configuration */
 #define BMI2_FLAT_THETA_POS                       UINT8_C(0x01)
 #define BMI2_FLAT_BLOCK_POS                       UINT8_C(0x07)
-#define BMI2_FLAT_OUT_CONF_POS                    UINT8_C(0x09)
 #define BMI2_FLAT_HOLD_TIME_POS                   UINT8_C(0x06)
-
-/*! @name Mask definitions for BMI2 external sensor sync configuration */
-#define BMI2_EXT_SENS_SYNC_OUT_CONF_MASK          UINT16_C(0x001E)
-
-/*! @name Bit position definitions for external sensor sync configuration */
-#define BMI2_EXT_SENS_SYNC_OUT_CONF_POS           UINT8_C(0x01)
 
 /*! @name Mask definitions for BMI2 wrist gesture configuration */
 #define BMI2_WRIST_GEST_WEAR_ARM_MASK             UINT16_C(0x0010)
-#define BMI2_WRIST_GEST_OUT_CONF_MASK             UINT16_C(0x000F)
 
 /*! @name Bit position definitions for wrist gesture configuration */
 #define BMI2_WRIST_GEST_WEAR_ARM_POS              UINT8_C(0x04)
 
+/*! @name Mask definitions for BMI2 wrist gesture wh configuration */
+#define BMI2_WRIST_GEST_WH_DEVICE_POS_MASK        UINT16_C(0x0001)
+#define BMI2_WRIST_GEST_WH_INT                    UINT8_C(0x10)
+#define BMI2_WRIST_GEST_WH_START_ADD              UINT8_C(0x08)
+
 /*! @name Mask definitions for BMI2 wrist wear wake-up configuration */
-#define BMI2_WRIST_WAKE_UP_OUT_CONF_MASK          UINT16_C(0x000F)
+#define BMI2_WRIST_WAKE_UP_WH_INT_MASK            UINT8_C(0x08)
 
 /*! @name Mask definition for BMI2 wrist wear wake-up configuration for wearable variant */
 #define BMI2_WRIST_WAKE_UP_ANGLE_LR_MASK          UINT16_C(0x00FF)
@@ -1276,16 +1260,6 @@
 #define BMI2_ASDA_PUPSEL_2K                       UINT8_C(0x03)
 
 /******************************************************************************/
-/*!  @name         CHIP ID MACROS                                        */
-/******************************************************************************/
-
-/*! @name BMI260 chip identifier */
-#define BMI260_CHIP_IDENTIFIER                    UINT8_C(0x27)
-
-/*! @name BMI261 chip identifier */
-#define BMI261_CHIP_IDENTIFIER                    UINT8_C(0x21)
-
-/******************************************************************************/
 /*! @name           Function Pointers                             */
 /******************************************************************************/
 
@@ -1349,6 +1323,22 @@ typedef void (*bmi2_delay_fptr_t)(uint32_t period, void *intf_ptr);
  *
  */
 typedef int8_t (*bmi2_wake_up_fptr_t)(void *wake_up, void *bmi2_dev);
+
+/*!
+ * @brief To get the configurations for tap feature.
+ *
+ * @param[out]      tap        : Void pointer to store bmi2_tap_config structure.
+ * @param[in, out]  bmi2_dev   : Void pointer to store bmi2_dev structure.
+ *
+ * @return Result of API execution status
+ *
+ * @retval BMI2_OK - Success.
+ * @retval BMI2_E_COM_FAIL - Error: Communication fail
+ * @retval BMI2_E_NULL_PTR - Error: Null pointer error
+ * @retval BMI2_E_INVALID_PAGE - Error: Invalid Page
+ *
+ */
+typedef int8_t (*bmi2_tap_fptr_t)(void *tap, void *bmi2_dev);
 
 /******************************************************************************/
 /*!  @name         Enum Declarations                                  */
@@ -1461,61 +1451,6 @@ struct bmi2_sens_int_config
 
     /*! Type of interrupt pin */
     enum bmi2_hw_int_pin hw_int_pin;
-};
-
-/*! @name Structure to define the output configuration value of features */
-struct bmi2_int_map
-{
-    /*! Output configuration value of sig-motion */
-    uint8_t sig_mot_out_conf;
-
-    /*! Output configuration value of any-motion */
-    uint8_t any_mot_out_conf;
-
-    /*! Output configuration value of no-motion */
-    uint8_t no_mot_out_conf;
-
-    /*! Output configuration value of step-detector */
-    uint8_t step_det_out_conf;
-
-    /*! Output configuration value of step-activity */
-    uint8_t step_act_out_conf;
-
-    /*! Output configuration value of tilt */
-    uint8_t tilt_out_conf;
-
-    /*! Output configuration value of uphold to wake */
-    uint8_t up_hold_to_wake_out_conf;
-
-    /*! Output configuration value of glance */
-    uint8_t glance_out_conf;
-
-    /*! Output configuration value of wake-up */
-    uint8_t wake_up_out_conf;
-
-    /*! Output configuration value of orientation */
-    uint8_t orient_out_conf;
-
-    /*! Output configuration value of high-g */
-    uint8_t high_g_out_conf;
-
-    /*! Output configuration value of low-g */
-    uint8_t low_g_out_conf;
-
-    /*! Output configuration value of flat */
-    uint8_t flat_out_conf;
-
-    /*! Output configuration value of S4S */
-    uint8_t ext_sync_out_conf;
-
-    /*! Output configuration value of wrist gesture */
-    uint8_t wrist_gest_out_conf;
-
-    /*! Output configuration value of wrist wear wake-up */
-    uint8_t wrist_wear_wake_up_out_conf;
-
-    /*! Output configuration value of free-fall detection */
-    uint8_t freefall_out_conf;
 };
 
 /*! @name Structure to define output for activity recognition */
@@ -1905,9 +1840,6 @@ struct bmi2_any_motion_config
 
     /*! To select per z-axis */
     uint16_t select_z;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define no-motion configuration */
@@ -1927,9 +1859,6 @@ struct bmi2_no_motion_config
 
     /*! To select per z-axis */
     uint16_t select_z;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define sig-motion configuration */
@@ -1949,9 +1878,6 @@ struct bmi2_sig_motion_config
 
     /*! Parameter 5 */
     uint16_t param_5;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define step counter/detector/activity configuration */
@@ -1963,15 +1889,7 @@ struct bmi2_step_config
     /*! Reset counter */
     uint16_t reset_counter;
 
-    /*! Enable bits for enabling output into the register status bits
-     * for step-detector
-     */
-    uint16_t out_conf_step_detector;
-
-    /*! Enable bits for enabling output into the register status bits
-     * for step-activity
-     */
-    uint16_t out_conf_activity;
+    /*! Step buffer size */
     uint8_t step_buffer_size;
 };
 
@@ -1986,27 +1904,6 @@ struct bmi2_gyro_user_gain_config
 
     /*! Gain update value for z-axis */
     uint16_t ratio_z;
-};
-
-/*! @name Structure to define tilt configuration */
-struct bmi2_tilt_config
-{
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-};
-
-/*! @name Structure to define uphold to wake configuration */
-struct bmi2_up_hold_to_wake_config
-{
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-};
-
-/*! @name Structure to define glance detector configuration */
-struct bmi2_glance_det_config
-{
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define wake-up configuration */
@@ -2038,9 +1935,37 @@ struct bmi2_wake_up_config
 
     /*! Axis selection */
     uint16_t axis_sel;
+};
 
-    /*! Enable bits for enabling output into the register status bits for bmi260 and bmi261 */
-    uint16_t out_conf;
+/*! @name Structure to define tap configuration */
+struct bmi2_tap_config
+{
+    /*! Tap sensitivity */
+    uint16_t sensitivity;
+
+    /*! Tap feature.
+     * For Single tap, single_tap_en = 1
+     * For Double tap, single_tap_en = 0
+     */
+    uint16_t single_tap_en;
+
+    /*! Enable -> Filtered tap data, Disable -> Unfiltered data */
+    uint16_t data_reg_en;
+
+    /*! Scaling factor of threshold */
+    uint16_t tap_sens_thres;
+
+    /*! Maximum duration between each taps */
+    uint16_t max_gest_dur;
+
+    /*! Minimum quite time between the two gesture detection */
+    uint16_t quite_time_after_gest;
+
+    /*! Wait time */
+    uint16_t wait_for_timeout;
+
+    /*! Axis selection */
+    uint16_t axis_sel;
 };
 
 /*! @name Structure to define orientation configuration */
@@ -2060,9 +1985,6 @@ struct bmi2_orient_config
 
     /*!  Acceleration hysteresis for orientation detection */
     uint16_t hysteresis;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define high-g configuration */
@@ -2085,9 +2007,6 @@ struct bmi2_high_g_config
 
     /*!  Duration interval */
     uint16_t duration;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define low-g configuration */
@@ -2101,10 +2020,6 @@ struct bmi2_low_g_config
 
     /*! Duration interval */
     uint16_t duration;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-
 };
 
 /*! @name Structure to define flat configuration */
@@ -2121,16 +2036,6 @@ struct bmi2_flat_config
 
     /*! Holds the duration in 50Hz samples(20msec) */
     uint16_t hold_time;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-};
-
-/*! @name Structure to define external sensor sync configuration */
-struct bmi2_ext_sens_sync_config
-{
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 };
 
 /*! @name Structure to define wrist gesture configuration */
@@ -2138,9 +2043,6 @@ struct bmi2_wrist_gest_config
 {
     /*!  Wearable arm (left or right) */
     uint16_t wearable_arm;
-
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
 
     /*! Sine of the minimum tilt angle in portrait down direction of the device when wrist is rolled
      *  away from user. The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
@@ -2159,9 +2061,6 @@ struct bmi2_wrist_gest_config
 /*! @name Structure to define wrist wear wake-up configuration */
 struct bmi2_wrist_wear_wake_up_config
 {
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-
     /*! Cosine of min expected attitude change of the device within 1 second time window when
      *  moving within focus position.
      *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
@@ -2207,36 +2106,43 @@ struct bmi2_wrist_wear_wake_up_config
 struct bmi2_wrist_gest_w_config
 {
     /*!  Wearable arm (left or right) */
-    uint8_t wearable_arm : 1;
+    uint8_t device_position;
 
-    /*! Enable bits for enabling output into the register status bits */
-    uint8_t out_conf : 4;
+    /*! Minimum threshold for flick peak on y-axis */
+    uint16_t min_flick_peak_y_threshold;
 
-    /*! Sine of the minimum tilt angle in portrait down direction of the device when wrist is rolled
-     *  away from user. The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
-     *  Range is 1448 to 1774. Default value is 1774.  */
-    uint16_t min_flick_peak;
+    /*! Minimum threshold for flick peak on z-axis */
+    uint16_t min_flick_peak_z_threshold;
 
-    /*! Value of minimum time difference between wrist roll-out and roll-in movement during flick gesture.
-     *  Range is 3 to 5 samples at 50Hz. Default value is 4 (i.e. 0.08 seconds).  */
-    uint16_t min_flick_samples;
+    /*! Maximum expected value of positive gravitational acceleration on x-axis
+     * when arm is in focus pose */
+    uint16_t gravity_bounds_x_pos;
 
-    /*! Maximum time within which gesture movement has to be completed. Range is 150 to 250 samples at 50Hz.
-     * Default value is 200 (i.e. 4 seconds).  */
-    uint16_t max_duration;
+    /*! Maximum expected value of negative gravitational acceleration on x-axis
+     * when arm is in focus pose */
+    uint16_t gravity_bounds_x_neg;
 
-    /*!  Defines the Wait time between the detection of the wrist gesture and reporting the wrist gesture.
-     *  The sample resolution is 20ms. The default value is 25 which is equal to reporting delay 500ms .
-     */
-    uint16_t reporting_delay;
+    /*! Maximum expected value of negative gravitational acceleration on y-axis
+     * when arm is in focus pose */
+    uint16_t gravity_bounds_y_neg;
+
+    /*! Maximum expected value of negative gravitational acceleration on z-axis
+     * when arm is in focus pose */
+    uint16_t gravity_bounds_z_neg;
+
+    /*! Exponential smoothing coefficient for adaptive peak threshold decay */
+    uint16_t flick_peak_decay_coeff;
+
+    /*! Exponential smoothing coefficient for acceleration mean estimation */
+    uint16_t lp_mean_filter_coeff;
+
+    /*! Maximum duration between 2 peaks of jiggle in samples @50Hz  */
+    uint16_t max_duration_jiggle_peaks;
 };
 
 /*! @name Structure to define wrist wear wake-up configuration for wearable configuration */
 struct bmi2_wrist_wear_wake_up_wh_config
 {
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-
     /*! Cosine of min expected attitude change of the device within 1 second time window when
      * moving within focus position.
      *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
@@ -2301,9 +2207,6 @@ struct bmi2_primary_ois_config
 /*! @name Structure to configure free-fall detection settings */
 struct bmi2_free_fall_det_config
 {
-    /*! Enable bits for enabling output into the register status bits */
-    uint16_t out_conf;
-
     /*! free-fall accel settings */
     uint16_t freefall_accel_settings[BMI2_FREE_FALL_ACCEL_SET_PARAMS];
 };
@@ -2338,17 +2241,11 @@ union bmi2_sens_config_types
     /*! Gyroscope user gain configuration */
     struct bmi2_gyro_user_gain_config gyro_gain_update;
 
-    /*! Tilt configuration */
-    struct bmi2_tilt_config tilt;
-
-    /*! uphold to wake configuration */
-    struct bmi2_up_hold_to_wake_config up_hold_to_wake;
-
-    /*! Glance detector configuration */
-    struct bmi2_glance_det_config glance_det;
-
     /*! Wake-up configuration */
     struct bmi2_wake_up_config tap;
+
+    /*! Tap configuration */
+    struct bmi2_tap_config tap_conf;
 
     /*! Orientation configuration */
     struct bmi2_orient_config orientation;
@@ -2361,9 +2258,6 @@ union bmi2_sens_config_types
 
     /*! Flat configuration */
     struct bmi2_flat_config flat;
-
-    /*! External sensor sync configuration */
-    struct bmi2_ext_sens_sync_config ext_sens_sync;
 
     /*! Wrist gesture configuration */
     struct bmi2_wrist_gest_config wrist_gest;
@@ -2405,6 +2299,16 @@ struct bmi2_feature_config
 
     /*! Address of the feature */
     uint8_t start_addr;
+};
+
+/*!  @name Structure to define the feature interrupt configurations */
+struct bmi2_map_int
+{
+    /*! Defines the type of sensor */
+    uint8_t type;
+
+    /*! Defines the feature interrupt */
+    uint8_t sens_map_int;
 };
 
 /*!  @name Structure to define BMI2 sensor configurations */
@@ -2462,9 +2366,6 @@ struct bmi2_dev
     /*! Array of feature output configuration structure */
     const struct bmi2_feature_config *feat_output;
 
-    /*! Structure to maintain a copy of feature out_conf values */
-    struct bmi2_int_map int_map;
-
     /*! Structure to maintain a copy of the re-mapped axis */
     struct bmi2_axes_remap remap;
 
@@ -2500,37 +2401,75 @@ struct bmi2_dev
 
     /*! Function pointer to set wakeup configurations */
     bmi2_wake_up_fptr_t set_wakeup_config;
+
+    /*! Function pointer to get tap configurations */
+    bmi2_tap_fptr_t get_tap_config;
+
+    /*! Function pointer to set tap configurations */
+    bmi2_tap_fptr_t set_tap_config;
+
+    /*! Array of feature interrupts configuration structure */
+    struct bmi2_map_int *map_int;
+
+    /*! To define maximum number of interrupts */
+    uint8_t sens_int_map;
 };
 
 /*!  @name Structure to enable an accel axis for foc */
 struct bmi2_accel_foc_g_value
 {
-    /* '0' to disable x axis and '1' to enable x axis */
+    /*! '0' to disable x axis and '1' to enable x axis */
     uint8_t x;
 
-    /* '0' to disable y axis and '1' to enable y axis */
+    /*! '0' to disable y axis and '1' to enable y axis */
     uint8_t y;
 
-    /* '0' to disable z axis and '1' to enable z axis */
+    /*! '0' to disable z axis and '1' to enable z axis */
     uint8_t z;
 
-    /* '0' for positive input and '1' for negative input */
+    /*! '0' for positive input and '1' for negative input */
     uint8_t sign;
 };
 
 /*! @name Structure to configure activity recognition settings */
 struct bmi2_act_recg_sett
 {
-    /* 1 to enable & 0 to disable post processing */
+    /*! Activity recognition register 1 */
     uint8_t act_rec_1 : 1;
 
+    /*! Activity recognition register 2 */
     uint16_t act_rec_2;
 
+    /*! Activity recognition register 3 */
     uint16_t act_rec_3;
 
+    /*! Activity recognition register 4 */
     uint8_t act_rec_4 : 4;
 
+    /*! Activity recognition register 5 */
     uint8_t act_rec_5 : 4;
+};
+
+/*! @name Structure to configure activity recognition settings for bmi270hc */
+struct bmi2_hc_act_recg_sett
+{
+    /*! Static segment size for activity classification. */
+    uint8_t segment_size;
+
+    /*! Enable/Disable post processing of the activity detected */
+    uint8_t pp_en;
+
+    /*! Minimum threshold of the Gini's diversity index (GDI) */
+    uint16_t min_gdi_thres;
+
+    /*! Maximum threshold of the Gini's diversity index (GDI) */
+    uint16_t max_gdi_thres;
+
+    /*! Buffer size for post processing of the activity detected */
+    uint16_t buf_size;
+
+    /*! Minimum segments belonging to a certain activity type */
+    uint16_t min_seg_conf;
 };
 
 #endif /* BMI2_DEFS_H_ */
