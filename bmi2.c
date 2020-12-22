@@ -1916,7 +1916,7 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev)
     {
         /* Reset bmi2 device */
         rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &data, 1, dev);
-        dev->delay_us(2000, dev->intf_ptr);
+        dev->delay_us(3000, dev->intf_ptr);
 
         /* set APS flag as after soft reset the sensor is on advance power save mode */
         dev->aps_status = BMI2_ENABLE;
