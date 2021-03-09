@@ -9,6 +9,6 @@ The BMI2xy is a small, low power, low noise inertial measurement unit designed f
 
 - Indoor navigation, pedestrian dead-reckoning, step-counting
 
-For more information refer product page [Link](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270.html) 
+For more information refer product page [Link](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) 
 
 ---
