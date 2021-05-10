@@ -4445,11 +4445,16 @@ int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev)
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (int_stat != NULL))
     {
-        /* Delay to read the internal status */
-        dev->delay_us(20000, dev->intf_ptr);
+        /* Try reading internal status register until initialized or timeout */
+        int timeout = 50;
+        do
+        {
+            /* Delay to read the internal status */
+            dev->delay_us(20000, dev->intf_ptr);
 
-        /* Get the error bits and message */
-        rslt = bmi2_get_regs(BMI2_INTERNAL_STATUS_ADDR, int_stat, 1, dev);
+            /* Get the error bits and message */
+            rslt = bmi2_get_regs(BMI2_INTERNAL_STATUS_ADDR, int_stat, 1, dev);
+        } while ((*int_stat == 0) && --timeout);
     }
     else
     {
