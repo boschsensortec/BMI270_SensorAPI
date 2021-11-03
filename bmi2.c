@@ -2820,7 +2820,8 @@ int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
 
             /* Convert word to byte since all sensor enables are in a byte */
             data_enable = (uint8_t)(fifo->data_enable >> 8);
-            for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
+            uint16_t end_idx = data_index + data_read_length;
+            for (; (data_index < end_idx) && (rslt != BMI2_W_FIFO_EMPTY);)
             {
                 /* Unpack frame to get the accelerometer data */
                 rslt = unpack_accel_frame(accel_data, &data_index, &accel_index, data_enable, fifo, dev);
@@ -2904,7 +2905,7 @@ int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
             (*gyro_length) = gyro_index;
 
             /* Update the gyroscope byte index */
-            fifo->acc_byte_start_idx = data_index;
+            fifo->gyr_byte_start_idx = data_index;
         }
         else
         {
@@ -6135,9 +6136,9 @@ static int8_t parse_fifo_accel_len(uint16_t *start_idx,
     }
 
     /* If more data is requested than available */
-    if ((*len) > fifo->length)
+    if ((*start_idx) + (*len) > fifo->length)
     {
-        (*len) = fifo->length;
+        (*len) = fifo->length - (*start_idx);
     }
 
     return rslt;
