@@ -179,8 +179,7 @@ int main(void)
             accel_frame_length = BMI2_FIFO_ACCEL_FRAME_COUNT;
             gyro_frame_length = BMI2_FIFO_GYRO_FRAME_COUNT;
 
-            printf("\nFIFO data bytes available : %d \n", fifo_length);
-            printf("\nFIFO data bytes requested : %d \n", fifoframe.length);
+            fifoframe.length = fifo_length;
 
             /* Read FIFO data. */
             rslt = bmi2_read_fifo_data(&fifoframe, &bmi2_dev);
