@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.c
-* @date       2020-11-04
-* @version    v2.63.1
+* @date       2021-09-30
+* @version    v2.71.8
 *
 */
 
@@ -476,35 +476,9 @@ static uint8_t extract_output_feat_config(struct bmi2_feature_config *feat_outpu
 static int8_t get_gyro_cross_sense(int16_t *cross_sense, struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API gets the accelerometer data from the register.
+ * @brief This internal API parses the accelerometer/gyroscope data.
  *
- * @param[out] data         : Structure instance of sensor_data.
- * @param[in]  reg_addr     : Register address where data is stored.
- * @param[in]  dev          : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t get_accel_sensor_data(struct bmi2_sens_axes_data *data, uint8_t reg_addr, struct bmi2_dev *dev);
-
-/*!
- * @brief This internal API gets the gyroscope data from the register.
- *
- * @param[out] data         : Structure instance of sensor_data.
- * @param[in]  reg_addr     : Register address where data is stored.
- * @param[in]  dev          : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t get_gyro_sensor_data(struct bmi2_sens_axes_data *data, uint8_t reg_addr, struct bmi2_dev *dev);
-
-/*!
- * @brief This internal API gets the accelerometer/gyroscope data.
- *
- * @param[out] data         : Structure instance of sensor_data.
+ * @param[out] data         : Structure instance of bmi2_sens_axes_data.
  * @param[in]  reg_data     : Data stored in the register.
  *
  * @return None
@@ -516,7 +490,7 @@ static void get_acc_gyr_data(struct bmi2_sens_axes_data *data, const uint8_t *re
 /*!
  * @brief This internal API gets the re-mapped accelerometer/gyroscope data.
  *
- * @param[out] data         : Structure instance of sensor_data.
+ * @param[out] data         : Structure instance of bmi2_sens_axes_data.
  * @param[in]  dev          : Structure instance of bmi2_dev.
  *
  * @return None
@@ -524,19 +498,6 @@ static void get_acc_gyr_data(struct bmi2_sens_axes_data *data, const uint8_t *re
  * @retval None
  */
 static void get_remapped_data(struct bmi2_sens_axes_data *data, const struct bmi2_dev *dev);
-
-/*!
- * @brief This internal API reads the user-defined bytes of data from the given
- * register address of auxiliary sensor in data mode.
- *
- * @param[out] aux_data     : Pointer to the stored auxiliary data.
- * @param[in]  dev          : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t read_aux_data_mode(uint8_t *aux_data, struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API reads the user-defined bytes of data from the given
@@ -621,6 +582,7 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
  *
  * @param[out] start_idx   : The start index for parsing data.
  * @param[out] len         : Number of bytes to be parsed.
+ * @param[out] skip_length : Number of bytes to skip if dummy frame is obtained
  * @param[in]  acc_count   : Number of accelerometer frames to be read.
  * @param[in]  fifo        : Structure instance of bmi2_fifo_frame.
  *
@@ -630,6 +592,7 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
  */
 static int8_t parse_fifo_accel_len(uint16_t *start_idx,
                                    uint16_t *len,
+                                   uint8_t *skip_length,
                                    const uint16_t *acc_count,
                                    const struct bmi2_fifo_frame *fifo);
 
@@ -653,8 +616,53 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
                                         const struct bmi2_dev *dev);
 
 /*!
+ * @brief This internal API is used to parse accelerometer data from the FIFO
+ * data in headerless mode.
+ *
+ * @param[out] acc          : Structure instance of bmi2_sens_axes_data where
+ *                            the parsed accelerometer data bytes are stored.
+ * @param[in] accel_length  : Number of accelerometer frames (x,y,z data).
+ * @param[in] fifo          : Structure instance of bmi2_fifo_frame.
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t extract_accel_headerless_mode(struct bmi2_sens_axes_data *acc,
+                                            uint16_t *accel_length,
+                                            struct bmi2_fifo_frame *fifo,
+                                            const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to skip dummy frames in FIFO headerless mode
+ *
+ * @param[in] dummy_frame_header   : Dummy frame header byte value in FIFO headerless mode
+ *
+ * ----------------------------------|--------------------
+ *        dummy_frame_header         |    Applicable to
+ * ----------------------------------|--------------------
+ *   BMI2_FIFO_HEADERLESS_DUMMY_ACC  |     ACCEL
+ *   BMI2_FIFO_HEADERLESS_DUMMY_GYR  |     GYRO
+ *   BMI2_FIFO_HEADERLESS_DUMMY_AUX  |     AUX
+ * ----------------------------------|--------------------
+ *
+ * @param[in] data_index    : Index value of number of bytes parsed.
+ * @param[in] skip_length   : Number of bytes to skip if dummy frame is obtained
+ * @param[in] fifo          : Structure instance of bmi2_fifo_frame.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t check_dummy_frame(uint8_t dummy_frame_header,
+                                uint16_t *data_index,
+                                uint8_t skip_length,
+                                const struct bmi2_fifo_frame *fifo);
+
+/*!
  * @brief This internal API is used to parse the accelerometer data from the
- * FIFO data in both header and header-less mode. It updates the current data
+ * FIFO data in header mode. It updates the current data
  * byte to be parsed.
  *
  * @param[in,out] acc       : Structure instance of bmi2_sens_axes_data where
@@ -671,12 +679,38 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
  * @retval 0 -> Success
  * @retval < 0 -> Fail
  */
-static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
-                                 uint16_t *idx,
-                                 uint16_t *acc_idx,
-                                 uint8_t frame,
-                                 const struct bmi2_fifo_frame *fifo,
-                                 const struct bmi2_dev *dev);
+static int8_t unpack_accel_header_frame(struct bmi2_sens_axes_data *acc,
+                                        uint16_t *idx,
+                                        uint16_t *acc_idx,
+                                        uint8_t frame,
+                                        const struct bmi2_fifo_frame *fifo,
+                                        const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to parse the accelerometer data from the
+ * FIFO data in header-less mode. It updates the current data
+ * byte to be parsed.
+ *
+ * @param[in,out] acc       : Structure instance of bmi2_sens_axes_data where
+ *                            where the parsed data bytes are stored.
+ * @param[in,out] idx       : Index value of number of bytes parsed.
+ * @param[in,out] acc_idx   : Index value of accelerometer data (x,y,z axes)
+ *                            frame to be parsed.
+ * @param[in]     frame     : Either data is enabled by user in header-less
+ *                            mode or header frame value in header mode.
+ * @param[in]     fifo      : Structure instance of bmi2_fifo_frame.
+ * @param[in]     dev       : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
+                                            uint16_t *idx,
+                                            uint16_t *acc_idx,
+                                            uint8_t frame,
+                                            const struct bmi2_fifo_frame *fifo,
+                                            const struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API is used to parse accelerometer data from the FIFO
@@ -703,6 +737,7 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
  *
  * @param[out] start_idx   : The start index for parsing data.
  * @param[out] len         : Number of bytes to be parsed.
+ * @param[out] skip_length : Number of bytes to skip if dummy frame is obtained
  * @param[in]  gyr_count   : Number of gyroscope frames to be read.
  * @param[in]  frame       : Either data enabled by user in header-less
  *                            mode or header frame value in header mode.
@@ -713,13 +748,14 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
  * @retval < 0 -> Fail
  */
 static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
-                                  uint16_t(*len),
+                                  uint16_t *len,
+                                  uint8_t *skip_length,
                                   const uint16_t *gyr_count,
                                   const struct bmi2_fifo_frame *fifo);
 
 /*!
  * @brief This internal API is used to parse the gyroscope data from the FIFO
- * data in both header and header-less mode It updates the current data byte to
+ * data in header mode It updates the current data byte to
  * be parsed.
  *
  * @param[in,out] gyr       : Structure instance of bmi2_sens_axes_data.
@@ -735,12 +771,37 @@ static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
  * @retval 0 -> Success
  * @retval < 0 -> Fail
  */
-static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
-                                uint16_t *idx,
-                                uint16_t *gyr_idx,
-                                uint8_t frame,
-                                const struct bmi2_fifo_frame *fifo,
-                                const struct bmi2_dev *dev);
+static int8_t unpack_gyro_header_frame(struct bmi2_sens_axes_data *gyr,
+                                       uint16_t *idx,
+                                       uint16_t *gyr_idx,
+                                       uint8_t frame,
+                                       const struct bmi2_fifo_frame *fifo,
+                                       const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to parse the gyroscope data from the FIFO
+ * data in header-less mode It updates the current data byte to
+ * be parsed.
+ *
+ * @param[in,out] gyr       : Structure instance of bmi2_sens_axes_data.
+ * @param[in,out] idx       : Index value of number of bytes parsed
+ * @param[in,out] gyr_idx   : Index value of gyroscope data (x,y,z axes)
+ *                            frame to be parsed.
+ * @param[in]     frame     : Either data is enabled by user in header-less
+ *                            mode or header frame value in header mode.
+ * @param[in]     fifo      : Structure instance of bmi2_fifo_frame.
+ * @param[in]     dev       : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t unpack_gyro_headerless_frame(struct bmi2_sens_axes_data *gyr,
+                                           uint16_t *idx,
+                                           uint16_t *gyr_idx,
+                                           uint8_t frame,
+                                           const struct bmi2_fifo_frame *fifo,
+                                           const struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API is used to parse gyroscope data from the FIFO data.
@@ -780,11 +841,31 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
                                        const struct bmi2_dev *dev);
 
 /*!
+ * @brief This internal API is used to parse gyroscope data from the FIFO
+ * data in headerless mode.
+ *
+ * @param[out] gyr          : Structure instance of bmi2_sens_axes_data where
+ *                            the parsed gyroscope data bytes are stored.
+ * @param[in] gyro_length   : Number of gyroscope frames (x,y,z data).
+ * @param[in] fifo          : Structure instance of bmi2_fifo_frame.
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t extract_gyro_headerless_mode(struct bmi2_sens_axes_data *gyr,
+                                           uint16_t *gyro_length,
+                                           struct bmi2_fifo_frame *fifo,
+                                           const struct bmi2_dev *dev);
+
+/*!
  * @brief This API computes the number of bytes of auxiliary FIFO data
  * which is to be parsed in header-less mode.
  *
  * @param[out] start_idx   : The start index for parsing data.
  * @param[out] len         : Number of bytes to be parsed.
+ * @param[out] skip_length : Number of bytes to skip if dummy frame is obtained
  * @param[in]  aux_count   : Number of accelerometer frames to be read.
  * @param[in]  fifo        : Structure instance of bmi2_fifo_frame.
  *
@@ -793,7 +874,8 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
  * @retval < 0 -> Fail
  */
 static int8_t parse_fifo_aux_len(uint16_t *start_idx,
-                                 uint16_t(*len),
+                                 uint16_t *len,
+                                 uint8_t *skip_length,
                                  const uint16_t *aux_count,
                                  const struct bmi2_fifo_frame *fifo);
 
@@ -814,6 +896,25 @@ static int8_t extract_aux_header_mode(struct bmi2_aux_fifo_data *aux,
                                       uint16_t *aux_length,
                                       struct bmi2_fifo_frame *fifo,
                                       const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to parse auxiliary data from the FIFO
+ * data in headerless mode.
+ *
+ * @param[out] aux          : Structure instance of bmi2_sens_axes_data where
+ *                            the parsed auxiliary data bytes are stored.
+ * @param[in] aux_length    : Number of auxiliary frames (x,y,z data).
+ * @param[in] fifo          : Structure instance of bmi2_fifo_frame.
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t extract_aux_headerless_mode(struct bmi2_aux_fifo_data *aux,
+                                          uint16_t *aux_length,
+                                          struct bmi2_fifo_frame *fifo,
+                                          const struct bmi2_dev *dev);
 
 /*!
  * @brief This API is used to parse the auxiliary data from the FIFO data in
@@ -1154,6 +1255,19 @@ static void unpack_virt_aux_sensor_time(struct bmi2_aux_fifo_data *aux,
                                         const struct bmi2_fifo_frame *fifo);
 
 /*!
+ * @brief This internal API clips the gyroscope cross-axis sensitivity within signed 16-bit limit
+ *
+ * @param[in]  value              : Gyro cross-axis sensitivity value to be saturated.
+ * @param[out] saturation_val     : Saturation value to be clipped.
+ *
+ * @return Result of API execution status
+ *
+ * @return Result of API execution status
+ * @retval Saturated gyro cross-axis sensitivity value
+ */
+static int16_t saturate(int32_t value, uint16_t saturation_val);
+
+/*!
  * @brief This internal API corrects the gyroscope cross-axis sensitivity
  * between the z and the x axis.
  *
@@ -1477,6 +1591,16 @@ static int8_t set_st_running(uint8_t st_status, struct bmi2_dev *dev);
  */
 static int8_t crt_prepare_setup(struct bmi2_dev *dev);
 
+/*!
+ * @brief This API is to run the crt process for both max burst length 0 and non zero condition.
+ *
+ * @param[in] gyro_st_crt   : Update the gyro self-test crt enable bit
+ * @param[in] dev           : Structure instance of bmi2_dev
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
 static int8_t do_gtrigger_test(uint8_t gyro_st_crt, struct bmi2_dev *dev);
 
 /*!
@@ -1553,7 +1677,8 @@ static int8_t process_crt_download(uint8_t last_byte_flag, struct bmi2_dev *dev)
 /*!
  * @brief This api is used to enable the gyro self-test or crt.
  *
- * @param[in] dev        : Structure instance of bmi2_dev.
+ * @param[in] gyro_st_crt   : Update the gyro self-test crt enable bit
+ * @param[in] dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
  * @retval 0 -> Success
@@ -1564,8 +1689,8 @@ static int8_t select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev);
 /*!
  * @brief This api is used to enable/disable abort.
  *
- * @param[in] abort_enable  : variable to enable the abort feature.
- * @param[in] dev        : Structure instance of bmi2_dev.
+ * @param[in] abort_enable  : Variable to enable the abort feature.
+ * @param[in] dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
  * @retval 0 -> Success
@@ -1588,7 +1713,7 @@ static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_s
 /*!
  * @brief This api is used to trigger the preparation for system for NVM programming.
  *
- * @param[out] nvm_prep : pointer to variable to store the status of nvm_prep_prog.
+ * @param[out] nvm_prep : Pointer to variable to store the status of nvm_prep_prog.
  * @param[in] dev       : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -1596,66 +1721,6 @@ static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_s
  * @retval < 0 -> Fail
  */
 static int8_t set_nvm_prep_prog(uint8_t nvm_prep, struct bmi2_dev *dev);
-
-/*!
- * @brief This api validates accel foc position as per the range
- *
- * @param[in] sens_list : Sensor type
- * @param[in] accel_g_axis : accel axis to foc. NA for gyro foc
- * @param[in] avg_foc_data : average value of sensor sample datas
- * @param[in] dev : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t validate_foc_position(uint8_t sens_list,
-                                    const struct bmi2_accel_foc_g_value *accel_g_axis,
-                                    struct bmi2_sens_axes_data avg_foc_data,
-                                    struct bmi2_dev *dev);
-
-/*!
- * @brief This api validates accel foc axis given as input
- *
- * @param[in] avg_foc_data : average value of sensor sample datas
- * @param[in] dev : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev);
-
-/*!
- * @brief This api is used to verify the right position of the sensor before doing accel foc
- *
- * @param[in] dev : Structure instance of bmi2_dev.
- * @param[in] sens_list: Sensor type
- * @param[in] accel_g_axis: Accel Foc axis and sign input
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t verify_foc_position(uint8_t sens_list,
-                                  const struct bmi2_accel_foc_g_value *accel_g_axis,
-                                  struct bmi2_dev *dev);
-
-/*!
- * @brief This API reads and provides average for 128 samples of sensor data for foc operation
- * gyro.
- *
- * @param[in] sens_list : Sensor type.
- * @param[in] bmi2_dev: Structure instance of bmi2_dev.
- * @param[in] temp_foc_data: to store data samples
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t get_average_of_sensor_data(uint8_t sens_list,
-                                         struct bmi2_foc_temp_value *temp_foc_data,
-                                         struct bmi2_dev *dev);
 
 /*!
  * @brief This internal api gets major and minor version for config file
@@ -1720,6 +1785,80 @@ static int8_t sensor_enable(uint64_t sensor_sel, struct bmi2_dev *dev);
  */
 static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev);
 
+/*!
+ * @brief This internal API reads accelerometer, gyroscope and auxiliary sensor data.
+ *
+ * @param[in]  aux_len      : Length of auxiliary sensor data
+ * @param[in]  acc_len      : Length of accelerometer sensor data
+ * @param[in]  gyr_len      : Length of gyroscope sensor data
+ * @param[out]  sensor_data : Sensor data from register.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t read_sensor_data(uint8_t aux_len,
+                               uint8_t acc_len,
+                               uint8_t gyr_len,
+                               uint8_t *sensor_data,
+                               struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API parses accelerometer, gyroscope and auxiliary sensor data with sensortime
+ *
+ * @param[in]  aux_len      : Length of auxiliary sensor data
+ * @param[in]  acc_len      : Length of accelerometer sensor data
+ * @param[in]  gyr_len      : Length of gyroscope sensor data
+ * @param[in]  data         : Structure instance of bmi2_sens_data.
+ * @param[in]  sensor_data  : Sensor data from register.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t parse_data(uint8_t aux_len,
+                         uint8_t acc_len,
+                         uint8_t gyr_len,
+                         struct bmi2_sens_data *data,
+                         const uint8_t *sensor_data,
+                         struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to test gyro CRT.
+ *
+ * @param[in]  max_burst_length  : Variable to store maximum burst length.
+ * @param[in]  gyro_st_crt       : Update the gyro self-test crt enable bit.
+ * @param[in, out]  dev          : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t gyro_crt_test(uint8_t max_burst_length, uint8_t gyro_st_crt, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to unpack virtual auxillary sensortime data.
+ *
+ * @param[out]    aux     : Pointer to structure where the parsed auxiliary data
+ *                          bytes are stored.
+ * @param[in,out] idx     : Index value of number of bytes parsed
+ * @param[in,out] aux_idx : Index value of auxiliary data (x,y,z axes)
+ *                          frame to be parsed
+ * @param[in]     fifo    : Structure instance of bmi2_fifo_frame.
+ * @param[in, out]  dev   : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static void unpack_virtual_aux_data(struct bmi2_aux_fifo_data *aux,
+                                    uint16_t *idx,
+                                    const uint16_t *aux_idx,
+                                    const struct bmi2_fifo_frame *fifo,
+                                    const struct bmi2_dev *dev);
+
 /******************************************************************************/
 /*!  @name      User Interface Definitions                            */
 /******************************************************************************/
@@ -1745,12 +1884,17 @@ int8_t bmi2_sec_init(struct bmi2_dev *dev)
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
+
     if (rslt == BMI2_OK)
     {
-        /* Perform soft-reset to bring all register values to their
-         * default values
-         */
-        rslt = bmi2_soft_reset(dev);
+        /* Set APS flag as after reset, the sensor is on advance power save mode */
+        dev->aps_status = BMI2_ENABLE;
+
+        /* Performing a dummy read to bring interface back to SPI from I2C interface */
+        if (dev->intf == BMI2_SPI_INTF)
+        {
+            rslt = bmi2_get_regs(BMI2_CHIP_ID_ADDR, &chip_id, 1, dev);
+        }
 
         if (rslt == BMI2_OK)
         {
@@ -1772,6 +1916,11 @@ int8_t bmi2_sec_init(struct bmi2_dev *dev)
                      *  re-mapping in the device structure
                      */
                     dev->remap = axes_remap;
+
+                    /* Perform soft-reset to bring all register values to their
+                     * default values
+                     */
+                    rslt = bmi2_soft_reset(dev);
                 }
                 else
                 {
@@ -1804,23 +1953,20 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
     /* Variable to define loop */
     uint16_t index = 0;
 
+    /* Variable to define temporary buffer */
+    uint8_t temp_buf[BMI2_MAX_LEN];
+
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (data != NULL))
     {
-        /* Variable to define temporary length */
-        uint16_t temp_len = len + dev->dummy_byte;
-
-        /* Variable to define temporary buffer */
-        uint8_t temp_buf[temp_len];
-
         /* Configuring reg_addr for SPI Interface */
         if (dev->intf == BMI2_SPI_INTF)
         {
             reg_addr = (reg_addr | BMI2_SPI_RD_MASK);
         }
 
-        dev->intf_rslt = dev->read(reg_addr, temp_buf, temp_len, dev->intf_ptr);
+        dev->intf_rslt = dev->read(reg_addr, temp_buf, (len + dev->dummy_byte), dev->intf_ptr);
 
         if (dev->aps_status == BMI2_ENABLE)
         {
@@ -1884,7 +2030,7 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
             dev->delay_us(2, dev->intf_ptr);
         }
 
-        /* updating the advance power saver flag */
+        /* Updating the advance power saver flag */
         if (reg_addr == BMI2_PWR_CONF_ADDR)
         {
             if (*data & BMI2_ADV_POW_EN_MASK)
@@ -1933,7 +2079,7 @@ int8_t bmi2_soft_reset(struct bmi2_dev *dev)
         rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &data, 1, dev);
         dev->delay_us(2000, dev->intf_ptr);
 
-        /* set APS flag as after soft reset the sensor is on advance power save mode */
+        /* Set APS flag as after soft reset the sensor is on advance power save mode */
         dev->aps_status = BMI2_ENABLE;
 
         /* Performing a dummy read to bring interface back to SPI from
@@ -2534,11 +2680,9 @@ int8_t bmi2_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens,
 }
 
 /*!
- * @brief This API gets the sensor/feature data for accelerometer, gyroscope,
- * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
- * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
+ * @brief This API gets the feature data gyroscope user-gain update and gyroscope cross sensitivity.
  */
-int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev)
+int8_t bmi2_get_feature_data(struct bmi2_feat_sensor_data *feat_sensor_data, uint8_t n_sens, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -2551,7 +2695,7 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
-    if ((rslt == BMI2_OK) && (sensor_data != NULL))
+    if ((rslt == BMI2_OK) && (feat_sensor_data != NULL))
     {
         /* Get status of advance power save mode */
         aps_stat = dev->aps_status;
@@ -2560,7 +2704,7 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
             /* Disable Advance power save if enabled for feature
              * configurations
              */
-            if (sensor_data[loop].type >= BMI2_MAIN_SENS_MAX_NUM)
+            if (feat_sensor_data[loop].type >= BMI2_MAIN_SENS_MAX_NUM)
             {
                 if (aps_stat == BMI2_ENABLE)
                 {
@@ -2573,34 +2717,19 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
 
             if (rslt == BMI2_OK)
             {
-                switch (sensor_data[loop].type)
+                switch (feat_sensor_data[loop].type)
                 {
-                    case BMI2_ACCEL:
-
-                        /* Get accelerometer data */
-                        rslt = get_accel_sensor_data(&sensor_data[loop].sens_data.acc, BMI2_ACC_X_LSB_ADDR, dev);
-                        break;
-                    case BMI2_GYRO:
-
-                        /* Get gyroscope data */
-                        rslt = get_gyro_sensor_data(&sensor_data[loop].sens_data.gyr, BMI2_GYR_X_LSB_ADDR, dev);
-                        break;
-                    case BMI2_AUX:
-
-                        /* Get auxiliary sensor data in data mode */
-                        rslt = read_aux_data_mode(sensor_data[loop].sens_data.aux_data, dev);
-                        break;
-
                     case BMI2_GYRO_CROSS_SENSE:
 
                         /* Get Gyroscope cross sense value of z axis */
-                        rslt = get_gyro_cross_sense(&sensor_data[loop].sens_data.correction_factor_zx, dev);
+                        rslt = get_gyro_cross_sense(&feat_sensor_data[loop].sens_data.correction_factor_zx, dev);
                         break;
 
                     case BMI2_GYRO_GAIN_UPDATE:
 
                         /* Get saturation status of gyroscope user gain update  */
-                        rslt = get_gyro_gain_update_status(&sensor_data[loop].sens_data.gyro_user_gain_status, dev);
+                        rslt =
+                            get_gyro_gain_update_status(&feat_sensor_data[loop].sens_data.gyro_user_gain_status, dev);
                         break;
                     default:
                         rslt = BMI2_E_INVALID_SENSOR;
@@ -2620,6 +2749,66 @@ int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens
             if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
             {
                 rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
+            }
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the sensor data for accelerometer, gyroscope,
+ * auxiliary sensor with sensortime
+ */
+int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    uint8_t reg_data = 0;
+
+    uint8_t aux_len = 0, acc_len = 0, gyr_len = 0;
+
+    /* Array to define data stored in register */
+    uint8_t sensor_data[BMI2_ACC_GYR_AUX_NUM_BYTES] = { 0 };
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (data != NULL))
+    {
+        rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+
+        if (rslt == BMI2_OK)
+        {
+            /* Update auxiliary sensor data length */
+            if (reg_data & BMI2_AUX_EN_MASK)
+            {
+                aux_len = BMI2_AUX_NUM_BYTES;
+            }
+
+            /* Update accelerometer sensor data length */
+            if (reg_data & BMI2_ACC_EN_MASK)
+            {
+                acc_len = aux_len + BMI2_ACC_NUM_BYTES;
+            }
+
+            /* Update gyroscope sensor data length */
+            if (reg_data & BMI2_GYR_EN_MASK)
+            {
+                gyr_len = aux_len + acc_len + BMI2_GYR_NUM_BYTES;
+            }
+
+            /* Read sensor data */
+            rslt = read_sensor_data(aux_len, acc_len, gyr_len, sensor_data, dev);
+
+            if (rslt == BMI2_OK)
+            {
+                /* Parse read sensor data */
+                rslt = parse_data(aux_len, acc_len, gyr_len, data, sensor_data, dev);
             }
         }
     }
@@ -2671,7 +2860,6 @@ int8_t bmi2_set_fifo_config(uint16_t config, uint8_t enable, struct bmi2_dev *de
                 data[1] = data[1] | fifo_config_1;
                 if (dev->variant_feature & BMI2_CRT_RTOSK_ENABLE)
                 {
-
                     /* Burst length is needed for CRT
                      *  FIFO enable will reset the default values
                      *  So configure the max burst length again.
@@ -2732,6 +2920,8 @@ int8_t bmi2_get_fifo_config(uint16_t *fifo_config, struct bmi2_dev *dev)
 
 /*!
  * @brief This API reads the FIFO data.
+ * NOTE : Dummy byte (for SPI Interface) required for FIFO data read
+ * must be given as part of data pointer in struct bmi2_fifo_frame
  */
 int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev)
 {
@@ -2751,12 +2941,33 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev)
         /* Clear the FIFO data structure */
         reset_fifo_frame_structure(fifo, dev);
 
+        /* Configuring reg_addr for SPI Interface */
+        if (dev->intf == BMI2_SPI_INTF)
+        {
+            addr = (addr | BMI2_SPI_RD_MASK);
+        }
+
         /* Read FIFO data */
-        rslt = bmi2_get_regs(addr, fifo->data, fifo->length, dev);
+        dev->intf_rslt = dev->read(addr, fifo->data, (uint32_t)fifo->length, dev->intf_ptr);
+
+        /* Provide delay based on advanced power saving mode status */
+        if (dev->aps_status == BMI2_ENABLE)
+        {
+            dev->delay_us(450, dev->intf_ptr);
+        }
+        else
+        {
+            dev->delay_us(2, dev->intf_ptr);
+        }
+
+        /* If interface read fails, update rslt variable with communication failure */
+        if (dev->intf_rslt != BMI2_INTF_RET_SUCCESS)
+        {
+            rslt = BMI2_E_COM_FAIL;
+        }
 
         if (rslt == BMI2_OK)
         {
-
             /* Get the set FIFO frame configurations */
             rslt = bmi2_get_regs(BMI2_FIFO_CONFIG_0_ADDR, config_data, 2, dev);
             if (rslt == BMI2_OK)
@@ -2795,48 +3006,25 @@ int8_t bmi2_extract_accel(struct bmi2_sens_axes_data *accel_data,
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to index the bytes */
-    uint16_t data_index = 0;
-
-    /* Variable to index accelerometer frames */
-    uint16_t accel_index = 0;
-
-    /* Variable to store the number of bytes to be read */
-    uint16_t data_read_length = 0;
-
-    /* Variable to define the data enable byte */
-    uint8_t data_enable = 0;
-
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
+
     if ((rslt == BMI2_OK) && (accel_data != NULL) && (accel_length != NULL) && (fifo != NULL))
     {
+        /* Check if this is the first iteration of data unpacking
+         * if yes, then consider dummy byte on SPI
+         */
+        if (fifo->acc_byte_start_idx == 0)
+        {
+            /* Dummy byte included */
+            fifo->acc_byte_start_idx = dev->dummy_byte;
+        }
+
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
-
-            /* Get the number of accelerometer bytes to be read */
-            rslt = parse_fifo_accel_len(&data_index, &data_read_length, accel_length, fifo);
-
-            /* Convert word to byte since all sensor enables are in a byte */
-            data_enable = (uint8_t)(fifo->data_enable >> 8);
-            for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
-            {
-                /* Unpack frame to get the accelerometer data */
-                rslt = unpack_accel_frame(accel_data, &data_index, &accel_index, data_enable, fifo, dev);
-
-                if (rslt != BMI2_W_FIFO_EMPTY)
-                {
-                    /* Check for the availability of next two bytes of FIFO data */
-                    rslt = check_empty_fifo(&data_index, fifo);
-                }
-            }
-
-            /* Update number of accelerometer frames to be read */
-            (*accel_length) = accel_index;
-
-            /* Update the accelerometer byte index */
-            fifo->acc_byte_start_idx = data_index;
+            /* Parsing the FIFO data in headerless mode */
+            rslt = extract_accel_headerless_mode(accel_data, accel_length, fifo, dev);
         }
         else
         {
@@ -2865,46 +3053,24 @@ int8_t bmi2_extract_gyro(struct bmi2_sens_axes_data *gyro_data,
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to index the bytes */
-    uint16_t data_index = 0;
-
-    /* Variable to index gyroscope frames */
-    uint16_t gyro_index = 0;
-
-    /* Variable to store the number of bytes to be read */
-    uint16_t data_read_length = 0;
-
-    /* Variable to define the data enable byte */
-    uint8_t data_enable = 0;
-
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (gyro_data != NULL) && (gyro_length != NULL) && (fifo != NULL))
     {
+        /* Check if this is the first iteration of data unpacking
+         * if yes, then consider dummy byte on SPI
+         */
+        if (fifo->gyr_byte_start_idx == 0)
+        {
+            /* Dummy byte included */
+            fifo->gyr_byte_start_idx = dev->dummy_byte;
+        }
+
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
-            /* Get the number of gyro bytes to be read */
-            rslt = parse_fifo_gyro_len(&data_index, &data_read_length, gyro_length, fifo);
-
-            /* Convert word to byte since all sensor enables are in a byte */
-            data_enable = (uint8_t)(fifo->data_enable >> 8);
-            for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
-            {
-                /* Unpack frame to get gyroscope data */
-                rslt = unpack_gyro_frame(gyro_data, &data_index, &gyro_index, data_enable, fifo, dev);
-                if (rslt != BMI2_W_FIFO_EMPTY)
-                {
-                    /* Check for the availability of next two bytes of FIFO data */
-                    rslt = check_empty_fifo(&data_index, fifo);
-                }
-            }
-
-            /* Update number of gyroscope frames to be read */
-            (*gyro_length) = gyro_index;
-
-            /* Update the gyroscope byte index */
-            fifo->acc_byte_start_idx = data_index;
+            /* Parsing the FIFO data in headerless mode */
+            rslt = extract_gyro_headerless_mode(gyro_data, gyro_length, fifo, dev);
         }
         else
         {
@@ -2932,49 +3098,24 @@ int8_t bmi2_extract_aux(struct bmi2_aux_fifo_data *aux,
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to index the bytes */
-    uint16_t data_index = 0;
-
-    /* Variable to index auxiliary frames */
-    uint16_t aux_index = 0;
-
-    /* Variable to store the number of bytes to be read */
-    uint16_t data_read_length = 0;
-
-    /* Variable to define the data enable byte */
-    uint8_t data_enable = 0;
-
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (aux != NULL) && (aux_length != NULL) && (fifo != NULL))
     {
+        /* Check if this is the first iteration of data unpacking
+         * if yes, then consider dummy byte on SPI
+         */
+        if (fifo->aux_byte_start_idx == 0)
+        {
+            /* Dummy byte included */
+            fifo->aux_byte_start_idx = dev->dummy_byte;
+        }
+
         /* Parsing the FIFO data in header-less mode */
         if (fifo->header_enable == 0)
         {
-            rslt = parse_fifo_aux_len(&data_index, &data_read_length, aux_length, fifo);
-
-            /* Convert word to byte since all sensor enables are in
-             * a byte
-             */
-            data_enable = (uint8_t)(fifo->data_enable >> 8);
-            for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
-            {
-                /* Unpack frame to get auxiliary data */
-                rslt = unpack_aux_frame(aux, &data_index, &aux_index, data_enable, fifo, dev);
-                if (rslt != BMI2_W_FIFO_EMPTY)
-                {
-                    /* Check for the availability of next
-                     * two bytes of FIFO data
-                     */
-                    rslt = check_empty_fifo(&data_index, fifo);
-                }
-            }
-
-            /* Update number of auxiliary frames to be read */
-            *aux_length = aux_index;
-
-            /* Update the auxiliary byte index */
-            fifo->aux_byte_start_idx = data_index;
+            /* Parsing the FIFO data in headerless mode */
+            rslt = extract_aux_headerless_mode(aux, aux_length, fifo, dev);
         }
         else
         {
@@ -3495,78 +3636,6 @@ int8_t bmi2_write_aux_man_mode(uint8_t reg_addr, const uint8_t *aux_data, uint16
             if ((rslt == BMI2_OK) && (aps_stat == BMI2_ENABLE))
             {
                 rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
-            }
-        }
-        else
-        {
-            rslt = BMI2_E_AUX_INVALID_CFG;
-        }
-    }
-    else
-    {
-        rslt = BMI2_E_NULL_PTR;
-    }
-
-    return rslt;
-}
-
-/*!
- * @brief This API writes the user-defined bytes of data and the address of
- * auxiliary sensor where data is to be written, from an interleaved input,
- * in manual mode.
- *
- * @note Change of BMI2_AUX_WR_ADDR is only allowed if AUX is not busy.
- */
-int8_t bmi2_write_aux_interleaved(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev)
-{
-    /* Variable to define error */
-    int8_t rslt;
-
-    /* Variable to define loop */
-    uint8_t loop = 1;
-
-    /* Variable to define APS status */
-    uint8_t aps_stat = 0;
-
-    /* Null-pointer check */
-    rslt = null_ptr_check(dev);
-    if ((rslt == BMI2_OK) && (aux_data != NULL))
-    {
-        /* Validate if manual mode */
-        if (dev->aux_man_en)
-        {
-            /* Get status of advance power save mode */
-            aps_stat = dev->aps_status;
-            if (aps_stat == BMI2_ENABLE)
-            {
-                /* Disable APS if enabled */
-                rslt = bmi2_set_adv_power_save(BMI2_DISABLE, dev);
-            }
-
-            if (rslt == BMI2_OK)
-            {
-                /* Write the start register address extracted
-                 * from the interleaved data
-                 */
-                rslt = write_aux_data(reg_addr, aux_data[0], dev);
-
-                /* Extract the remaining address and data from
-                 * the interleaved data and write it in the
-                 * corresponding addresses byte by byte
-                 */
-                for (; ((loop < len) && (rslt == BMI2_OK)); loop += 2)
-                {
-                    rslt = write_aux_data(aux_data[loop], aux_data[loop + 1], dev);
-                    dev->delay_us(1000, dev->intf_ptr);
-                }
-
-                /* Enable Advance power save if disabled for
-                 * writing data and not when already disabled
-                 */
-                if ((rslt == BMI2_OK) && (aps_stat == BMI2_ENABLE))
-                {
-                    rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
-                }
             }
         }
         else
@@ -4352,8 +4421,9 @@ int8_t bmi2_write_gyro_offset_comp_axes(const struct bmi2_sens_axes_data *gyr_of
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (gyr_off_comp_axes != NULL))
     {
-        /* Get the MSB values of gyroscope compensated offset values */
-        rslt = bmi2_get_regs(BMI2_GYR_OFF_COMP_6_ADDR, &reg_data[3], 1, dev);
+        /* Get the gyroscope offset compensation values of axes */
+        rslt = bmi2_get_regs(BMI2_GYR_OFF_COMP_3_ADDR, reg_data, 4, dev);
+
         if (rslt == BMI2_OK)
         {
             /* Get MSB value of x-axis from user-input */
@@ -4403,7 +4473,7 @@ int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
-    struct bmi2_sensor_data data;
+    struct bmi2_feat_sensor_data data;
 
     /* Check if the feature is supported by this variant */
     if (dev->variant_feature & BMI2_GYRO_CROSS_SENS_ENABLE)
@@ -4415,7 +4485,7 @@ int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev)
             data.type = BMI2_GYRO_CROSS_SENSE;
 
             /* Get the respective data */
-            rslt = bmi2_get_sensor_data(&data, 1, dev);
+            rslt = bmi2_get_feature_data(&data, 1, dev);
             if (rslt == BMI2_OK)
             {
                 /* Update the gyroscope cross sense value of z axis
@@ -4428,6 +4498,10 @@ int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev)
         {
             rslt = BMI2_E_NULL_PTR;
         }
+    }
+    else
+    {
+        rslt = BMI2_E_INVALID_SENSOR;
     }
 
     return rslt;
@@ -4445,8 +4519,8 @@ int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev)
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (int_stat != NULL))
     {
-        /* Delay to read the internal status */
-        dev->delay_us(20000, dev->intf_ptr);
+        /* Wait till ASIC is initialized */
+        dev->delay_us(BMI2_INTERNAL_STATUS_READ_DELAY_MS, dev->intf_ptr);
 
         /* Get the error bits and message */
         rslt = bmi2_get_regs(BMI2_INTERNAL_STATUS_ADDR, int_stat, 1, dev);
@@ -4458,69 +4532,6 @@ int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev)
 
     return rslt;
 }
-
-/*! @cond DOXYGEN_SUPRESS */
-
-/* Suppressing doxygen warnings triggered for same static function names present across various sensor variant
- * directories */
-
-/*!
- * @brief This API verifies and allows only the correct position to do Fast Offset Compensation for
- * accelerometer & gyro.
- */
-static int8_t verify_foc_position(uint8_t sens_list,
-                                  const struct bmi2_accel_foc_g_value *accel_g_axis,
-                                  struct bmi2_dev *dev)
-{
-    int8_t rslt;
-
-    struct bmi2_sens_axes_data avg_foc_data = { 0 };
-    struct bmi2_foc_temp_value temp_foc_data = { 0 };
-
-    rslt = null_ptr_check(dev);
-    if (rslt == BMI2_OK)
-    {
-        /* Enable sensor */
-        rslt = bmi2_sensor_enable(&sens_list, 1, dev);
-    }
-
-    if (rslt == BMI2_OK)
-    {
-
-        rslt = get_average_of_sensor_data(sens_list, &temp_foc_data, dev);
-        if (rslt == BMI2_OK)
-        {
-            if (sens_list == BMI2_ACCEL)
-            {
-
-                /* Taking modulus to make negative values as positive */
-                if ((accel_g_axis->x == 1) && (accel_g_axis->sign == 1))
-                {
-                    temp_foc_data.x = temp_foc_data.x * -1;
-                }
-                else if ((accel_g_axis->y == 1) && (accel_g_axis->sign == 1))
-                {
-                    temp_foc_data.y = temp_foc_data.y * -1;
-                }
-                else if ((accel_g_axis->z == 1) && (accel_g_axis->sign == 1))
-                {
-                    temp_foc_data.z = temp_foc_data.z * -1;
-                }
-            }
-
-            /* Typecasting into 16bit */
-            avg_foc_data.x = (int16_t)(temp_foc_data.x);
-            avg_foc_data.y = (int16_t)(temp_foc_data.y);
-            avg_foc_data.z = (int16_t)(temp_foc_data.z);
-
-            rslt = validate_foc_position(sens_list, accel_g_axis, avg_foc_data, dev);
-        }
-    }
-
-    return rslt;
-}
-
-/*! @endcond */
 
 /*!
  * @brief This API performs Fast Offset Compensation for accelerometer.
@@ -4547,15 +4558,10 @@ int8_t bmi2_perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_value
         if ((((BMI2_ABS(accel_g_value->x)) + (BMI2_ABS(accel_g_value->y)) + (BMI2_ABS(accel_g_value->z))) == 1) &&
             ((accel_g_value->sign == 1) || (accel_g_value->sign == 0)))
         {
-            rslt = verify_foc_position(BMI2_ACCEL, accel_g_value, dev);
-            if (rslt == BMI2_OK)
-            {
-
-                /* Save accelerometer configurations, accelerometer
-                 * enable status and advance power save status
-                 */
-                rslt = save_accel_foc_config(&acc_cfg, &aps, &acc_en, dev);
-            }
+            /* Save accelerometer configurations, accelerometer
+             * enable status and advance power save status
+             */
+            rslt = save_accel_foc_config(&acc_cfg, &aps, &acc_en, dev);
 
             /* Set configurations for FOC */
             if (rslt == BMI2_OK)
@@ -4624,92 +4630,87 @@ int8_t bmi2_perform_gyro_foc(struct bmi2_dev *dev)
     rslt = null_ptr_check(dev);
     if (rslt == BMI2_OK)
     {
-        /* Argument2 is not applicable for gyro */
-        rslt = verify_foc_position(BMI2_GYRO, 0, dev);
+        /* Save gyroscope configurations, gyroscope enable
+         * status and advance power save status
+         */
+        rslt = save_gyro_config(&gyr_cfg, &aps, &gyr_en, dev);
+
+        /* Set configurations for gyroscope FOC */
         if (rslt == BMI2_OK)
         {
-            /* Save gyroscope configurations, gyroscope enable
-             * status and advance power save status
-             */
-            rslt = save_gyro_config(&gyr_cfg, &aps, &gyr_en, dev);
+            rslt = set_gyro_foc_config(dev);
+        }
 
-            /* Set configurations for gyroscope FOC */
-            if (rslt == BMI2_OK)
+        /* Perform FOC */
+        if (rslt == BMI2_OK)
+        {
+            for (loop = 0; loop < 128; loop++)
             {
-                rslt = set_gyro_foc_config(dev);
+                /* Giving a delay of more than 40ms since ODR is configured as 25Hz */
+                dev->delay_us(50000, dev->intf_ptr);
+
+                /* Get gyroscope data ready interrupt status */
+                rslt = bmi2_get_status(&reg_status, dev);
+
+                /* Read 128 samples of gyroscope data on data ready interrupt */
+                if ((rslt == BMI2_OK) && (reg_status & BMI2_DRDY_GYR))
+                {
+                    rslt = read_gyro_xyz(&gyr_value[loop], dev);
+                    if (rslt == BMI2_OK)
+                    {
+                        /* Store the data in a temporary structure */
+                        temp.x = temp.x + (int32_t)gyr_value[loop].x;
+                        temp.y = temp.y + (int32_t)gyr_value[loop].y;
+                        temp.z = temp.z + (int32_t)gyr_value[loop].z;
+                    }
+                }
+
+                if (rslt != BMI2_OK)
+                {
+                    break;
+                }
+                else if ((reg_status & BMI2_DRDY_GYR) != BMI2_DRDY_GYR)
+                {
+                    rslt = BMI2_E_INVALID_STATUS;
+                    break;
+                }
             }
 
-            /* Perform FOC */
             if (rslt == BMI2_OK)
             {
-                for (loop = 0; loop < 128; loop++)
-                {
-                    /* Giving a delay of more than 40ms since ODR is configured as 25Hz */
-                    dev->delay_us(50000, dev->intf_ptr);
+                /* Take average of x, y and z data for lesser
+                 * noise. It is same as offset data since lsb/dps
+                 * is same for both data and offset register
+                 */
+                gyro_offset.x = (int16_t)(temp.x / 128);
+                gyro_offset.y = (int16_t)(temp.y / 128);
+                gyro_offset.z = (int16_t)(temp.z / 128);
 
-                    /* Get gyroscope data ready interrupt status */
-                    rslt = bmi2_get_status(&reg_status, dev);
+                /* Saturate gyroscope data since the offset
+                 * registers are of 10 bit value where as the
+                 * gyroscope data is of 16 bit value
+                 */
+                saturate_gyro_data(&gyro_offset);
 
-                    /* Read 128 samples of gyroscope data on data ready interrupt */
-                    if ((rslt == BMI2_OK) && (reg_status & BMI2_DRDY_GYR))
-                    {
-                        rslt = read_gyro_xyz(&gyr_value[loop], dev);
-                        if (rslt == BMI2_OK)
-                        {
-                            /* Store the data in a temporary structure */
-                            temp.x = temp.x + (int32_t)gyr_value[loop].x;
-                            temp.y = temp.y + (int32_t)gyr_value[loop].y;
-                            temp.z = temp.z + (int32_t)gyr_value[loop].z;
-                        }
-                    }
+                /* Invert the gyroscope offset  data */
+                invert_gyro_offset(&gyro_offset);
 
-                    if (rslt != BMI2_OK)
-                    {
-                        break;
-                    }
-                    else if ((reg_status & BMI2_DRDY_GYR) != BMI2_DRDY_GYR)
-                    {
-                        rslt = BMI2_E_INVALID_STATUS;
-                        break;
-                    }
-                }
+                /* Write offset data in the gyroscope offset
+                 * compensation register
+                 */
+                rslt = bmi2_write_gyro_offset_comp_axes(&gyro_offset, dev);
+            }
 
-                if (rslt == BMI2_OK)
-                {
-                    /* Take average of x, y and z data for lesser
-                     * noise. It is same as offset data since lsb/dps
-                     * is same for both data and offset register
-                     */
-                    gyro_offset.x = (int16_t)(temp.x / 128);
-                    gyro_offset.y = (int16_t)(temp.y / 128);
-                    gyro_offset.z = (int16_t)(temp.z / 128);
+            /* Enable gyroscope offset compensation */
+            if (rslt == BMI2_OK)
+            {
+                rslt = bmi2_set_gyro_offset_comp(BMI2_ENABLE, dev);
+            }
 
-                    /* Saturate gyroscope data since the offset
-                     * registers are of 10 bit value where as the
-                     * gyroscope data is of 16 bit value
-                     */
-                    saturate_gyro_data(&gyro_offset);
-
-                    /* Invert the gyroscope offset  data */
-                    invert_gyro_offset(&gyro_offset);
-
-                    /* Write offset data in the gyroscope offset
-                     * compensation register
-                     */
-                    rslt = bmi2_write_gyro_offset_comp_axes(&gyro_offset, dev);
-                }
-
-                /* Enable gyroscope offset compensation */
-                if (rslt == BMI2_OK)
-                {
-                    rslt = bmi2_set_gyro_offset_comp(BMI2_ENABLE, dev);
-                }
-
-                /* Restore the saved gyroscope configurations */
-                if (rslt == BMI2_OK)
-                {
-                    rslt = restore_gyro_config(&gyr_cfg, aps, gyr_en, dev);
-                }
+            /* Restore the saved gyroscope configurations */
+            if (rslt == BMI2_OK)
+            {
+                rslt = restore_gyro_config(&gyr_cfg, aps, gyr_en, dev);
             }
         }
     }
@@ -4924,8 +4925,6 @@ static int8_t write_config_file(struct bmi2_dev *dev)
                 /* Enable loading of the configuration */
                 rslt = set_config_load(BMI2_ENABLE, dev);
 
-                /* Wait till ASIC is initialized */
-                dev->delay_us(150000, dev->intf_ptr);
                 if (rslt == BMI2_OK)
                 {
                     /* Enable advanced power save mode */
@@ -5788,60 +5787,6 @@ static int8_t map_feat_int(uint8_t *reg_data_array, enum bmi2_hw_int_pin int_pin
 }
 
 /*!
- * @brief This internal API gets the accelerometer data from the register.
- */
-static int8_t get_accel_sensor_data(struct bmi2_sens_axes_data *data, uint8_t reg_addr, struct bmi2_dev *dev)
-{
-    /* Variable to define error */
-    int8_t rslt;
-
-    /* Array to define data stored in register */
-    uint8_t reg_data[BMI2_ACC_GYR_NUM_BYTES] = { 0 };
-
-    /* Read the sensor data */
-    rslt = bmi2_get_regs(reg_addr, reg_data, BMI2_ACC_GYR_NUM_BYTES, dev);
-    if (rslt == BMI2_OK)
-    {
-        /* Get accelerometer data from the register */
-        get_acc_gyr_data(data, reg_data);
-
-        /* Get the re-mapped accelerometer data */
-        get_remapped_data(data, dev);
-    }
-
-    return rslt;
-}
-
-/*!
- * @brief This internal API gets the gyroscope data from the register.
- */
-static int8_t get_gyro_sensor_data(struct bmi2_sens_axes_data *data, uint8_t reg_addr, struct bmi2_dev *dev)
-{
-    /* Variable to define error */
-    int8_t rslt;
-
-    /* Array to define data stored in register */
-    uint8_t reg_data[BMI2_ACC_GYR_NUM_BYTES] = { 0 };
-
-    /* Read the sensor data */
-    rslt = bmi2_get_regs(reg_addr, reg_data, BMI2_ACC_GYR_NUM_BYTES, dev);
-    if (rslt == BMI2_OK)
-    {
-        /* Get gyroscope data from the register */
-        get_acc_gyr_data(data, reg_data);
-
-        /* Get the compensated gyroscope data */
-        comp_gyro_cross_axis_sensitivity(data, dev);
-
-        /* Get the re-mapped gyroscope data */
-        get_remapped_data(data, dev);
-
-    }
-
-    return rslt;
-}
-
-/*!
  * @brief This internal API gets the accelerometer/gyroscope data.
  */
 static void get_acc_gyr_data(struct bmi2_sens_axes_data *data, const uint8_t *reg_data)
@@ -6013,46 +5958,6 @@ static int8_t write_aux_data(uint8_t reg_addr, uint8_t reg_data, struct bmi2_dev
 }
 
 /*!
- * @brief This internal API reads the user-defined bytes of data from the given
- * register address of auxiliary sensor in data mode.
- */
-static int8_t read_aux_data_mode(uint8_t *aux_data, struct bmi2_dev *dev)
-{
-    /* Variable to define error */
-    int8_t rslt;
-
-    /* Variables to define loop */
-    uint8_t count = 0;
-
-    /* Variables to define index */
-    uint8_t index = 0;
-
-    /* Array to define data stored in register */
-    uint8_t reg_data[BMI2_AUX_NUM_BYTES] = { 0 };
-
-    /* Check if data mode */
-    if (!dev->aux_man_en)
-    {
-        /* Read the auxiliary sensor data */
-        rslt = bmi2_get_regs(BMI2_AUX_X_LSB_ADDR, reg_data, BMI2_AUX_NUM_BYTES, dev);
-        if (rslt == BMI2_OK)
-        {
-            /* Get the 8 bytes of auxiliary data */
-            do
-            {
-                *(aux_data + count++) = *(reg_data + index++);
-            } while (count < BMI2_AUX_NUM_BYTES);
-        }
-    }
-    else
-    {
-        rslt = BMI2_E_AUX_INVALID_CFG;
-    }
-
-    return rslt;
-}
-
-/*!
  * @brief This internal API maps the actual burst read length with that of the
  * register value set by user.
  */
@@ -6090,6 +5995,7 @@ static int8_t map_read_len(uint8_t *len, const struct bmi2_dev *dev)
  */
 static int8_t parse_fifo_accel_len(uint16_t *start_idx,
                                    uint16_t *len,
+                                   uint8_t *skip_length,
                                    const uint16_t *acc_count,
                                    const struct bmi2_fifo_frame *fifo)
 {
@@ -6104,24 +6010,45 @@ static int8_t parse_fifo_accel_len(uint16_t *start_idx,
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ACC_LENGTH;
     }
     /* If only accelerometer and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_AUX_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ACC_AUX_LENGTH;
+
+        /* Data start index */
+        (*start_idx) = fifo->acc_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_GYR_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ACC_GYR_LENGTH;
+
+        /* Data start index */
+        (*start_idx) = fifo->acc_byte_start_idx + BMI2_FIFO_GYR_LENGTH;
     }
     /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ALL_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
+
+        /* Data start index */
+        (*start_idx) = fifo->acc_byte_start_idx + BMI2_FIFO_GYR_AUX_LENGTH;
     }
     else
     {
@@ -6139,6 +6066,109 @@ static int8_t parse_fifo_accel_len(uint16_t *start_idx,
     {
         (*len) = fifo->length;
     }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to skip dummy frames in FIFO headerless mode
+ */
+static int8_t check_dummy_frame(uint8_t dummy_frame_header,
+                                uint16_t *data_index,
+                                uint8_t skip_length,
+                                const struct bmi2_fifo_frame *fifo)
+{
+    int8_t rslt;
+
+    /* Validate data index */
+    if (((*data_index) + 6) < fifo->length)
+    {
+        /* Check if FIFO contains dummy frame */
+        if (((fifo->data[(*data_index)] == dummy_frame_header) &&
+             (fifo->data[(*data_index) + 1] == BMI2_FIFO_HEADERLESS_DUMMY_BYTE_1) &&
+             (fifo->data[(*data_index) + 2] == BMI2_FIFO_HEADERLESS_DUMMY_BYTE_2)) &&
+            ((fifo->data[(*data_index) + 3] == BMI2_FIFO_HEADERLESS_DUMMY_BYTE_3)))
+        {
+            /* Move the data index to next frame */
+            (*data_index) = (*data_index) + skip_length;
+
+            /* Dummy byte parsed */
+            rslt = BMI2_W_DUMMY_BYTE;
+        }
+        else
+        {
+            /* Valid frame */
+            rslt = BMI2_OK;
+        }
+    }
+    else
+    {
+        /* Move the data index to the last byte to mark completion */
+        (*data_index) = fifo->length;
+
+        /* FIFO is empty */
+        rslt = BMI2_W_FIFO_EMPTY;
+    }
+
+    return rslt;
+
+}
+
+/*!
+ * @brief This internal API is used to parse the accelerometer data from the
+ * FIFO in headerless mode.
+ */
+static int8_t extract_accel_headerless_mode(struct bmi2_sens_axes_data *acc,
+                                            uint16_t *accel_length,
+                                            struct bmi2_fifo_frame *fifo,
+                                            const struct bmi2_dev *dev)
+{
+    int8_t rslt;
+
+    /* Variable to index the bytes */
+    uint16_t data_index = 0;
+
+    /* Variable to define the data enable byte */
+    uint8_t data_enable;
+
+    /* Variable to index accelerometer frames */
+    uint16_t accel_index = 0;
+
+    /* Variable to store the number of bytes to be read */
+    uint16_t data_read_length = 0;
+
+    /* Number of bytes to skip in case dummy frame is obtained */
+    uint8_t skip_length = 0;
+
+    /* Get the number of accelerometer bytes to be read */
+    rslt = parse_fifo_accel_len(&data_index, &data_read_length, &skip_length, accel_length, fifo);
+
+    /* Convert word to byte since all sensor enables are in a byte */
+    data_enable = (uint8_t)(fifo->data_enable >> 8);
+
+    for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
+    {
+        rslt = check_dummy_frame(BMI2_FIFO_HEADERLESS_DUMMY_ACC, &data_index, skip_length, fifo);
+
+        /* Unpack only if Valid frame is present */
+        if (rslt == BMI2_OK)
+        {
+            /* Unpack frame to get the accelerometer data */
+            rslt = unpack_accel_headerless_frame(acc, &data_index, &accel_index, data_enable, fifo, dev);
+
+            if (rslt != BMI2_W_FIFO_EMPTY)
+            {
+                /* Check for the availability of next two bytes of FIFO data */
+                rslt = check_empty_fifo(&data_index, fifo);
+            }
+        }
+    }
+
+    /* Update number of accelerometer frames to be read */
+    (*accel_length) = accel_index;
+
+    /* Update the accelerometer byte index */
+    fifo->acc_byte_start_idx = data_index;
 
     return rslt;
 }
@@ -6186,7 +6216,7 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
             case BMI2_FIFO_HEADER_ALL_FRM:
 
                 /* Unpack from normal frames */
-                rslt = unpack_accel_frame(acc, &data_index, &accel_index, frame_header, fifo, dev);
+                rslt = unpack_accel_header_frame(acc, &data_index, &accel_index, frame_header, fifo, dev);
                 break;
 
             /* If header defines only gyroscope frame */
@@ -6259,15 +6289,15 @@ static int8_t extract_accel_header_mode(struct bmi2_sens_axes_data *acc,
 
 /*!
  * @brief This internal API is used to parse the accelerometer data from the
- * FIFO data in both header and header-less mode. It updates the current data
+ * FIFO data in header-less mode. It updates the current data
  * byte to be parsed.
  */
-static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
-                                 uint16_t *idx,
-                                 uint16_t *acc_idx,
-                                 uint8_t frame,
-                                 const struct bmi2_fifo_frame *fifo,
-                                 const struct bmi2_dev *dev)
+static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
+                                            uint16_t *idx,
+                                            uint16_t *acc_idx,
+                                            uint8_t frame,
+                                            const struct bmi2_fifo_frame *fifo,
+                                            const struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
@@ -6275,7 +6305,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
     switch (frame)
     {
         /* If frame contains only accelerometer data */
-        case BMI2_FIFO_HEADER_ACC_FRM:
         case BMI2_FIFO_HEAD_LESS_ACC_FRM:
 
             /* Partially read, then skip the data */
@@ -6284,8 +6313,194 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
                 /* Update the data index as complete*/
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the accelerometer data */
+            unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ACC_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&acc[(*acc_idx)], idx, fifo);
+            }
+
+            /* Update accelerometer frame index */
+            (*acc_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer and gyroscope data */
+        case BMI2_FIFO_HEAD_LESS_GYR_ACC_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->acc_gyr_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the accelerometer data */
+            unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ACC_GYR_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&acc[(*acc_idx)], idx, fifo);
+            }
+
+            /* Update accelerometer frame index */
+            (*acc_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_AUX_ACC_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->acc_aux_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the accelerometer data */
+            unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ACC_AUX_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&acc[(*acc_idx)], idx, fifo);
+            }
+
+            /* Update accelerometer frame index */
+            (*acc_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer, gyroscope and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_ALL_FRM:
+
+            /* Partially read, then skip the data*/
+            if ((*idx + fifo->all_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the accelerometer data */
+            unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&acc[(*acc_idx)], idx, fifo);
+            }
+
+            /* Update accelerometer frame index */
+            (*acc_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains gyroscope and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_GYR_AUX_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->aux_gyr_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains only auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_AUX_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->aux_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains only gyroscope data */
+        case BMI2_FIFO_HEAD_LESS_GYR_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->gyr_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+        default:
+
+            /* Move the data index to the last byte in case of invalid values */
+            (*idx) = fifo->length;
+
+            /* FIFO is empty */
+            rslt = BMI2_W_FIFO_EMPTY;
+            break;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to parse the accelerometer data from the
+ * FIFO data in header mode. It updates the current data
+ * byte to be parsed.
+ */
+static int8_t unpack_accel_header_frame(struct bmi2_sens_axes_data *acc,
+                                        uint16_t *idx,
+                                        uint16_t *acc_idx,
+                                        uint8_t frame,
+                                        const struct bmi2_fifo_frame *fifo,
+                                        const struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt = BMI2_OK;
+
+    switch (frame)
+    {
+        /* If frame contains only accelerometer data */
+        case BMI2_FIFO_HEADER_ACC_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->acc_frm_len) > fifo->length)
+            {
+                /* Update the data index as complete*/
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6310,7 +6525,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains accelerometer and gyroscope data */
         case BMI2_FIFO_HEADER_GYR_ACC_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_ACC_FRM:
 
             /* Partially read, then skip the data */
             if (((*idx) + fifo->acc_gyr_frm_len) > fifo->length)
@@ -6318,8 +6532,7 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6344,7 +6557,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains accelerometer and auxiliary data */
         case BMI2_FIFO_HEADER_AUX_ACC_FRM:
-        case BMI2_FIFO_HEAD_LESS_AUX_ACC_FRM:
 
             /* Partially read, then skip the data */
             if (((*idx) + fifo->acc_aux_frm_len) > fifo->length)
@@ -6352,8 +6564,7 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6378,7 +6589,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains accelerometer, gyroscope and auxiliary data */
         case BMI2_FIFO_HEADER_ALL_FRM:
-        case BMI2_FIFO_HEAD_LESS_ALL_FRM:
 
             /* Partially read, then skip the data*/
             if ((*idx + fifo->all_frm_len) > fifo->length)
@@ -6386,8 +6596,7 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6412,7 +6621,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains gyroscope and auxiliary data */
         case BMI2_FIFO_HEADER_AUX_GYR_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_AUX_FRM:
 
             /* Update data index */
             (*idx) = (*idx) + fifo->aux_gyr_frm_len;
@@ -6423,7 +6631,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains only auxiliary data */
         case BMI2_FIFO_HEADER_AUX_FRM:
-        case BMI2_FIFO_HEAD_LESS_AUX_FRM:
 
             /* Update data index */
             (*idx) = (*idx) + fifo->aux_frm_len;
@@ -6434,7 +6641,6 @@ static int8_t unpack_accel_frame(struct bmi2_sens_axes_data *acc,
 
         /* If frame contains only gyroscope data */
         case BMI2_FIFO_HEADER_GYR_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_FRM:
 
             /* Update data index */
             (*idx) = (*idx) + fifo->gyr_frm_len;
@@ -6494,7 +6700,8 @@ static void unpack_accel_data(struct bmi2_sens_axes_data *acc,
  * which is to be parsed in header-less mode.
  */
 static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
-                                  uint16_t(*len),
+                                  uint16_t *len,
+                                  uint8_t *skip_length,
                                   const uint16_t *gyr_count,
                                   const struct bmi2_fifo_frame *fifo)
 {
@@ -6509,24 +6716,42 @@ static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_GYR_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_GYR_LENGTH;
     }
     /* If only gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_GYR_AUX_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_GYR_AUX_LENGTH;
+
+        /* Data start index */
+        (*start_idx) = fifo->gyr_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_ACC_GYR_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ACC_GYR_LENGTH;
     }
     /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_ALL_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
+
+        /* Data start index */
+        (*start_idx) = fifo->gyr_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
     }
     else
     {
@@ -6544,6 +6769,65 @@ static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
     {
         (*len) = fifo->length;
     }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to parse the gyroscope data from the
+ * FIFO in headerless mode.
+ */
+static int8_t extract_gyro_headerless_mode(struct bmi2_sens_axes_data *gyr,
+                                           uint16_t *gyro_length,
+                                           struct bmi2_fifo_frame *fifo,
+                                           const struct bmi2_dev *dev)
+{
+    int8_t rslt;
+
+    /* Variable to index the bytes */
+    uint16_t data_index = 0;
+
+    /* Variable to index gyroscope frames */
+    uint16_t gyro_index = 0;
+
+    /* Variable to store the number of bytes to be read */
+    uint16_t data_read_length = 0;
+
+    /* Variable to define the data enable byte */
+    uint8_t data_enable;
+
+    /* Variable to hold number of bytes to skip in case dummy frame is obtained */
+    uint8_t skip_length = 0;
+
+    /* Get the number of gyro bytes to be read */
+    rslt = parse_fifo_gyro_len(&data_index, &data_read_length, &skip_length, gyro_length, fifo);
+
+    /* Convert word to byte since all sensor enables are in a byte */
+    data_enable = (uint8_t)(fifo->data_enable >> 8);
+
+    for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
+    {
+        rslt = check_dummy_frame(BMI2_FIFO_HEADERLESS_DUMMY_GYR, &data_index, skip_length, fifo);
+
+        /* Unpack only if Valid frame is present */
+        if (rslt == BMI2_OK)
+        {
+            /* Unpack frame to get gyroscope data */
+            rslt = unpack_gyro_headerless_frame(gyr, &data_index, &gyro_index, data_enable, fifo, dev);
+
+            if (rslt != BMI2_W_FIFO_EMPTY)
+            {
+                /* Check for the availability of next two bytes of FIFO data */
+                rslt = check_empty_fifo(&data_index, fifo);
+            }
+        }
+    }
+
+    /* Update number of gyroscope frames to be read */
+    (*gyro_length) = gyro_index;
+
+    /* Update the gyroscope byte index */
+    fifo->gyr_byte_start_idx = data_index;
 
     return rslt;
 }
@@ -6591,7 +6875,7 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
             case BMI2_FIFO_HEADER_ALL_FRM:
 
                 /* Unpack from normal frames */
-                rslt = unpack_gyro_frame(gyr, &data_index, &gyro_index, frame_header, fifo, dev);
+                rslt = unpack_gyro_header_frame(gyr, &data_index, &gyro_index, frame_header, fifo, dev);
                 break;
 
             /* If header defines only accelerometer frame */
@@ -6664,15 +6948,15 @@ static int8_t extract_gyro_header_mode(struct bmi2_sens_axes_data *gyr,
 
 /*!
  * @brief This internal API is used to parse the gyroscope data from the FIFO
- * data in both header and header-less mode. It updates the current data byte to
+ * data in header mode. It updates the current data byte to
  * be parsed.
  */
-static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
-                                uint16_t *idx,
-                                uint16_t *gyr_idx,
-                                uint8_t frame,
-                                const struct bmi2_fifo_frame *fifo,
-                                const struct bmi2_dev *dev)
+static int8_t unpack_gyro_header_frame(struct bmi2_sens_axes_data *gyr,
+                                       uint16_t *idx,
+                                       uint16_t *gyr_idx,
+                                       uint8_t frame,
+                                       const struct bmi2_fifo_frame *fifo,
+                                       const struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt = BMI2_OK;
@@ -6681,7 +6965,6 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
     {
         /* If frame contains only gyroscope data */
         case BMI2_FIFO_HEADER_GYR_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_FRM:
 
             /* Partially read, then skip the data */
             if (((*idx) + fifo->gyr_frm_len) > fifo->length)
@@ -6689,8 +6972,7 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
                 /* Update the data index as complete*/
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6715,7 +6997,6 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
 
         /* If frame contains accelerometer and gyroscope data */
         case BMI2_FIFO_HEADER_GYR_ACC_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_ACC_FRM:
 
             /* Partially read, then skip the data */
             if (((*idx) + fifo->acc_gyr_frm_len) > fifo->length)
@@ -6723,8 +7004,7 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6749,7 +7029,6 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
 
         /* If frame contains gyroscope and auxiliary data */
         case BMI2_FIFO_HEADER_AUX_GYR_FRM:
-        case BMI2_FIFO_HEAD_LESS_GYR_AUX_FRM:
 
             /* Partially read, then skip the data */
             if (((*idx) + fifo->aux_gyr_frm_len) > fifo->length)
@@ -6757,8 +7036,7 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6783,7 +7061,6 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
 
         /* If frame contains accelerometer, gyroscope and auxiliary data */
         case BMI2_FIFO_HEADER_ALL_FRM:
-        case BMI2_FIFO_HEAD_LESS_ALL_FRM:
 
             /* Partially read, then skip the data*/
             if ((*idx + fifo->all_frm_len) > fifo->length)
@@ -6791,8 +7068,7 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -6817,7 +7093,6 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
 
         /* If frame contains accelerometer and auxiliary data */
         case BMI2_FIFO_HEADER_AUX_ACC_FRM:
-        case BMI2_FIFO_HEAD_LESS_AUX_ACC_FRM:
 
             /* Update data index */
             (*idx) = (*idx) + fifo->acc_aux_frm_len;
@@ -6839,6 +7114,192 @@ static int8_t unpack_gyro_frame(struct bmi2_sens_axes_data *gyr,
 
         /* If frame contains only accelerometer data */
         case BMI2_FIFO_HEADER_ACC_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->acc_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+        default:
+
+            /* Move the data index to the last byte in case of invalid values */
+            (*idx) = fifo->length;
+
+            /* FIFO is empty */
+            rslt = BMI2_W_FIFO_EMPTY;
+            break;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to parse the gyroscope data from the FIFO
+ * data in header-less mode. It updates the current data byte to
+ * be parsed.
+ */
+static int8_t unpack_gyro_headerless_frame(struct bmi2_sens_axes_data *gyr,
+                                           uint16_t *idx,
+                                           uint16_t *gyr_idx,
+                                           uint8_t frame,
+                                           const struct bmi2_fifo_frame *fifo,
+                                           const struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt = BMI2_OK;
+
+    switch (frame)
+    {
+        /* If frame contains only gyroscope data */
+        case BMI2_FIFO_HEAD_LESS_GYR_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->gyr_frm_len) > fifo->length)
+            {
+                /* Update the data index as complete*/
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the gyroscope data */
+            unpack_gyro_data(&gyr[(*gyr_idx)], *idx, fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_GYR_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&gyr[(*gyr_idx)], idx, fifo);
+            }
+
+            /* Update gyroscope frame index */
+            (*gyr_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer and gyroscope data */
+        case BMI2_FIFO_HEAD_LESS_GYR_ACC_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->acc_gyr_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the gyroscope data */
+            unpack_gyro_data(&gyr[(*gyr_idx)], (*idx), fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ACC_GYR_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&gyr[(*gyr_idx)], idx, fifo);
+            }
+
+            /* Update gyroscope frame index */
+            (*gyr_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains gyroscope and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_GYR_AUX_FRM:
+
+            /* Partially read, then skip the data */
+            if (((*idx) + fifo->aux_gyr_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the gyroscope data */
+            unpack_gyro_data(&gyr[(*gyr_idx)], (*idx), fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_GYR_AUX_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&gyr[(*gyr_idx)], idx, fifo);
+            }
+
+            /* Update gyroscope frame index */
+            (*gyr_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer, gyroscope and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_ALL_FRM:
+
+            /* Partially read, then skip the data*/
+            if ((*idx + fifo->all_frm_len) > fifo->length)
+            {
+                /* Move the data index to the last byte */
+                (*idx) = fifo->length;
+
+                rslt = BMI2_OK;
+                break;
+            }
+
+            /* Get the gyroscope data */
+            unpack_gyro_data(&gyr[(*gyr_idx)], (*idx), fifo, dev);
+
+            /* Update data index */
+            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+
+            /* Get virtual sensor time if S4S is enabled */
+            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+            {
+                unpack_virt_sensor_time(&gyr[(*gyr_idx)], idx, fifo);
+            }
+
+            /* Update gyroscope frame index */
+            (*gyr_idx)++;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains accelerometer and auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_AUX_ACC_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->acc_aux_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains only auxiliary data */
+        case BMI2_FIFO_HEAD_LESS_AUX_FRM:
+
+            /* Update data index */
+            (*idx) = (*idx) + fifo->aux_frm_len;
+
+            /* More frames could be read */
+            rslt = BMI2_W_PARTIAL_READ;
+            break;
+
+        /* If frame contains only accelerometer data */
         case BMI2_FIFO_HEAD_LESS_ACC_FRM:
 
             /* Update data index */
@@ -6901,7 +7362,8 @@ static void unpack_gyro_data(struct bmi2_sens_axes_data *gyr,
  * to be parsed in header-less mode.
  */
 static int8_t parse_fifo_aux_len(uint16_t *start_idx,
-                                 uint16_t(*len),
+                                 uint16_t *len,
+                                 uint8_t *skip_length,
                                  const uint16_t *aux_count,
                                  const struct bmi2_fifo_frame *fifo)
 {
@@ -6916,30 +7378,40 @@ static int8_t parse_fifo_aux_len(uint16_t *start_idx,
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_AUX_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_AUX_LENGTH;
     }
     /* If only accelerometer and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ACC_AUX_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ACC_AUX_LENGTH;
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_GYR_AUX_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_GYR_AUX_LENGTH;
     }
     /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
         (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ALL_LENGTH);
+
+        /* Number of bytes to skip in case dummy frame is obtained */
+        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
     }
     else
     {
-        /* Move the data index to the last byte to mark completion when
-         * no sensors or sensors apart from gyroscope are enabled
-         */
+        /* Move the data index to the last byte to mark completion */
         (*start_idx) = fifo->length;
 
         /* FIFO is empty */
@@ -6951,6 +7423,64 @@ static int8_t parse_fifo_aux_len(uint16_t *start_idx,
     {
         (*len) = fifo->length;
     }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to parse the auxiliary data from the
+ * FIFO in headerless mode.
+ */
+static int8_t extract_aux_headerless_mode(struct bmi2_aux_fifo_data *aux,
+                                          uint16_t *aux_length,
+                                          struct bmi2_fifo_frame *fifo,
+                                          const struct bmi2_dev *dev)
+{
+    int8_t rslt;
+
+    /* Variable to index the bytes */
+    uint16_t data_index = 0;
+
+    /* Variable to index auxiliary frames */
+    uint16_t aux_index = 0;
+
+    /* Variable to store the number of bytes to be read */
+    uint16_t data_read_length = 0;
+
+    /* Variable to define the data enable byte */
+    uint8_t data_enable;
+
+    /* Number of bytes to skip in case dummy frame is obtained */
+    uint8_t skip_length = 0;
+
+    rslt = parse_fifo_aux_len(&data_index, &data_read_length, &skip_length, aux_length, fifo);
+
+    /* Convert word to byte since all sensor enables are in a byte */
+    data_enable = (uint8_t)(fifo->data_enable >> 8);
+
+    for (; (data_index < data_read_length) && (rslt != BMI2_W_FIFO_EMPTY);)
+    {
+        rslt = check_dummy_frame(BMI2_FIFO_HEADERLESS_DUMMY_AUX, &data_index, skip_length, fifo);
+
+        /* Unpack only if Valid frame is present */
+        if (rslt == BMI2_OK)
+        {
+            /* Unpack frame to get auxiliary data */
+            rslt = unpack_aux_frame(aux, &data_index, &aux_index, data_enable, fifo, dev);
+
+            if (rslt != BMI2_W_FIFO_EMPTY)
+            {
+                /* Check for the availability of next two bytes of FIFO data */
+                rslt = check_empty_fifo(&data_index, fifo);
+            }
+        }
+    }
+
+    /* Update number of auxiliary frames to be read */
+    *aux_length = aux_index;
+
+    /* Update the auxiliary byte index */
+    fifo->aux_byte_start_idx = data_index;
 
     return rslt;
 }
@@ -7100,8 +7630,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
                 /* Update the data index as complete*/
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -7111,11 +7640,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             /* Update data index */
             (*idx) = (*idx) + BMI2_FIFO_AUX_LENGTH;
 
-            /* Get virtual sensor time if S4S is enabled */
-            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
-            {
-                unpack_virt_aux_sensor_time(&aux[(*aux_idx)], idx, fifo);
-            }
+            unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
             /* Update auxiliary frame index */
             (*aux_idx)++;
@@ -7134,8 +7659,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -7145,11 +7669,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             /* Update data index */
             (*idx) = (*idx) + BMI2_FIFO_ACC_AUX_LENGTH;
 
-            /* Get virtual sensor time if S4S is enabled */
-            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
-            {
-                unpack_virt_aux_sensor_time(&aux[(*aux_idx)], idx, fifo);
-            }
+            unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
             /* Update auxiliary frame index */
             (*aux_idx)++;
@@ -7168,8 +7688,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -7179,11 +7698,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             /* Update data index */
             (*idx) = (*idx) + BMI2_FIFO_GYR_AUX_LENGTH;
 
-            /* Get virtual sensor time if S4S is enabled */
-            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
-            {
-                unpack_virt_aux_sensor_time(&aux[(*aux_idx)], idx, fifo);
-            }
+            unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
             /* Update auxiliary frame index */
             (*aux_idx)++;
@@ -7202,8 +7717,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
 
-                /* FIFO is empty */
-                rslt = BMI2_W_FIFO_EMPTY;
+                rslt = BMI2_OK;
                 break;
             }
 
@@ -7213,11 +7727,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             /* Update data index */
             (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
 
-            /* Get virtual sensor time if S4S is enabled */
-            if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
-            {
-                unpack_virt_aux_sensor_time(&aux[(*aux_idx)], idx, fifo);
-            }
+            unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
             /* Update auxiliary frame index */
             (*aux_idx)++;
@@ -7271,6 +7781,22 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
     }
 
     return rslt;
+}
+
+/*!
+ * @brief This internal API is used to unpack virtual auxillary sensortime data.
+ */
+static void unpack_virtual_aux_data(struct bmi2_aux_fifo_data *aux,
+                                    uint16_t *idx,
+                                    const uint16_t *aux_idx,
+                                    const struct bmi2_fifo_frame *fifo,
+                                    const struct bmi2_dev *dev)
+{
+    /* Get virtual sensor time if S4S is enabled */
+    if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
+    {
+        unpack_virt_aux_sensor_time(&aux[(*aux_idx)], idx, fifo);
+    }
 }
 
 /*!
@@ -7416,12 +7942,12 @@ static int8_t check_empty_fifo(uint16_t *data_index, const struct bmi2_fifo_fram
     if (((*data_index) + 6) < fifo->length)
     {
         /* Check if FIFO is empty */
-        if (((fifo->data[(*data_index)] == BMI2_FIFO_MSB_CONFIG_CHECK) &&
-             (fifo->data[(*data_index) + 1] == BMI2_FIFO_LSB_CONFIG_CHECK)) &&
-            ((fifo->data[(*data_index) + 2] == BMI2_FIFO_MSB_CONFIG_CHECK) &&
-             (fifo->data[(*data_index) + 3] == BMI2_FIFO_LSB_CONFIG_CHECK)) &&
-            ((fifo->data[(*data_index) + 4] == BMI2_FIFO_MSB_CONFIG_CHECK) &&
-             (fifo->data[(*data_index) + 5] == BMI2_FIFO_LSB_CONFIG_CHECK)))
+        if (((fifo->data[(*data_index)] == BMI2_FIFO_LSB_CONFIG_CHECK) &&
+             (fifo->data[(*data_index) + 1] == BMI2_FIFO_MSB_CONFIG_CHECK) &&
+             (fifo->data[(*data_index) + 2] == BMI2_FIFO_LSB_CONFIG_CHECK)) &&
+            ((fifo->data[(*data_index) + 3] == BMI2_FIFO_MSB_CONFIG_CHECK) &&
+             (fifo->data[(*data_index) + 4] == BMI2_FIFO_LSB_CONFIG_CHECK)) &&
+            ((fifo->data[(*data_index) + 5] == BMI2_FIFO_MSB_CONFIG_CHECK)))
         {
             /* Move the data index to the last byte to mark completion */
             (*data_index) = fifo->length;
@@ -7455,8 +7981,7 @@ static int8_t move_next_frame(uint16_t *data_index, uint8_t current_frame_length
         /* Move the data index to the last byte */
         (*data_index) = fifo->length;
 
-        /* FIFO is empty */
-        rslt = BMI2_W_FIFO_EMPTY;
+        rslt = BMI2_OK;
     }
     else
     {
@@ -7490,8 +8015,7 @@ static int8_t unpack_sensortime_frame(uint16_t *data_index, struct bmi2_fifo_fra
         /* Move the data index to the last byte */
         (*data_index) = fifo->length;
 
-        /* FIFO is empty */
-        rslt = BMI2_W_FIFO_EMPTY;
+        rslt = BMI2_OK;
     }
     else
     {
@@ -7528,8 +8052,7 @@ static int8_t unpack_skipped_frame(uint16_t *data_index, struct bmi2_fifo_frame 
         /* Update the data index to the last byte */
         (*data_index) = fifo->length;
 
-        /* FIFO is empty */
-        rslt = BMI2_W_FIFO_EMPTY;
+        rslt = BMI2_OK;
     }
     else
     {
@@ -7699,9 +8222,9 @@ static int8_t read_accel_xyz(struct bmi2_sens_axes_data *accel, struct bmi2_dev 
     uint16_t msb = 0;
 
     /* Array to define data buffer */
-    uint8_t data[BMI2_ACC_GYR_NUM_BYTES] = { 0 };
+    uint8_t data[BMI2_ACC_NUM_BYTES] = { 0 };
 
-    rslt = bmi2_get_regs(BMI2_ACC_X_LSB_ADDR, data, BMI2_ACC_GYR_NUM_BYTES, dev);
+    rslt = bmi2_get_regs(BMI2_ACC_X_LSB_ADDR, data, BMI2_ACC_NUM_BYTES, dev);
     if (rslt == BMI2_OK)
     {
         /* Accelerometer data x axis */
@@ -7739,9 +8262,9 @@ static int8_t read_gyro_xyz(struct bmi2_sens_axes_data *gyro, struct bmi2_dev *d
     uint16_t msb = 0;
 
     /* Array to define data buffer */
-    uint8_t data[BMI2_ACC_GYR_NUM_BYTES] = { 0 };
+    uint8_t data[BMI2_GYR_NUM_BYTES] = { 0 };
 
-    rslt = bmi2_get_regs(BMI2_GYR_X_LSB_ADDR, data, BMI2_ACC_GYR_NUM_BYTES, dev);
+    rslt = bmi2_get_regs(BMI2_GYR_X_LSB_ADDR, data, BMI2_GYR_NUM_BYTES, dev);
     if (rslt == BMI2_OK)
     {
         /* Gyroscope data x axis */
@@ -8037,13 +8560,36 @@ static int8_t set_remap_axes(const struct bmi2_axes_remap *remap, struct bmi2_de
 }
 
 /*!
+ * @brief This internal API clips the gyroscope cross-axis sensitivity within signed 16-bit limit
+ */
+static int16_t saturate(int32_t value, uint16_t saturation_val)
+{
+    int16_t retval = (int16_t)value;
+
+    if (value > (int32_t)saturation_val)
+    {
+        retval = (int16_t)saturation_val;
+    }
+    else if (value < (-(int32_t)saturation_val - 1))
+    {
+        retval = -(int16_t)saturation_val - 1;
+    }
+
+    return retval;
+}
+
+/*!
  * @brief This internal API corrects the gyroscope cross-axis sensitivity
  * between the z and the x axis.
  */
 static void comp_gyro_cross_axis_sensitivity(struct bmi2_sens_axes_data *gyr_data, const struct bmi2_dev *dev)
 {
+    uint16_t int16_max = UINT16_C(32767);
+
     /* Get the compensated gyroscope x-axis */
-    gyr_data->x = gyr_data->x - (int16_t)(((int32_t) dev->gyr_cross_sens_zx * (int32_t) gyr_data->z) / 512);
+    gyr_data->x =
+        saturate((int32_t)(gyr_data->x - (int16_t)(((int32_t) dev->gyr_cross_sens_zx * (int32_t) gyr_data->z) / 512)),
+                 int16_max);
 }
 
 /*!
@@ -9026,11 +9572,8 @@ int8_t bmi2_do_crt(struct bmi2_dev *dev)
 static int8_t do_gtrigger_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
 {
     int8_t rslt;
-    int8_t rslt_crt = BMI2_OK;
     uint8_t st_status = 0;
     uint8_t max_burst_length = 0;
-    uint8_t download_ready = 0;
-    uint8_t cmd = BMI2_G_TRIGGER_CMD;
     struct bmi2_gyro_self_test_status gyro_st_result = { 0 };
 
     /* Variable to get the status of advance power save */
@@ -9062,93 +9605,10 @@ static int8_t do_gtrigger_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
                 rslt = get_st_running(&st_status, dev);
             }
 
-            /* CRT is not running  and Max burst length is zero */
+            /* CRT is not running and Max burst length is zero */
             if (st_status == 0)
             {
-                if (rslt == BMI2_OK)
-                {
-                    rslt = set_st_running(BMI2_ENABLE, dev);
-                }
-
-                /* Preparing the setup */
-                if (rslt == BMI2_OK)
-                {
-                    rslt = crt_prepare_setup(dev);
-                }
-
-                /* Enable the gyro self-test, CRT */
-                if (rslt == BMI2_OK)
-                {
-                    rslt = select_self_test(gyro_st_crt, dev);
-                }
-
-                /* Check if FIFO is unchanged by checking the max burst length */
-                if ((rslt == BMI2_OK) && (max_burst_length == 0))
-                {
-                    /* Trigger CRT */
-                    rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &cmd, 1, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        /* Wait until st_status = 0 or time out is 2 seconds */
-                        rslt = wait_st_running(BMI2_CRT_WAIT_RUNNING_RETRY_EXECUTION, dev);
-
-                        /* CRT Running wait & check is successful */
-                        if (rslt == BMI2_OK)
-                        {
-                            rslt = crt_gyro_st_update_result(dev);
-                        }
-                    }
-                }
-                else
-                {
-                    /* FIFO may be used */
-                    if (rslt == BMI2_OK)
-                    {
-                        if (dev->read_write_len < 2)
-                        {
-                            dev->read_write_len = 2;
-                        }
-
-                        if (dev->read_write_len > (BMI2_CRT_MAX_BURST_WORD_LENGTH * 2))
-                        {
-                            dev->read_write_len = BMI2_CRT_MAX_BURST_WORD_LENGTH * 2;
-                        }
-
-                        /* Reset the max burst length to default value */
-                        rslt = set_maxburst_len(dev->read_write_len, dev);
-                    }
-
-                    if (rslt == BMI2_OK)
-                    {
-                        rslt = get_rdy_for_dl(&download_ready, dev);
-                    }
-
-                    /* Trigger CRT  */
-                    if (rslt == BMI2_OK)
-                    {
-                        rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &cmd, 1, dev);
-                    }
-
-                    /* Wait till either ready for download toggle or crt running = 0 */
-                    if (rslt == BMI2_OK)
-                    {
-                        rslt = wait_rdy_for_dl_toggle(BMI2_CRT_READY_FOR_DOWNLOAD_RETRY, download_ready, dev);
-                        if (rslt == BMI2_OK)
-                        {
-                            rslt = write_crt_config_file(dev->read_write_len, BMI2_CRT_CONFIG_FILE_SIZE, 0x1800, dev);
-                        }
-
-                        if (rslt == BMI2_OK)
-                        {
-                            rslt = wait_st_running(BMI2_CRT_WAIT_RUNNING_RETRY_EXECUTION, dev);
-                            rslt_crt = crt_gyro_st_update_result(dev);
-                            if (rslt == BMI2_OK)
-                            {
-                                rslt = rslt_crt;
-                            }
-                        }
-                    }
-                }
+                rslt = gyro_crt_test(max_burst_length, gyro_st_crt, dev);
             }
             else
             {
@@ -9170,6 +9630,10 @@ static int8_t do_gtrigger_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
             {
                 rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
             }
+        }
+        else
+        {
+            rslt = BMI2_E_INVALID_SENSOR;
         }
     }
 
@@ -9504,7 +9968,7 @@ static int8_t select_self_test(uint8_t gyro_st_crt, struct bmi2_dev *dev)
             /* Define the offset in bytes */
             idx = gyro_self_test_crt_config.start_addr;
 
-            /* update the gyro self-test crt enable bit */
+            /* Update the gyro self-test crt enable bit */
             feat_config[idx] = BMI2_SET_BIT_POS0(feat_config[idx], BMI2_GYRO_SELF_TEST_CRT_EN, gyro_st_crt);
 
             /* Update the register address */
@@ -9674,96 +10138,6 @@ static int8_t gyro_self_test_completed(struct bmi2_gyro_self_test_status *gyro_s
     return rslt;
 }
 
-/*!
- * @brief This api validates accel foc position as per the range
- */
-static int8_t validate_foc_position(uint8_t sens_list,
-                                    const struct bmi2_accel_foc_g_value *accel_g_axis,
-                                    struct bmi2_sens_axes_data avg_foc_data,
-                                    struct bmi2_dev *dev)
-{
-    int8_t rslt = BMI2_E_INVALID_INPUT;
-
-    if (sens_list == BMI2_ACCEL)
-    {
-        if (accel_g_axis->x == 1)
-        {
-            rslt = validate_foc_accel_axis(avg_foc_data.x, dev);
-        }
-        else if (accel_g_axis->y == 1)
-        {
-            rslt = validate_foc_accel_axis(avg_foc_data.y, dev);
-        }
-        else
-        {
-            rslt = validate_foc_accel_axis(avg_foc_data.z, dev);
-        }
-    }
-    else if (sens_list == BMI2_GYRO)
-    {
-        if (((avg_foc_data.x >= BMI2_GYRO_FOC_NOISE_LIMIT_NEGATIVE) &&
-             (avg_foc_data.x <= BMI2_GYRO_FOC_NOISE_LIMIT_POSITIVE)) &&
-            ((avg_foc_data.y >= BMI2_GYRO_FOC_NOISE_LIMIT_NEGATIVE) &&
-             (avg_foc_data.y <= BMI2_GYRO_FOC_NOISE_LIMIT_POSITIVE)) &&
-            ((avg_foc_data.z >= BMI2_GYRO_FOC_NOISE_LIMIT_NEGATIVE) &&
-             (avg_foc_data.z <= BMI2_GYRO_FOC_NOISE_LIMIT_POSITIVE)))
-        {
-            rslt = BMI2_OK;
-        }
-        else
-        {
-            rslt = BMI2_E_INVALID_FOC_POSITION;
-        }
-    }
-
-    return rslt;
-}
-
-/*!
- * @brief This api validates depends on accel foc access input
- */
-static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev)
-{
-    struct bmi2_sens_config sens_cfg = { 0 };
-    uint8_t range;
-    int8_t rslt;
-
-    sens_cfg.type = BMI2_ACCEL;
-    rslt = bmi2_get_sensor_config(&sens_cfg, 1, dev);
-    range = sens_cfg.cfg.acc.range;
-
-    /* reference LSB value of 16G */
-    if ((range == BMI2_ACC_RANGE_2G) && (avg_foc_data > BMI2_ACC_2G_MIN_NOISE_LIMIT) &&
-        (avg_foc_data < BMI2_ACC_2G_MAX_NOISE_LIMIT))
-    {
-        rslt = BMI2_OK;
-    }
-    /* reference LSB value of 16G */
-    else if ((range == BMI2_ACC_RANGE_4G) && (avg_foc_data > BMI2_ACC_4G_MIN_NOISE_LIMIT) &&
-             (avg_foc_data < BMI2_ACC_4G_MAX_NOISE_LIMIT))
-    {
-        rslt = BMI2_OK;
-    }
-    /* reference LSB value of 16G */
-    else if ((range == BMI2_ACC_RANGE_8G) && (avg_foc_data > BMI2_ACC_8G_MIN_NOISE_LIMIT) &&
-             (avg_foc_data < BMI2_ACC_8G_MAX_NOISE_LIMIT))
-    {
-        rslt = BMI2_OK;
-    }
-    /* reference LSB value of 16G */
-    else if ((range == BMI2_ACC_RANGE_16G) && (avg_foc_data > BMI2_ACC_16G_MIN_NOISE_LIMIT) &&
-             (avg_foc_data < BMI2_ACC_16G_MAX_NOISE_LIMIT))
-    {
-        rslt = BMI2_OK;
-    }
-    else
-    {
-        rslt = BMI2_E_INVALID_FOC_POSITION;
-    }
-
-    return rslt;
-}
-
 /*! @brief This api is used for programming the non volatile memory(nvm) */
 int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
 {
@@ -9853,83 +10227,6 @@ int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
     if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
     {
         rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
-    }
-
-    return rslt;
-}
-
-/*!
- * @brief This API reads and provides average for 128 samples of sensor data for foc operation
- * gyro.
- */
-static int8_t get_average_of_sensor_data(uint8_t sens_list,
-                                         struct bmi2_foc_temp_value *temp_foc_data,
-                                         struct bmi2_dev *dev)
-{
-    int8_t rslt = 0;
-    struct bmi2_sensor_data sensor_data = { 0 };
-    uint8_t sample_count = 0;
-    uint8_t datardy_try_cnt;
-    uint8_t drdy_status = 0;
-    uint8_t sensor_drdy = 0;
-
-    sensor_data.type = sens_list;
-    if (sens_list == BMI2_ACCEL)
-    {
-        sensor_drdy = BMI2_DRDY_ACC;
-    }
-    else
-    {
-        sensor_drdy = BMI2_DRDY_GYR;
-    }
-
-    /* Read sensor values before FOC */
-    while (sample_count < BMI2_FOC_SAMPLE_LIMIT)
-    {
-        datardy_try_cnt = 5;
-        do
-        {
-            dev->delay_us(20000, dev->intf_ptr);
-            rslt = bmi2_get_status(&drdy_status, dev);
-            datardy_try_cnt--;
-        } while ((rslt == BMI2_OK) && (!(drdy_status & sensor_drdy)) && (datardy_try_cnt));
-
-        if ((rslt != BMI2_OK) || (datardy_try_cnt == 0))
-        {
-            rslt = BMI2_E_DATA_RDY_INT_FAILED;
-            break;
-        }
-
-        rslt = bmi2_get_sensor_data(&sensor_data, 1, dev);
-
-        if (rslt == BMI2_OK)
-        {
-            if (sensor_data.type == BMI2_ACCEL)
-            {
-                temp_foc_data->x += sensor_data.sens_data.acc.x;
-                temp_foc_data->y += sensor_data.sens_data.acc.y;
-                temp_foc_data->z += sensor_data.sens_data.acc.z;
-            }
-            else if (sensor_data.type == BMI2_GYRO)
-            {
-                temp_foc_data->x += sensor_data.sens_data.gyr.x;
-                temp_foc_data->y += sensor_data.sens_data.gyr.y;
-                temp_foc_data->z += sensor_data.sens_data.gyr.z;
-            }
-        }
-        else
-        {
-            break;
-        }
-
-        sample_count++;
-    }
-
-    if (rslt == BMI2_OK)
-    {
-        temp_foc_data->x = (temp_foc_data->x / BMI2_FOC_SAMPLE_LIMIT);
-        temp_foc_data->y = (temp_foc_data->y / BMI2_FOC_SAMPLE_LIMIT);
-        temp_foc_data->z = (temp_foc_data->z / BMI2_FOC_SAMPLE_LIMIT);
     }
 
     return rslt;
@@ -10329,6 +10626,263 @@ static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev)
         if (sensor_sel & BMI2_MAIN_SENSORS)
         {
             rslt = bmi2_set_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API reads accelerometer, gyroscope and auxiliary sensor data.
+ */
+static int8_t read_sensor_data(uint8_t aux_len,
+                               uint8_t acc_len,
+                               uint8_t gyr_len,
+                               uint8_t *sensor_data,
+                               struct bmi2_dev *dev)
+{
+    int8_t rslt;
+    uint8_t start_addr = 0;
+    uint8_t len = 0;
+
+    /* Read data with auxiliary sensor data */
+    if (aux_len != 0)
+    {
+        /* Read auxiliary, accelerometer and gyroscope sensor data */
+        if ((acc_len != 0) && (gyr_len != 0))
+        {
+            start_addr = BMI2_AUX_X_LSB_ADDR;
+            len = BMI2_ACC_GYR_AUX_NUM_BYTES;
+        }
+        /* Read auxiliary and accelerometer sensor data */
+        else if ((acc_len != 0) && (gyr_len == 0))
+        {
+            start_addr = BMI2_AUX_X_LSB_ADDR;
+            len = BMI2_AUX_ACC_NUM_BYTES;
+        }
+        /* Read auxiliary and gyroscope sensor data */
+        else if ((gyr_len != 0) && (acc_len == 0))
+        {
+            start_addr = BMI2_AUX_X_LSB_ADDR;
+            len = BMI2_ACC_GYR_AUX_NUM_BYTES;
+        }
+        /* Read only auxiliary sensor data */
+        else if ((acc_len == 0) && (gyr_len == 0))
+        {
+            start_addr = BMI2_AUX_X_LSB_ADDR;
+            len = BMI2_AUX_NUM_BYTES;
+        }
+    }
+    /* Read data without auxiliary sensor data */
+    else
+    {
+        /* Read accelerometer and gyroscope sensor data */
+        if ((acc_len != 0) && (gyr_len != 0))
+        {
+            start_addr = BMI2_ACC_X_LSB_ADDR;
+            len = BMI2_ACC_GYR_NUM_BYTES;
+        }
+        /* Read only accelerometer sensor data */
+        else if ((acc_len != 0) && (gyr_len == 0))
+        {
+            start_addr = BMI2_ACC_X_LSB_ADDR;
+            len = BMI2_ACC_NUM_BYTES;
+        }
+        /* Read only gyroscope sensor data */
+        else if ((gyr_len != 0) && (acc_len == 0))
+        {
+            start_addr = BMI2_GYR_X_LSB_ADDR;
+            len = BMI2_GYR_NUM_BYTES;
+        }
+    }
+
+    /* Read data with start_addr and len determined */
+    rslt = bmi2_get_regs(start_addr, sensor_data, len, dev);
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API parses accelerometer, gyroscope and auxiliary sensor data with sensortime
+ */
+static int8_t parse_data(uint8_t aux_len,
+                         uint8_t acc_len,
+                         uint8_t gyr_len,
+                         struct bmi2_sens_data *data,
+                         const uint8_t *sensor_data,
+                         struct bmi2_dev *dev)
+{
+    int8_t rslt;
+
+    uint8_t sens_time[3] = { 0 };
+
+    /* Variables to define loop */
+    uint8_t count = 0;
+
+    /* Variables to define index */
+    uint8_t index = 0;
+
+    uint32_t sensor_time_byte3 = 0;
+    uint16_t sensor_time_byte2 = 0;
+    uint8_t sensor_time_byte1 = 0;
+
+    /* Parse auxiliary sensor data */
+    if (aux_len != 0)
+    {
+        /* Get the 8 bytes of auxiliary data */
+        do
+        {
+            *(data->aux_data + count++) = *(sensor_data + index++);
+        } while (count < BMI2_AUX_NUM_BYTES);
+    }
+
+    /* Parse auxiliary(if enabled) and accelerometer sensor data */
+    if (acc_len != 0)
+    {
+        /* Get accelerometer data from the register */
+        get_acc_gyr_data(&data->acc, sensor_data + (acc_len - BMI2_ACC_NUM_BYTES));
+
+        /* Get the re-mapped accelerometer data */
+        get_remapped_data(&data->acc, dev);
+    }
+
+    /* Parse auxiliary(if enabled), acceleromter(if enabled) and gyroscope sensor data */
+    if (gyr_len != 0)
+    {
+        if ((aux_len != 0) && (acc_len != 0))
+        {
+            /* Get gyroscope data from the register */
+            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_AUX_ACC_NUM_BYTES);
+        }
+
+        if ((aux_len != 0) && (acc_len == 0))
+        {
+            /* Get gyroscope data from the register */
+            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_AUX_ACC_NUM_BYTES);
+        }
+
+        if ((acc_len != 0) && (aux_len == 0))
+        {
+            /* Get gyroscope data from the register */
+            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_ACC_NUM_BYTES);
+        }
+
+        if ((acc_len == 0) && (aux_len == 0))
+        {
+            /* Get gyroscope data from the register */
+            get_acc_gyr_data(&data->gyr, sensor_data);
+        }
+
+        /* Get the compensated gyroscope data */
+        comp_gyro_cross_axis_sensitivity(&data->gyr, dev);
+
+        /* Get the re-mapped gyroscope data */
+        get_remapped_data(&data->gyr, dev);
+    }
+
+    /* Read sensortime */
+    rslt = bmi2_get_regs(BMI2_SENSORTIME_ADDR, sens_time, 3, dev);
+    if (rslt == BMI2_OK)
+    {
+        sensor_time_byte3 = sens_time[BMI2_SENSOR_TIME_MSB_BYTE] << 16;
+        sensor_time_byte2 = sens_time[BMI2_SENSOR_TIME_XLSB_BYTE] << 8;
+        sensor_time_byte1 = sens_time[0];
+
+        data->sens_time = (uint32_t)(sensor_time_byte3 | sensor_time_byte2 | sensor_time_byte1);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to test gyro CRT.
+ */
+static int8_t gyro_crt_test(uint8_t max_burst_length, uint8_t gyro_st_crt, struct bmi2_dev *dev)
+{
+    int8_t rslt;
+    int8_t rslt_crt = BMI2_OK;
+    uint8_t cmd = BMI2_G_TRIGGER_CMD;
+    uint8_t download_ready = 0;
+
+    rslt = set_st_running(BMI2_ENABLE, dev);
+
+    /* Preparing the setup */
+    if (rslt == BMI2_OK)
+    {
+        rslt = crt_prepare_setup(dev);
+    }
+
+    /* Enable the gyro self-test, CRT */
+    if (rslt == BMI2_OK)
+    {
+        rslt = select_self_test(gyro_st_crt, dev);
+    }
+
+    /* Check if FIFO is unchanged by checking the max burst length */
+    if ((rslt == BMI2_OK) && (max_burst_length == 0))
+    {
+        /* Trigger CRT */
+        rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &cmd, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Wait until st_status = 0 or time out is 2 seconds */
+            rslt = wait_st_running(BMI2_CRT_WAIT_RUNNING_RETRY_EXECUTION, dev);
+
+            /* CRT Running wait & check is successful */
+            if (rslt == BMI2_OK)
+            {
+                rslt = crt_gyro_st_update_result(dev);
+            }
+        }
+    }
+    else
+    {
+        /* FIFO may be used */
+        if (rslt == BMI2_OK)
+        {
+            if (dev->read_write_len < 2)
+            {
+                dev->read_write_len = 2;
+            }
+
+            if (dev->read_write_len > (BMI2_CRT_MAX_BURST_WORD_LENGTH * 2))
+            {
+                dev->read_write_len = BMI2_CRT_MAX_BURST_WORD_LENGTH * 2;
+            }
+
+            /* Reset the max burst length to default value */
+            rslt = set_maxburst_len(dev->read_write_len, dev);
+        }
+
+        if (rslt == BMI2_OK)
+        {
+            rslt = get_rdy_for_dl(&download_ready, dev);
+        }
+
+        /* Trigger CRT  */
+        if (rslt == BMI2_OK)
+        {
+            rslt = bmi2_set_regs(BMI2_CMD_REG_ADDR, &cmd, 1, dev);
+        }
+
+        /* Wait till either ready for download toggle or crt running = 0 */
+        if (rslt == BMI2_OK)
+        {
+            rslt = wait_rdy_for_dl_toggle(BMI2_CRT_READY_FOR_DOWNLOAD_RETRY, download_ready, dev);
+            if (rslt == BMI2_OK)
+            {
+                rslt = write_crt_config_file(dev->read_write_len, BMI2_CRT_CONFIG_FILE_SIZE, 0x1800, dev);
+            }
+
+            if (rslt == BMI2_OK)
+            {
+                rslt = wait_st_running(BMI2_CRT_WAIT_RUNNING_RETRY_EXECUTION, dev);
+                rslt_crt = crt_gyro_st_update_result(dev);
+                if (rslt == BMI2_OK)
+                {
+                    rslt = rslt_crt;
+                }
+            }
         }
     }
 

@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2_defs.h
-* @date       2020-11-04
-* @version    v2.63.1
+* @date       2021-09-30
+* @version    v2.71.8
 *
 */
 
@@ -127,6 +127,9 @@
 #define BMI2_TRUE                                 UINT8_C(1)
 #define BMI2_FALSE                                UINT8_C(0)
 
+/*! @name Macro to define maximum length of read */
+#define BMI2_MAX_LEN                              UINT8_C(128)
+
 /*! @name To define sensor interface success code */
 #define BMI2_INTF_RET_SUCCESS                     INT8_C(0)
 
@@ -172,6 +175,15 @@
 /*! @name To define warnings for FIFO activity */
 #define BMI2_W_FIFO_EMPTY                         INT8_C(1)
 #define BMI2_W_PARTIAL_READ                       INT8_C(2)
+#define BMI2_W_DUMMY_BYTE                         INT8_C(3)
+
+/*! @name Macros to define dummy frame header  FIFO headerless mode */
+#define BMI2_FIFO_HEADERLESS_DUMMY_ACC            UINT8_C(0x01)
+#define BMI2_FIFO_HEADERLESS_DUMMY_GYR            UINT8_C(0x02)
+#define BMI2_FIFO_HEADERLESS_DUMMY_AUX            UINT8_C(0x03)
+#define BMI2_FIFO_HEADERLESS_DUMMY_BYTE_1         UINT8_C(0x7F)
+#define BMI2_FIFO_HEADERLESS_DUMMY_BYTE_2         UINT8_C(0x00)
+#define BMI2_FIFO_HEADERLESS_DUMMY_BYTE_3         UINT8_C(0x80)
 
 /*! @name Bit wise to define information */
 #define BMI2_I_MIN_VALUE                          UINT8_C(1)
@@ -183,6 +195,7 @@
 #define BMI2_AUX_X_LSB_ADDR                       UINT8_C(0x04)
 #define BMI2_ACC_X_LSB_ADDR                       UINT8_C(0x0C)
 #define BMI2_GYR_X_LSB_ADDR                       UINT8_C(0x12)
+#define BMI2_SENSORTIME_ADDR                      UINT8_C(0x18)
 #define BMI2_EVENT_ADDR                           UINT8_C(0x1B)
 #define BMI2_INT_STATUS_0_ADDR                    UINT8_C(0x1C)
 #define BMI2_INT_STATUS_1_ADDR                    UINT8_C(0x1D)
@@ -190,18 +203,18 @@
 #define BMI2_SYNC_COMMAND_ADDR                    UINT8_C(0x1E)
 #define BMI2_GYR_CAS_GPIO0_ADDR                   UINT8_C(0x1E)
 #define BMI2_INTERNAL_STATUS_ADDR                 UINT8_C(0x21)
-#define BMI2_FIFO_LENGTH_0_ADDR                   UINT8_C(0X24)
-#define BMI2_FIFO_DATA_ADDR                       UINT8_C(0X26)
+#define BMI2_FIFO_LENGTH_0_ADDR                   UINT8_C(0x24)
+#define BMI2_FIFO_DATA_ADDR                       UINT8_C(0x26)
 #define BMI2_FEAT_PAGE_ADDR                       UINT8_C(0x2F)
 #define BMI2_FEATURES_REG_ADDR                    UINT8_C(0x30)
 #define BMI2_ACC_CONF_ADDR                        UINT8_C(0x40)
 #define BMI2_GYR_CONF_ADDR                        UINT8_C(0x42)
 #define BMI2_AUX_CONF_ADDR                        UINT8_C(0x44)
-#define BMI2_FIFO_DOWNS_ADDR                      UINT8_C(0X45)
-#define BMI2_FIFO_WTM_0_ADDR                      UINT8_C(0X46)
-#define BMI2_FIFO_WTM_1_ADDR                      UINT8_C(0X47)
-#define BMI2_FIFO_CONFIG_0_ADDR                   UINT8_C(0X48)
-#define BMI2_FIFO_CONFIG_1_ADDR                   UINT8_C(0X49)
+#define BMI2_FIFO_DOWNS_ADDR                      UINT8_C(0x45)
+#define BMI2_FIFO_WTM_0_ADDR                      UINT8_C(0x46)
+#define BMI2_FIFO_WTM_1_ADDR                      UINT8_C(0x47)
+#define BMI2_FIFO_CONFIG_0_ADDR                   UINT8_C(0x48)
+#define BMI2_FIFO_CONFIG_1_ADDR                   UINT8_C(0x49)
 #define BMI2_AUX_DEV_ID_ADDR                      UINT8_C(0x4B)
 #define BMI2_AUX_IF_CONF_ADDR                     UINT8_C(0x4C)
 #define BMI2_AUX_RD_ADDR                          UINT8_C(0x4D)
@@ -218,17 +231,17 @@
 #define BMI2_INIT_ADDR_1                          UINT8_C(0x5C)
 #define BMI2_INIT_DATA_ADDR                       UINT8_C(0x5E)
 #define BMI2_AUX_IF_TRIM                          UINT8_C(0x68)
-#define BMI2_GYR_CRT_CONF_ADDR                    UINT8_C(0X69)
+#define BMI2_GYR_CRT_CONF_ADDR                    UINT8_C(0x69)
 #define BMI2_NVM_CONF_ADDR                        UINT8_C(0x6A)
-#define BMI2_IF_CONF_ADDR                         UINT8_C(0X6B)
-#define BMI2_ACC_SELF_TEST_ADDR                   UINT8_C(0X6D)
+#define BMI2_IF_CONF_ADDR                         UINT8_C(0x6B)
+#define BMI2_ACC_SELF_TEST_ADDR                   UINT8_C(0x6D)
 #define BMI2_GYR_SELF_TEST_AXES_ADDR              UINT8_C(0x6E)
-#define BMI2_SELF_TEST_MEMS_ADDR                  UINT8_C(0X6F)
+#define BMI2_SELF_TEST_MEMS_ADDR                  UINT8_C(0x6F)
 #define BMI2_NV_CONF_ADDR                         UINT8_C(0x70)
-#define BMI2_ACC_OFF_COMP_0_ADDR                  UINT8_C(0X71)
-#define BMI2_GYR_OFF_COMP_3_ADDR                  UINT8_C(0X74)
-#define BMI2_GYR_OFF_COMP_6_ADDR                  UINT8_C(0X77)
-#define BMI2_GYR_USR_GAIN_0_ADDR                  UINT8_C(0X78)
+#define BMI2_ACC_OFF_COMP_0_ADDR                  UINT8_C(0x71)
+#define BMI2_GYR_OFF_COMP_3_ADDR                  UINT8_C(0x74)
+#define BMI2_GYR_OFF_COMP_6_ADDR                  UINT8_C(0x77)
+#define BMI2_GYR_USR_GAIN_0_ADDR                  UINT8_C(0x78)
 #define BMI2_PWR_CONF_ADDR                        UINT8_C(0x7C)
 #define BMI2_PWR_CTRL_ADDR                        UINT8_C(0x7D)
 #define BMI2_CMD_REG_ADDR                         UINT8_C(0x7E)
@@ -246,8 +259,12 @@
 
 /*! @name BMI2 sensor data bytes */
 
-#define BMI2_ACC_GYR_NUM_BYTES                    UINT8_C(6)
 #define BMI2_AUX_NUM_BYTES                        UINT8_C(8)
+#define BMI2_ACC_NUM_BYTES                        UINT8_C(6)
+#define BMI2_GYR_NUM_BYTES                        UINT8_C(6)
+#define BMI2_ACC_GYR_NUM_BYTES                    UINT8_C(12)
+#define BMI2_AUX_ACC_NUM_BYTES                    UINT8_C(14)
+#define BMI2_ACC_GYR_AUX_NUM_BYTES                UINT8_C(20)
 #define BMI2_CRT_CONFIG_FILE_SIZE                 UINT16_C(2048)
 #define BMI2_FEAT_SIZE_IN_BYTES                   UINT8_C(16)
 #define BMI2_ACC_CONFIG_LENGTH                    UINT8_C(2)
@@ -380,6 +397,9 @@
 #define BMI2_Y_AXIS                               UINT8_C(1)
 #define BMI2_Z_AXIS                               UINT8_C(2)
 
+/*! @name Macro for delay to read internal status */
+#define BMI2_INTERNAL_STATUS_READ_DELAY_MS        UINT32_C(140000)
+
 /******************************************************************************/
 /*! @name        Sensor Macro Definitions                 */
 /******************************************************************************/
@@ -434,6 +454,14 @@
 #define BMI2_ACTIVITY_RECOGNITION_SETTINGS        UINT8_C(45)
 #define BMI2_OIS_OUTPUT                           UINT8_C(46)
 #define BMI2_CONFIG_ID                            UINT8_C(47)
+#define BMI2_EXT_TCO                              UINT8_C(48)
+#define BMI2_LPD                                  UINT8_C(49)
+#define BMI2_LAPTOP_POSITION_DETECTOR_1           UINT8_C(50)
+#define BMI2_LAPTOP_POSITION_DETECTOR_2           UINT8_C(51)
+#define BMI2_LAPTOP_POSITION_DETECTOR_3           UINT8_C(52)
+#define BMI2_LAPTOP_POSITION_DETECTOR_4           UINT8_C(53)
+#define BMI2_WRIST_GESTURE_WH_1                   UINT8_C(54)
+#define BMI2_WRIST_GESTURE_WH_2                   UINT8_C(55)
 
 /*! @name Bit wise for selecting BMI2 sensors/features */
 #define BMI2_ACCEL_SENS_SEL                       (1)
@@ -469,6 +497,8 @@
 #define BMI2_WRIST_WEAR_WAKE_UP_WH_SEL            (1 << BMI2_WRIST_WEAR_WAKE_UP_WH)
 #define BMI2_PRIMARY_OIS_SEL                      (1 << BMI2_PRIMARY_OIS)
 #define BMI2_FREE_FALL_DET_SEL                    (1 << BMI2_FREE_FALL_DET)
+#define BMI2_EXT_TCO_SEL                          ((uint64_t)1 << BMI2_EXT_TCO)
+#define BMI2_LPD_SEL                              ((uint64_t)1 << BMI2_LPD)
 
 /*! @name Mask definitions for BMI2 wake-up feature configuration for bmi260 */
 #define BMI2_WAKEUP_SENSITIVITY_MASK              UINT8_C(0x0E)
@@ -616,7 +646,7 @@
 /*! @name Mask definitions for BMI2 step-counter/detector feature configuration */
 #define BMI2_STEP_COUNT_WM_LEVEL_MASK             UINT16_C(0x03FF)
 #define BMI2_STEP_COUNT_RST_CNT_MASK              UINT16_C(0x0400)
-#define BMI2_STEP_BUFFER_SIZE_MASK                UINT16_C(0XFF00)
+#define BMI2_STEP_BUFFER_SIZE_MASK                UINT16_C(0xFF00)
 #define BMI2_STEP_COUNT_INT_MASK                  UINT8_C(0x02)
 #define BMI2_STEP_ACT_INT_MASK                    UINT8_C(0x04)
 
@@ -624,7 +654,7 @@
  * configuration
  */
 #define BMI2_STEP_COUNT_RST_CNT_POS               UINT8_C(0x0A)
-#define BMI2_STEP_BUFFER_SIZE_POS                 UINT8_C(0X08)
+#define BMI2_STEP_BUFFER_SIZE_POS                 UINT8_C(0x08)
 
 /*! @name Mask definitions for BMI2 gyroscope user gain feature
  * configuration
@@ -753,6 +783,9 @@
 #define BMI2_WRIST_WAKE_UP_ANGLE_PU_POS           UINT16_C(0x0008)
 #define BMI2_WRIST_WAKE_UP_MIN_DUR_QUITE_POS      UINT16_C(0x0008)
 
+/*! @name Mask definition for BMI2 EXT TCO configuration */
+#define BMI2_EXT_TCO_MASK                         UINT8_C(0x01)
+
 /*! @name Macros to define values of BMI2 axis and its sign for re-map
  * settings
  */
@@ -790,23 +823,51 @@
 #define BMI2_CRT_MIN_BURST_WORD_LENGTH            UINT8_C(2)
 #define BMI2_CRT_MAX_BURST_WORD_LENGTH            UINT16_C(255)
 
+/* Reference value with positive and negative noise range in lsb */
+
+/*
+ * For Gyro FOC, axes values after FOC must be 0 +/- 1 dps
+ *
+ * In 2000 dps, 1 dps is  16.384 (~16)
+ * In 1000 dps, 1 dps is  32.768 (~33)
+ * In  500 dps, 1 dps is  65.536 (~66)
+ * In  250 dps, 1 dps is 131.072 (~131)
+ * In  125 dps, 1 dps is 262.144 (~262)
+ */
+#define BMI2_GYRO_FOC_2000_DPS_REF                UINT16_C(16)
+#define BMI2_GYRO_FOC_1000_DPS_REF                UINT16_C(33)
+#define BMI2_GYRO_FOC_500_DPS_REF                 UINT16_C(66)
+#define BMI2_GYRO_FOC_250_DPS_REF                 UINT16_C(131)
+#define BMI2_GYRO_FOC_125_DPS_REF                 UINT16_C(262)
+
+/* Reference value with positive and negative noise range in lsb */
+
+/*
+ * As per datasheet, Zero-g offset : +/- 20mg
+ *
+ * In range 2G,  1G is 16384. so, 16384 x 20 x (10 ^ -3) = 328
+ * In range 4G,  1G is 8192.  so,  8192 x 20 x (10 ^ -3) = 164
+ * In range 8G,  1G is 4096.  so,  4096 x 20 x (10 ^ -3) = 82
+ * In range 16G, 1G is 2048.  so,  2048 x 20 x (10 ^ -3) = 41
+ */
 #define BMI2_ACC_FOC_2G_REF                       UINT16_C(16384)
 #define BMI2_ACC_FOC_4G_REF                       UINT16_C(8192)
 #define BMI2_ACC_FOC_8G_REF                       UINT16_C(4096)
 #define BMI2_ACC_FOC_16G_REF                      UINT16_C(2048)
 
-#define BMI2_GYRO_FOC_NOISE_LIMIT_NEGATIVE        INT8_C(-20)
-#define BMI2_GYRO_FOC_NOISE_LIMIT_POSITIVE        INT8_C(20)
+#define BMI2_ACC_FOC_2G_OFFSET                    UINT16_C(328)
+#define BMI2_ACC_FOC_4G_OFFSET                    UINT16_C(164)
+#define BMI2_ACC_FOC_8G_OFFSET                    UINT16_C(82)
+#define BMI2_ACC_FOC_16G_OFFSET                   UINT16_C(41)
 
-/* reference value with positive and negative noise range in lsb */
-#define BMI2_ACC_2G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_2G_REF + UINT16_C(255))
-#define BMI2_ACC_2G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_2G_REF - UINT16_C(255))
-#define BMI2_ACC_4G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_4G_REF + UINT16_C(255))
-#define BMI2_ACC_4G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_4G_REF - UINT16_C(255))
-#define BMI2_ACC_8G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_8G_REF + UINT16_C(255))
-#define BMI2_ACC_8G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_8G_REF - UINT16_C(255))
-#define BMI2_ACC_16G_MAX_NOISE_LIMIT              (BMI2_ACC_FOC_16G_REF + UINT16_C(255))
-#define BMI2_ACC_16G_MIN_NOISE_LIMIT              (BMI2_ACC_FOC_16G_REF - UINT16_C(255))
+#define BMI2_ACC_2G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_2G_REF + BMI2_ACC_FOC_2G_OFFSET)
+#define BMI2_ACC_2G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_2G_REF - BMI2_ACC_FOC_2G_OFFSET)
+#define BMI2_ACC_4G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_4G_REF + BMI2_ACC_FOC_4G_OFFSET)
+#define BMI2_ACC_4G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_4G_REF - BMI2_ACC_FOC_4G_OFFSET)
+#define BMI2_ACC_8G_MAX_NOISE_LIMIT               (BMI2_ACC_FOC_8G_REF + BMI2_ACC_FOC_8G_OFFSET)
+#define BMI2_ACC_8G_MIN_NOISE_LIMIT               (BMI2_ACC_FOC_8G_REF - BMI2_ACC_FOC_8G_OFFSET)
+#define BMI2_ACC_16G_MAX_NOISE_LIMIT              (BMI2_ACC_FOC_16G_REF + BMI2_ACC_FOC_16G_OFFSET)
+#define BMI2_ACC_16G_MIN_NOISE_LIMIT              (BMI2_ACC_FOC_16G_REF - BMI2_ACC_FOC_16G_OFFSET)
 
 #define BMI2_FOC_SAMPLE_LIMIT                     UINT8_C(128)
 
@@ -898,7 +959,7 @@
 #define BMI2_ACC_SELF_TEST_AMP_POS                UINT8_C(0x03)
 
 /*! @name MASK definition for gyro self test status  */
-#define BMI2_GYR_ST_AXES_DONE_MASK                UINT8_C(0X01)
+#define BMI2_GYR_ST_AXES_DONE_MASK                UINT8_C(0x01)
 #define BMI2_GYR_AXIS_X_OK_MASK                   UINT8_C(0x02)
 #define BMI2_GYR_AXIS_Y_OK_MASK                   UINT8_C(0x04)
 #define BMI2_GYR_AXIS_Z_OK_MASK                   UINT8_C(0x08)
@@ -1030,6 +1091,9 @@
 #define BMI2_FIFO_ACC_EN                          UINT16_C(0x4000)
 #define BMI2_FIFO_GYR_EN                          UINT16_C(0x8000)
 #define BMI2_FIFO_ALL_EN                          UINT16_C(0xE000)
+
+/*! @name Sensortime resolution in seconds */
+#define BMI2_SENSORTIME_RESOLUTION                0.0000390625f
 
 /*! @name FIFO sensor data lengths */
 #define BMI2_FIFO_ACC_LENGTH                      UINT8_C(6)
@@ -1698,8 +1762,8 @@ struct bmi2_ois_output
     int16_t ois_gyro_z;
 };
 
-/*! @name Union to define BMI2 sensor data */
-union bmi2_sens_data
+/*! @name Structure to define BMI2 sensor data */
+struct bmi2_sens_data
 {
     /*! Accelerometer axes data */
     struct bmi2_sens_axes_data acc;
@@ -1710,6 +1774,13 @@ union bmi2_sens_data
     /*! Auxiliary sensor data */
     uint8_t aux_data[BMI2_AUX_NUM_BYTES];
 
+    /*! Sensor time */
+    uint32_t sens_time;
+};
+
+/*! @name Union to define BMI2 feature data */
+union bmi2_feature_data
+{
     /*! Step counter output */
     uint32_t step_counter_output;
 
@@ -1745,13 +1816,13 @@ union bmi2_sens_data
 };
 
 /*! @name Structure to define type of sensor and their respective data */
-struct bmi2_sensor_data
+struct bmi2_feat_sensor_data
 {
     /*! Defines the type of sensor */
     uint8_t type;
 
     /*! Defines various sensor data */
-    union bmi2_sens_data sens_data;
+    union bmi2_feature_data sens_data;
 };
 
 /*! @name Structure to define accelerometer configuration */
@@ -1826,7 +1897,7 @@ struct bmi2_aux_config
 /*! @name Structure to define any-motion configuration */
 struct bmi2_any_motion_config
 {
-    /*! Duration in 50Hz samples(20msec) */
+    /*! Duration */
     uint16_t duration;
 
     /*! Acceleration slope threshold */
@@ -1845,7 +1916,7 @@ struct bmi2_any_motion_config
 /*! @name Structure to define no-motion configuration */
 struct bmi2_no_motion_config
 {
-    /*! Duration in 50Hz samples(20msec) */
+    /*! Duration */
     uint16_t duration;
 
     /*! Acceleration slope threshold */
@@ -1880,6 +1951,13 @@ struct bmi2_sig_motion_config
     uint16_t param_5;
 };
 
+/*! @name Structure to define EXT TCO configuration */
+struct bmi2_ext_tco
+{
+    /*! Enable(1) / Disable(0) hardware compensation.  */
+    uint8_t hw_comp_enable;
+};
+
 /*! @name Structure to define step counter/detector/activity configuration */
 struct bmi2_step_config
 {
@@ -1909,46 +1987,19 @@ struct bmi2_gyro_user_gain_config
 /*! @name Structure to define wake-up configuration */
 struct bmi2_wake_up_config
 {
-    /*! Wake-up sensitivity for bmi261 */
+    /*! Wake-up sensitivity */
     uint16_t sensitivity;
 
-    /*! Tap feature for BMI261
+    /*!
      * For Single tap, single_tap_en = 1
      * For Double tap, single_tap_en = 0
      */
     uint16_t single_tap_en;
-
-    /*! Enable -> Filtered tap data, Disable -> Unfiltered data */
-    uint16_t data_reg_en;
-
-    /*! Scaling factor of threshold */
-    uint16_t tap_sens_thres;
-
-    /*! Maximum duration between each taps */
-    uint16_t max_gest_dur;
-
-    /*! Minimum quite time between the two gesture detection */
-    uint16_t quite_time_after_gest;
-
-    /*! Wait time */
-    uint16_t wait_for_timeout;
-
-    /*! Axis selection */
-    uint16_t axis_sel;
 };
 
 /*! @name Structure to define tap configuration */
 struct bmi2_tap_config
 {
-    /*! Tap sensitivity */
-    uint16_t sensitivity;
-
-    /*! Tap feature.
-     * For Single tap, single_tap_en = 1
-     * For Double tap, single_tap_en = 0
-     */
-    uint16_t single_tap_en;
-
     /*! Enable -> Filtered tap data, Disable -> Unfiltered data */
     uint16_t data_reg_en;
 
@@ -2034,7 +2085,7 @@ struct bmi2_flat_config
     /*!  Hysteresis for theta flat detection */
     uint16_t hysteresis;
 
-    /*! Holds the duration in 50Hz samples(20msec) */
+    /*! Holds the duration */
     uint16_t hold_time;
 };
 
@@ -2061,51 +2112,149 @@ struct bmi2_wrist_gest_config
 /*! @name Structure to define wrist wear wake-up configuration */
 struct bmi2_wrist_wear_wake_up_config
 {
-    /*! Cosine of min expected attitude change of the device within 1 second time window when
-     *  moving within focus position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
-     *  Default is 1448.  */
+    /*! Cosine of minimum expected attitude change of the device
+     * within 1 second time window when moving within focus position.
+     * The parameter is scaled by 2048 i.e. 2048 * cos(angle).
+     * Range is 1024 to 1774. Default is 1448.
+     */
     uint16_t min_angle_focus;
 
-    /*! Cosine of min expected attitude change of the device within 1 second time window when
-     *  moving from non-focus to focus position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1448 to 1856.
-     *  Default value is 1774.  */
+    /*! Cosine of minimum expected attitude change of the device
+     *  within 1 second time window when moving from non-focus to focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle).
+     *  Range is 1448 to 1856. Default value is 1774.
+     */
     uint16_t min_angle_nonfocus;
 
-    /*! Sine of the max allowed downward tilt angle in landscape right direction of the device,
-     *  when it is in focus position
-     *  (i.e. user is able to comfortably look at the dial of wear device).
-     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to 1024.
-     *  Default value is 1024.  */
+    /*! Sine of the maximum allowed downward tilt angle in
+     * landscape right direction of the device, when it is in focus position
+     * (i.e. user is able to comfortably look at the dial of wear device).
+     * The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
+     * Range is 700 to 1024. Default value is 1024.
+     */
     uint16_t max_tilt_lr;
 
-    /*! Sine of the max allowed downward tilt angle in landscape left direction of the device,
-     * when it is in focus position
-     *  (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 700 to
-     * 1024. Default value is 700.  */
+    /*! Sine of the maximum allowed downward tilt angle in
+     * landscape left direction of the device, when it is in focus position
+     * (i.e. user is able to comfortably look at the dial of wear device).
+     * The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
+     * Range is 700 to 1024. Default value is 700.
+     */
     uint16_t max_tilt_ll;
 
-    /*! Sine of the max allowed backward tilt angle in portrait down direction of the device,
-     *  when it is in focus position
-     *  (i.e. user is able to comfortably look at the dial of wear device).
-     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 0 to179.
-     *  Default value is 179. */
+    /*! Sine of the maximum allowed backward tilt angle in
+     * portrait down direction of the device, when it is in focus position
+     * (i.e. user is able to comfortably look at the dial of wear device).
+     * The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
+     * Range is 0 to179. Default value is 179.
+     */
     uint16_t max_tilt_pd;
 
-    /*! Sine of the maximum allowed forward tilt angle in portrait up direction of the
-     *  device, when it is in focus position
-     *  (i.e. user is able to comfortably look at the dial of wear device).
-     *  The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle). Range is 1774 to 1978.
-     *  Default value is 1925. */
+    /*! Sine of the maximum allowed forward tilt angle in
+     * portrait up direction of the device, when it is in focus position
+     * (i.e. user is able to comfortably look at the dial of wear device).
+     * The configuration parameter is scaled by 2048 i.e. 2048 * sin(angle).
+     * Range is 1774 to 1978. Default value is 1925.
+     */
     uint16_t max_tilt_pu;
+};
+
+/*! @name Structure to define wrist wear wake-up configuration for wearable configuration */
+struct bmi2_wrist_wear_wake_up_wh_config
+{
+    /*! Cosine of minimum expected attitude change of the device
+     *  within 1 second time window when moving within focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle).
+     *  Range is 1024 to 1774. Default is 1774.
+     */
+    uint16_t min_angle_focus;
+
+    /*! Cosine of minimum expected attitude change of the device
+     *  within 1 second time window when moving from non-focus to focus position.
+     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle).
+     *  Range is 1448 to 1856. Default value is 1522.
+     */
+    uint16_t min_angle_nonfocus;
+
+    /*! Sine of the maximum allowed tilt angle in
+     *  landscape right direction of the device, when it is in focus position
+     *  (i.e. user is able to comfortably look at the dial of wear device).
+     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle).
+     *  Range is 88 to 128. Default value is 128.
+     */
+    uint8_t angle_landscape_right;
+
+    /*! Sine of the maximum allowed tilt angle in
+     *  landscape left direction of the device, when it is in focus position
+     *  (i.e. user is able to comfortably look at the dial of wear device).
+     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle).
+     *  Range is 88 to 128. Default value is 128.
+     */
+    uint8_t angle_landscape_left;
+
+    /*! Sine of the maximum allowed backward tilt angle in
+     *  portrait down direction of the device, when it is in focus position
+     *  (i.e. user is able to comfortably look at the dial of wear device).
+     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle).
+     *  Range is 0 to179. Default value is 22.
+     */
+    uint8_t angle_portrait_down;
+
+    /*! Sine of the maximum allowed forward tilt angle in
+     *  portrait up direction of the device, when it is in focus position
+     *  (i.e. user is able to comfortably look at the dial of wear device).
+     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle).
+     *  Range is 222 to 247. Default value is 241.
+     */
+    uint8_t angle_portrait_up;
+
+    /*! Minimum duration the arm should be moved while performing gesture.
+     *  Range: 1 to 10, resolution = 20 ms
+     *  Default 2(40 ms)
+     */
+    uint8_t min_dur_moved;
+
+    /*! Minimum duration the arm should be static between two consecutive gestures.
+     * Range: 1 to 10, resolution = 20 ms
+     * Default 2(40 ms)
+     */
+    uint8_t min_dur_quite;
+};
+
+/*! @name Structure to define primary OIS configuration */
+struct bmi2_primary_ois_config
+{
+    /*! Low pass filter control */
+    uint8_t lp_filter_enabled;
+
+    /*! Lp filter cut-off frequency */
+    uint8_t lp_filter_config;
+
+    /*! Enable gyroscope on OIS interface in registers
+     *  OIS_DATA_6 till OIS_DATA_11 with minimum group delay at 6.4KHz ODR
+     */
+    uint8_t gyr_en;
+
+    /*! Enable accelerometer on OIS interface in registers
+     * OIS_DATA_0 till OIS_DATA_5 with minimum group delay at 1.6KHz ODR
+     */
+    uint8_t acc_en;
+};
+
+/*! @name Structure to configure free-fall detection settings */
+struct bmi2_free_fall_det_config
+{
+    /*! free-fall accel settings */
+    uint16_t freefall_accel_settings[BMI2_FREE_FALL_ACCEL_SET_PARAMS];
 };
 
 /*! @name Structure to define wrist gesture configuration for wearable variant */
 struct bmi2_wrist_gest_w_config
 {
-    /*!  Wearable arm (left or right) */
+    /*! Device in left (0) or right (1) arm.
+     *  By default, the wearable device is assumed to be in left arm
+     *  i.e. default value is 0.
+     */
     uint8_t device_position;
 
     /*! Minimum threshold for flick peak on y-axis */
@@ -2140,75 +2289,94 @@ struct bmi2_wrist_gest_w_config
     uint16_t max_duration_jiggle_peaks;
 };
 
-/*! @name Structure to define wrist wear wake-up configuration for wearable configuration */
-struct bmi2_wrist_wear_wake_up_wh_config
+/*! @name Structure to configure Laptop position recognition settings for bmi260lpd */
+struct bmi2_lpd_config
 {
-    /*! Cosine of min expected attitude change of the device within 1 second time window when
-     * moving within focus position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1024 to 1774.
-     *  Default is 1448.  */
-    uint16_t min_angle_focus;
+    /*! Sets the bit for filtered data enable */
+    uint8_t flit_data_enable;
 
-    /*! Cosine of min expected attitude change of the device within 1 second time window when
-     * moving from non-focus to focus position.
-     *  The parameter is scaled by 2048 i.e. 2048 * cos(angle). Range is 1448 to 1856.
-     *  Default value is 1774.  */
-    uint16_t min_angle_nonfocus;
+    /*! lpd enable bit */
+    uint8_t lpd_enable;
 
-    /*! Sine of the max allowed downward tilt angle in landscape right direction of the device,
-     * when it is in focus position  (i.e. user is able to comfortably look at the dial of wear device).
-     *  The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 88 to 128.
-     * Default value is 128.  */
-    uint8_t angle_lr;
+    /*! Sets angle for portrait oriented in bag cases */
+    uint8_t portrait_theta;
 
-    /*! Sine of the max allowed downward tilt angle in landscape left direction of the device,
-     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 88 to 128.
-     * Default value is 128.  */
-    uint8_t angle_ll;
+    /*! Sets Hysteresis for portrait oriented in bag theta detection */
+    uint8_t portrait_hysteresis;
 
-    /*! Sine of the max allowed backward tilt angle in portrait down direction of the device,
-     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
-     *   The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 0 to 179.
-     * Default value is 22. */
-    uint8_t angle_pd;
+    /*! Sets angle for landscape oriented in bag cases */
+    uint8_t landscape_theta;
 
-    /*! Sine of the maximum allowed forward tilt angle in portrait up direction of the device,
-     * when it is in focus position (i.e. user is able to comfortably look at the dial of wear device).
-     * The configuration parameter is scaled by 256 i.e. 256 * sin(angle). Range is 222 to 247.
-     * Default value is 241. */
-    uint8_t angle_pu;
+    /*! Sets Hysteresis for landscape oriented in bag theta detection */
+    uint8_t landscape_hysteresis;
 
-    /*! Minimum duration the arm should be moved while performing gesture. Range: 1 to 10,
-     * resolution = 20 ms.
-     * Default 2(40 ms)*/
-    uint8_t min_dur_mov;
+    /*! Sets angle for flat oriented in bag cases */
+    uint8_t flat_posture_theta;
 
-    /*! Minimum duration the arm should be static between two consecutive gestures. Range: 1 to
-     * 10, resolution = 20 ms
-     * Default 2(40 ms)*/
-    uint8_t min_dur_quite;
+    /*! Sets Hysteresis for landscape oriented in bag theta detection */
+    uint8_t flat_posture_hysteresis;
+
+    /*! Sets blocking mode, if blocking mode is set no interrupt will be triggered */
+    uint8_t blocking_mode;
+
+    /*! Sets the hold time for which the condition has to be respected */
+    uint8_t hold_time;
+
+    /*! Sets threshold slope for block mode conditions */
+    uint8_t blockingslope_thres;
+
+    /*! Segment size for which the predictors are computed on */
+    uint16_t segment_size;
+
+    /* Post processing enable for the lap status detected */
+    uint16_t post_processing_enable;
+
+    /* Minimum threshold of the Gini's diversity index for accepting position */
+    uint16_t mingdithreshold_acc;
+
+    /* Minimum threshold of the Gini's diversity index for rejecting position */
+    uint16_t mingdithreshold_rej;
+
+    /* Buffer size for the post processing of the position detected */
+    uint16_t output_buffersize;
+
+    /* Minimum segments classified with moderate confidence as belonging to certain position */
+    uint16_t minseg_moderateconf;
 };
 
-/*! @name Structure to define primary OIS configuration */
-struct bmi2_primary_ois_config
+/*! @name Structure to configure wrist gesture configuration */
+struct bmi2_wrist_gesture_config
 {
-    uint8_t lp_filter_enable;
+    /* Minimum threshold for flick peak on y-axis */
+    uint16_t min_flick_peak_y_threshold;
 
-    uint8_t lp_filter_config;
+    /* Minimum threshold for flick peak on z-axis */
+    uint16_t min_flick_peak_z_threshold;
 
-    uint8_t primary_ois_reserved;
+    /* Maximum expected value of positive gravitational acceleration on x-axis when arm is in focus pose */
+    uint16_t gravity_bounds_x_pos;
 
-    uint8_t primary_ois_gyro_en;
+    /* Maximum expected value of negative gravitational acceleration on x-axis when arm is in focus pose */
+    uint16_t gravity_bounds_x_neg;
 
-    uint8_t primary_ois_accel_en;
-};
+    /* Maximum expected value of negaitive gravitational acceleration on y-axis when arm is in focus pose */
+    uint16_t gravity_bounds_y_neg;
 
-/*! @name Structure to configure free-fall detection settings */
-struct bmi2_free_fall_det_config
-{
-    /*! free-fall accel settings */
-    uint16_t freefall_accel_settings[BMI2_FREE_FALL_ACCEL_SET_PARAMS];
+    /* Maximum expected value of negaitive gravitational acceleration on z-axis when arm is in focus pose */
+    uint16_t gravity_bounds_z_neg;
+
+    /* Exponential smoothing coefficient for adaptive peak threshold decay */
+    uint16_t flick_peak_decay_coeff;
+
+    /* Exponential smoothing coefficient for acceleration mean estimation */
+    uint16_t lp_mean_filter_coeff;
+
+    /* Maximum duration between 2 peaks of jiggle in samples */
+    uint16_t max_duration_jiggle_peaks;
+
+    /* Device in left (0) or right (1) arm. By default, the wearable device is assumed to be in left arm i.e. default
+     * value is 0. */
+    uint16_t device_position;
 };
 
 /*!  @name Union to define the sensor configurations */
@@ -2232,6 +2400,9 @@ union bmi2_sens_config_types
     /*! Sig_motion configuration */
     struct bmi2_sig_motion_config sig_motion;
 
+    /*! EXT TCO configuration */
+    struct bmi2_ext_tco ext_tco;
+
     /*! Step counter parameter configuration */
     uint16_t step_counter_params[BMI2_STEP_CNT_N_PARAMS];
 
@@ -2242,7 +2413,7 @@ union bmi2_sens_config_types
     struct bmi2_gyro_user_gain_config gyro_gain_update;
 
     /*! Wake-up configuration */
-    struct bmi2_wake_up_config tap;
+    struct bmi2_wake_up_config wake_up_conf;
 
     /*! Tap configuration */
     struct bmi2_tap_config tap_conf;
@@ -2276,6 +2447,12 @@ union bmi2_sens_config_types
 
     /* Free-fall detection configurations */
     struct bmi2_free_fall_det_config free_fall_det;
+
+    /* Laptop position detection configurations */
+    struct bmi2_lpd_config lap_pos_det;
+
+    /* Structure to configure wrist gesture configurations */
+    struct bmi2_wrist_gesture_config wrist_g_config;
 };
 
 /*!  @name Structure to define the type of the sensor and its configurations */
@@ -2434,20 +2611,26 @@ struct bmi2_accel_foc_g_value
 /*! @name Structure to configure activity recognition settings */
 struct bmi2_act_recg_sett
 {
-    /*! Activity recognition register 1 */
-    uint8_t act_rec_1 : 1;
+    /*! Enable/Disable post processing of the activity detected by the classifier */
+    uint8_t pp_en;
 
-    /*! Activity recognition register 2 */
-    uint16_t act_rec_2;
+    /*! Minimum threshold of the Gini's diversity index (GDI) for
+     * accepting and adding activity detected by the classifier to activity buffer
+     */
+    uint16_t min_gdi_thres;
 
-    /*! Activity recognition register 3 */
-    uint16_t act_rec_3;
+    /*! Maximum threshold of the Gini's diversity index (GDI) for
+     *  rejecting the activity detected by the classifier
+     */
+    uint16_t max_gdi_thres;
 
-    /*! Activity recognition register 4 */
-    uint8_t act_rec_4 : 4;
+    /*! Buffer size for post processing of the activity detected by the classifier */
+    uint8_t buf_size;
 
-    /*! Activity recognition register 5 */
-    uint8_t act_rec_5 : 4;
+    /*! Minimum segments classified with moderate confidence as belonging
+     *  to a certain activity type to be added to activity buffer.
+     */
+    uint8_t min_seg_conf;
 };
 
 /*! @name Structure to configure activity recognition settings for bmi270hc */

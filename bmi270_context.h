@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi270_context.h
-* @date       2020-11-04
-* @version    v2.63.1
+* @date       2021-09-30
+* @version    v2.71.8
 *
 */
 
@@ -274,23 +274,21 @@ int8_t bmi270_context_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8
 
 /**
  * \ingroup bmi270_context
- * \defgroup bmi270_contextApiSensorD Sensor Data
- * @brief Get sensor data
+ * \defgroup bmi270_contextApiSensorD Feature Sensor Data
+ * @brief Get feature sensor data
  */
 
 /*!
  * \ingroup bmi270_contextApiSensorD
- * \page bmi270_context_api_bmi270_context_get_sensor_data bmi270_context_get_sensor_data
+ * \page bmi270_context_api_bmi270_context_get_feature_data bmi270_context_get_feature_data
  * \code
- * int8_t bmi270_context_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+ * int8_t bmi270_context_get_feature_data(struct bmi2_feat_sensor_data *feature_data, uint8_t n_sens, struct bmi2_dev *dev);
  * \endcode
- * @details This API gets the sensor/feature data for accelerometer, gyroscope,
- * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
- * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
+ * @details This API gets the feature data.
  *
- * @param[out] sensor_data   : Structure instance of bmi2_sensor_data.
- * @param[in]  n_sens        : Number of sensors selected.
- * @param[in]  dev           : Structure instance of bmi2_dev.
+ * @param[out] feature_data   : Structure instance of bmi2_feat_sensor_data.
+ * @param[in]  n_sens         : Number of sensors selected.
+ * @param[in]  dev            : Structure instance of bmi2_dev.
  *
  * @note Sensors/features whose data can be read
  *
@@ -306,7 +304,8 @@ int8_t bmi270_context_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8
  * @retval 0 -> Success
  * @retval < 0 -> Fail
  */
-int8_t bmi270_context_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+int8_t bmi270_context_get_feature_data(struct bmi2_feat_sensor_data *feature_data, uint8_t n_sens,
+                                       struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi270_context
@@ -424,46 +423,6 @@ int8_t bmi270_context_get_act_recog_output(struct bmi2_act_recog_output *act_rec
                                            uint16_t *act_frm_len,
                                            struct bmi2_fifo_frame *fifo,
                                            const struct bmi2_dev *dev);
-
-/**
- * \ingroup bmi270_contex
- * \defgroup bmi270_contextApiGyroUG Gyro User Gain
- * @brief Set / Get Gyro User Gain of the sensor
- */
-
-/*!
- * \ingroup bmi270_contextApiGyroUG
- * \page bmi270_context_api_bmi270_context_update_gyro_user_gain bmi270_context_update_gyro_user_gain
- * \code
- * int8_t bmi270_context_update_gyro_user_gain(const struct bmi2_gyro_user_gain_config *user_gain, struct bmi2_dev *dev);
- * \endcode
- * @details This API updates the gyroscope user-gain.
- *
- * @param[in] user_gain      : Structure that stores user-gain configurations.
- * @param[in] dev            : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-int8_t bmi270_context_update_gyro_user_gain(const struct bmi2_gyro_user_gain_config *user_gain, struct bmi2_dev *dev);
-
-/*!
- * \ingroup bmi270_contextApiGyroUG
- * \page bmi270_context_api_bmi270_context_read_gyro_user_gain bmi270_context_read_gyro_user_gain
- * \code
- * int8_t bmi270_context_read_gyro_user_gain(struct bmi2_gyro_user_gain_data *gyr_usr_gain, const struct bmi2_dev *dev);
- * \endcode
- * @details This API reads the compensated gyroscope user-gain values.
- *
- * @param[out] gyr_usr_gain   : Structure that stores gain values.
- * @param[in]  dev            : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-int8_t bmi270_context_read_gyro_user_gain(struct bmi2_gyro_user_gain_data *gyr_usr_gain, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi270_contextApiInt

@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.h
-* @date       2020-11-04
-* @version    v2.63.1
+* @date       2021-09-30
+* @version    v2.71.8
 *
 */
 
@@ -483,26 +483,21 @@ int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2
 
 /*!
  * \ingroup bmi2ApiSensorD
- * \page bmi2_api_bmi2_get_sensor_data bmi2_get_sensor_data
+ * \page bmi2_api_bmi2_get_feature_data bmi2_get_feature_data
  * \code
- * int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+ * int8_t bmi2_get_feature_data(struct bmi2_feat_sensor_data *feat_sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
  * \endcode
- * @details This API gets the sensor/feature data for accelerometer, gyroscope,
- * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
- * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
+ * @details This API gets the feature data for gyroscope user-gain update and gyroscope cross sensitivity
  *
- * @param[out] sensor_data   : Structure instance of bmi2_sensor_data.
- * @param[in]  n_sens        : Number of sensors selected.
- * @param[in]  dev           : Structure instance of bmi2_dev.
+ * @param[out] feat_sensor_data   : Structure instance of bmi2_feat_sensor_data.
+ * @param[in]  n_sens             : Number of sensors selected.
+ * @param[in]  dev                : Structure instance of bmi2_dev.
  *
  * @note Sensors/features whose data can be read
  *
  *@verbatim
  *  sens_list           |  Values
  * ---------------------|-----------
- * BMI2_ACCEL           |  0
- * BMI2_GYRO            |  1
- * BMI2_AUX             |  2
  * BMI2_GYRO_GAIN_UPDATE|  12
  * BMI2_GYRO_CROSS_SENSE|  28
  *@endverbatim
@@ -511,7 +506,24 @@ int8_t bmi2_sensor_disable(const uint8_t *sens_list, uint8_t n_sens, struct bmi2
  * @retval 0 -> Success
  * @retval < 0 -> Fail
  */
-int8_t bmi2_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+int8_t bmi2_get_feature_data(struct bmi2_feat_sensor_data *feat_sensor_data, uint8_t n_sens, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiSensorD
+ * \page bmi2_api_bmi2_get_sensor_data bmi2_get_sensor_data
+ * \code
+ * int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the sensor data for accelerometer, gyroscope and auxiliary sensor
+ *
+ * @param[out] data          : Structure instance of bmi2_sensor_data.
+ * @param[in]  dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -573,6 +585,8 @@ int8_t bmi2_get_fifo_config(uint16_t *fifo_config, struct bmi2_dev *dev);
  * @param[in]      dev      : Structure instance of bmi2_dev.
  *
  * @note APS has to be disabled before calling this function.
+ * @note Dummy byte (for SPI Interface) required for FIFO data read
+ * must be given as part of data pointer in struct bmi2_fifo_frame
  *
  * @return Result of API execution status
  * @retval 0 -> Success
@@ -1001,29 +1015,6 @@ int8_t bmi2_read_aux_man_mode(uint8_t reg_addr, uint8_t *aux_data, uint16_t len,
  */
 int8_t bmi2_write_aux_man_mode(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
 
-/*!
- * \ingroup bmi2ApiAux
- * \page bmi2_api_bmi2_write_aux_interleaved bmi2_write_aux_interleaved
- * \code
- * int8_t bmi2_write_aux_interleaved(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
- * \endcode
- * @details This API writes the user-defined bytes of data and the address of
- * auxiliary sensor where data is to be written, from an interleaved input,
- * in manual mode.
- *
- * @param[in]  reg_addr     : AUX address where data is to be written.
- * @param[in] aux_data      : Pointer to data to be written.
- * @param[in]  len          : Total length of data to be written.
- * @param[in]  dev          : Structure instance of bmi2_dev.
- *
- * @note Change of BMI2_AUX_WR_ADDR is only allowed if AUX is not busy.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-int8_t bmi2_write_aux_interleaved(uint8_t reg_addr, const uint8_t *aux_data, uint16_t len, struct bmi2_dev *dev);
-
 /**
  * \ingroup bmi2
  * \defgroup bmi2ApiStatus Sensor Status
@@ -1402,25 +1393,6 @@ int8_t bmi2_do_crt(struct bmi2_dev *dev);
  * \defgroup bmi2ApiCRTSt CRT and self test
  * @brief Enable / Abort CRT and self test operations of gyroscope
  */
-
-/*!
- * \ingroup bmi2ApiCRTSt
- * \page bmi2_api_bmi2_set_gyro_self_test_crt bmi2_set_gyro_self_test_crt
- * \code
- * int8_t bmi2_set_gyro_self_test_crt
- * \endcode
- * @details This api is used to enable the gyro self-test and crt.
- *   *gyro_self_test_crt -> 0  then gyro self test enable
- *   *gyro_self_test_crt -> 1 then CRT enable
- *
- * @param[in] gyro_self_test_crt  : enable the gyro self test or crt.
- * @param[in] dev                 : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-int8_t bmi2_set_gyro_self_test_crt(uint8_t *gyro_self_test_crt, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi2ApiCRTSt

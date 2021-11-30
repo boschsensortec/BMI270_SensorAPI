@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi270.c
-* @date       2020-11-04
-* @version    v2.63.1
+* @date       2021-09-30
+* @version    v2.71.8
 *
 */
 
@@ -887,14 +887,30 @@ static int8_t set_step_config(const struct bmi2_step_config *config, struct bmi2
  * @param[in, out]  dev       : Structure instance of bmi2_dev.
  *
  * @verbatim
- *-----------------------------------------------------------------------------
+ * --------------------------------------------------------------------------------------------
  *  bmi2_wrist_gest_config  |
  *  Structure parameters    |               Description
- *--------------------------|--------------------------------------------------
+ * --------------------------------------------------------------------------------------------
  *                          | Device in left (0) or right (1) arm. By default,
- *  wear_arm                | the wearable device is assumed to be in left arm
+ *  wearable_arm            | the wearable device is assumed to be in left arm
  *                          | i.e. default value is 0.
- * -------------------------|---------------------------------------------------
+ * --------------------------------------------------------------------------------------------
+ *                          | Sine of the minimum tilt angle in portrait down
+ *                          | direction of the device when wrist is rolled away
+ *                          | (roll-out) from user.
+ *  min_flick_peak          | The configuration parameter is scaled by 2048
+ *                          | i.e. 2048 * sin(angle).
+ *                          | Range is 1448 to 1774. Default value is 1774.
+ * --------------------------------------------------------------------------------------------
+ *                          | Value of minimum time difference between wrist
+ *                          | roll-out and roll-in movement during flick gesture.
+ *  min_flick_samples       | Range is 3 to 5 samples at 50Hz (i.e. 0.06 to 0.1 seconds).
+ *                          | Default value is 4 (i.e. 0.08 seconds).
+ * --------------------------------------------------------------------------------------------
+ *                          | Maximum time within which gesture movement has to be completed.
+ *  max_duration            | Range is 150 to 250 samples at 50Hz (i.e. 3 to 5 seconds).
+ *                          | Default value is 200 (i.e. 4 seconds).
+ * --------------------------------------------------------------------------------------------
  * @endverbatim
  *
  * @return Result of API execution status
@@ -918,8 +934,8 @@ static int8_t set_wrist_gest_config(const struct bmi2_wrist_gest_config *config,
  *----------------------------------|-------------------------------------------
  *                                  | To set the wrist wear wake-up parameters like
  *                                  | min_angle_focus, min_angle_nonfocus,
- *  wrist_wear_wakeup_params            | angle_landscape_left, angle_landscape_right,
- *                                  | angle_potrait_up and down.
+ *  wrist_wear_wakeup_params        | max_tilt_lr, max_tilt_ll,
+ *                                  | max_tilt_pd and max_tilt_pu.
  * ---------------------------------|-------------------------------------------
  * @endverbatim
  *
@@ -952,7 +968,8 @@ static int8_t set_wrist_wear_wake_up_config(const struct bmi2_wrist_wear_wake_up
  *  threshold               | Range is 0 to 1g.
  *                          | Default value is 0xAA = 83mg.
  * -------------------------|---------------------------------------------------
- *  x_sel, y_sel, z_sel     |  Selects the feature on a per-axis basis
+ *  select_x, select_y,     |
+ *       select_z           |  Selects the feature on a per-axis basis
  * -------------------------|---------------------------------------------------
  * @endverbatim
  *
@@ -985,7 +1002,8 @@ static int8_t get_any_motion_config(struct bmi2_any_motion_config *config, struc
  *  threshold               | Range is 0 to 1g.
  *                          | Default value is 0xAA = 83mg.
  * -------------------------|---------------------------------------------------
- *  x_sel, y_sel, z_sel     |  Selects the feature on a per-axis basis
+ *  select_x, select_y,     |
+ *       select_z           |  Selects the feature on a per-axis basis
  * -------------------------|---------------------------------------------------
  * @endverbatim
  *
@@ -1042,7 +1060,7 @@ static int8_t get_step_count_params_config(uint16_t *step_count_params, struct b
  *--------------------------|--------------------------------------------------
  *                          | The Step-counter will trigger output every time
  *                          | the number of steps are counted. Holds implicitly
- *  water-mark level        | a 20x factor, so the range is 0 to 10230,
+ *  water-mark level        | a 20x factor, so the range is 0 to 20460,
  *                          | with resolution of 20 steps.
  * -------------------------|---------------------------------------------------
  *  reset counter           | Flag to reset the counted steps.
@@ -1063,14 +1081,30 @@ static int8_t get_step_config(struct bmi2_step_config *config, struct bmi2_dev *
  * @param[in, out]  dev       : Structure instance of bmi2_dev.
  *
  * @verbatim
- *-----------------------------------------------------------------------------
+ * --------------------------------------------------------------------------------------------
  *  bmi2_wrist_gest_config  |
  *  Structure parameters    |               Description
- *--------------------------|--------------------------------------------------
+ * --------------------------------------------------------------------------------------------
  *                          | Device in left (0) or right (1) arm. By default,
- *  wear_arm                | the wearable device is assumed to be in left arm
+ *  wearable_arm            | the wearable device is assumed to be in left arm
  *                          | i.e. default value is 0.
- * -------------------------|---------------------------------------------------
+ * --------------------------------------------------------------------------------------------
+ *                          | Sine of the minimum tilt angle in portrait down
+ *                          | direction of the device when wrist is rolled away
+ *                          | (roll-out) from user.
+ *  min_flick_peak          | The configuration parameter is scaled by 2048
+ *                          | i.e. 2048 * sin(angle).
+ *                          | Range is 1448 to 1774. Default value is 1774.
+ * --------------------------------------------------------------------------------------------
+ *                          | Value of minimum time difference between wrist
+ *                          | roll-out and roll-in movement during flick gesture.
+ *  min_flick_samples       | Range is 3 to 5 samples at 50Hz (i.e. 0.06 to 0.1 seconds).
+ *                          | Default value is 4 (i.e. 0.08 seconds).
+ * --------------------------------------------------------------------------------------------
+ *                          | Maximum time within which gesture movement has to be completed.
+ *  max_duration            | Range is 150 to 250 samples at 50Hz (i.e. 3 to 5 seconds).
+ *                          | Default value is 200 (i.e. 4 seconds).
+ * --------------------------------------------------------------------------------------------
  * @endverbatim
  *
  * @return Result of API execution status
@@ -1088,15 +1122,15 @@ static int8_t get_wrist_gest_config(struct bmi2_wrist_gest_config *config, struc
  * @param[in, out]  dev       : Structure instance of bmi2_dev.
  *
  * @verbatim
- *------------------------------------|---------------------------------------
- * bmi2_wrist_wear_wake_up_wh_config  |
- *  Structure parameters              |               Description
- *------------------------------------|-------------------------------------------
- *                                    | To get the wrist wear wake-up parameters like
- *                                    | min_angle_focus, min_angle_nonfocus,
- *  wrist_wear_wake_params            | angle_landscape_left, angle_landscape_right,
- *                                    | angle_potrait_up and down.
- * -----------------------------------|-------------------------------------------
+ *-----------------------------------------------------------------------------
+ * bmi2_wrist_wear_wake_up_config   |
+ *  Structure parameters            |               Description
+ *----------------------------------|-------------------------------------------
+ *                                  | To set the wrist wear wake-up parameters like
+ *                                  | min_angle_focus, min_angle_nonfocus,
+ *  wrist_wear_wakeup_params        | max_tilt_lr, max_tilt_ll,
+ *                                  | max_tilt_pd and max_tilt_pu.
+ * ---------------------------------|-------------------------------------------
  * @endverbatim
  *
  * @return Result of API execution status
@@ -1229,6 +1263,80 @@ static int8_t enable_gyro_gain(uint8_t enable, struct bmi2_dev *dev);
 static uint8_t extract_output_feat_config(struct bmi2_feature_config *feat_output,
                                           uint8_t type,
                                           const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API sets feature configuration to the sensor.
+ *
+ * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
+ * @param[in]       loop         : Variable to loop the sensor feature.
+ * @param[in, out]  dev          : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t set_feat_config(const struct bmi2_sens_config *sens_cfg, uint8_t loop, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API gets feature configuration from the sensor.
+ *
+ * @param[in]       sens_cfg     : Structure instance of bmi2_sens_config.
+ * @param[in]       loop         : Variable to loop the sensor feature.
+ * @param[in, out]  dev          : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t get_feat_config(struct bmi2_sens_config *sens_cfg, uint8_t loop, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to enable main sensors like accel, gyro, aux and temperature.
+ *
+ * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t enable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to enable sensor features.
+ *
+ * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t enable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to disable main sensors like accel, gyro, aux and temperature.
+ *
+ * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t disable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to disable sensor features.
+ *
+ * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in, out]  dev     : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+static int8_t disable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev);
 
 /***************************************************************************/
 
@@ -1432,53 +1540,10 @@ int8_t bmi270_set_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sen
 
                 if (rslt == BMI2_OK)
                 {
-                    switch (sens_cfg[loop].type)
-                    {
-                        /* Set any motion configuration */
-                        case BMI2_ANY_MOTION:
-                            rslt = set_any_motion_config(&sens_cfg[loop].cfg.any_motion, dev);
-                            break;
-
-                        /* Set no motion configuration */
-                        case BMI2_NO_MOTION:
-                            rslt = set_no_motion_config(&sens_cfg[loop].cfg.no_motion, dev);
-                            break;
-
-                        /* Set sig-motion configuration */
-                        case BMI2_SIG_MOTION:
-                            rslt = set_sig_motion_config(&sens_cfg[loop].cfg.sig_motion, dev);
-                            break;
-
-                        /* Set the step counter parameters */
-                        case BMI2_STEP_COUNTER_PARAMS:
-                            rslt = set_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
-                            break;
-
-                        /* Set step counter/detector/activity configuration */
-                        case BMI2_STEP_DETECTOR:
-                        case BMI2_STEP_COUNTER:
-                        case BMI2_STEP_ACTIVITY:
-                            rslt = set_step_config(&sens_cfg[loop].cfg.step_counter, dev);
-                            break;
-
-                        /* Set the wrist gesture configuration */
-                        case BMI2_WRIST_GESTURE:
-                            rslt = set_wrist_gest_config(&sens_cfg[loop].cfg.wrist_gest, dev);
-                            break;
-
-                        /* Set the wrist wear wake-up configuration */
-                        case BMI2_WRIST_WEAR_WAKE_UP:
-                            rslt = set_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
-                            break;
-
-                        default:
-                            rslt = BMI2_E_INVALID_SENSOR;
-                            break;
-                    }
+                    rslt = set_feat_config(sens_cfg, loop, dev);
                 }
-
                 /* Return error if any of the set configurations fail */
-                if (rslt != BMI2_OK)
+                else
                 {
                     break;
                 }
@@ -1547,53 +1612,10 @@ int8_t bmi270_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sen
 
                 if (rslt == BMI2_OK)
                 {
-                    switch (sens_cfg[loop].type)
-                    {
-                        /* Get sig-motion configuration */
-                        case BMI2_SIG_MOTION:
-                            rslt = get_sig_motion_config(&sens_cfg[loop].cfg.sig_motion, dev);
-                            break;
-
-                        /* Get any motion configuration */
-                        case BMI2_ANY_MOTION:
-                            rslt = get_any_motion_config(&sens_cfg[loop].cfg.any_motion, dev);
-                            break;
-
-                        /* Get no motion configuration */
-                        case BMI2_NO_MOTION:
-                            rslt = get_no_motion_config(&sens_cfg[loop].cfg.no_motion, dev);
-                            break;
-
-                        /* Set the step counter parameters */
-                        case BMI2_STEP_COUNTER_PARAMS:
-                            rslt = get_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
-                            break;
-
-                        /* Get step counter/detector/activity configuration */
-                        case BMI2_STEP_DETECTOR:
-                        case BMI2_STEP_COUNTER:
-                        case BMI2_STEP_ACTIVITY:
-                            rslt = get_step_config(&sens_cfg[loop].cfg.step_counter, dev);
-                            break;
-
-                        /* Get the wrist gesture configuration */
-                        case BMI2_WRIST_GESTURE:
-                            rslt = get_wrist_gest_config(&sens_cfg[loop].cfg.wrist_gest, dev);
-                            break;
-
-                        /* Get the wrist wear wake-up configuration */
-                        case BMI2_WRIST_WEAR_WAKE_UP:
-                            rslt = get_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
-                            break;
-
-                        default:
-                            rslt = BMI2_E_INVALID_SENSOR;
-                            break;
-                    }
+                    rslt = get_feat_config(sens_cfg, loop, dev);
                 }
-
                 /* Return error if any of the get configurations fail */
-                if (rslt != BMI2_OK)
+                else
                 {
                     break;
                 }
@@ -1617,11 +1639,9 @@ int8_t bmi270_get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sen
 }
 
 /*!
- * @brief This API gets the sensor/feature data for accelerometer, gyroscope,
- * auxiliary sensor, step counter, high-g, gyroscope user-gain update,
- * orientation, gyroscope cross sensitivity and error status for NVM and VFRM.
+ * @brief This API gets the feature data.
  */
-int8_t bmi270_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_sens, struct bmi2_dev *dev)
+int8_t bmi270_get_feature_data(struct bmi2_feat_sensor_data *feature_data, uint8_t n_sens, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -1634,24 +1654,23 @@ int8_t bmi270_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_se
 
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
-    if ((rslt == BMI2_OK) && (sensor_data != NULL))
+    if ((rslt == BMI2_OK) && (feature_data != NULL))
     {
         /* Get status of advance power save mode */
         aps_stat = dev->aps_status;
         for (loop = 0; loop < n_sens; loop++)
         {
-            if ((sensor_data[loop].type == BMI2_ACCEL) || (sensor_data[loop].type == BMI2_GYRO) ||
-                (sensor_data[loop].type == BMI2_AUX) || (sensor_data[loop].type == BMI2_GYRO_GAIN_UPDATE) ||
-                (sensor_data[loop].type == BMI2_GYRO_CROSS_SENSE))
+            if ((feature_data[loop].type == BMI2_GYRO_GAIN_UPDATE) ||
+                (feature_data[loop].type == BMI2_GYRO_CROSS_SENSE))
             {
-                rslt = bmi2_get_sensor_data(&sensor_data[loop], 1, dev);
+                rslt = bmi2_get_feature_data(&feature_data[loop], 1, dev);
             }
             else
             {
                 /* Disable Advance power save if enabled for feature
                  * configurations
                  */
-                if (sensor_data[loop].type >= BMI2_MAIN_SENS_MAX_NUM)
+                if (feature_data[loop].type >= BMI2_MAIN_SENS_MAX_NUM)
                 {
                     if (aps_stat == BMI2_ENABLE)
                     {
@@ -1664,32 +1683,32 @@ int8_t bmi270_get_sensor_data(struct bmi2_sensor_data *sensor_data, uint8_t n_se
 
                 if (rslt == BMI2_OK)
                 {
-                    switch (sensor_data[loop].type)
+                    switch (feature_data[loop].type)
                     {
                         case BMI2_STEP_COUNTER:
 
                             /* Get step counter output */
-                            rslt = get_step_counter_output(&sensor_data[loop].sens_data.step_counter_output, dev);
+                            rslt = get_step_counter_output(&feature_data[loop].sens_data.step_counter_output, dev);
                             break;
                         case BMI2_STEP_ACTIVITY:
 
                             /* Get step activity output */
-                            rslt = get_step_activity_output(&sensor_data[loop].sens_data.activity_output, dev);
+                            rslt = get_step_activity_output(&feature_data[loop].sens_data.activity_output, dev);
                             break;
                         case BMI2_NVM_STATUS:
 
                             /* Get NVM error status  */
-                            rslt = get_nvm_error_status(&sensor_data[loop].sens_data.nvm_status, dev);
+                            rslt = get_nvm_error_status(&feature_data[loop].sens_data.nvm_status, dev);
                             break;
                         case BMI2_VFRM_STATUS:
 
                             /* Get VFRM error status  */
-                            rslt = get_vfrm_error_status(&sensor_data[loop].sens_data.vfrm_status, dev);
+                            rslt = get_vfrm_error_status(&feature_data[loop].sens_data.vfrm_status, dev);
                             break;
                         case BMI2_WRIST_GESTURE:
 
                             /* Get wrist gesture status  */
-                            rslt = get_wrist_gest_status(&sensor_data[loop].sens_data.wrist_gesture_output, dev);
+                            rslt = get_wrist_gest_status(&feature_data[loop].sens_data.wrist_gesture_output, dev);
                             break;
                         default:
                             rslt = BMI2_E_INVALID_SENSOR;
@@ -2002,48 +2021,10 @@ static int8_t sensor_enable(uint64_t sensor_sel, struct bmi2_dev *dev)
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to store register values */
-    uint8_t reg_data = 0;
-
-    /* Variable to define loop */
-    uint8_t loop = 1;
-
     /* Variable to get the status of advance power save */
     uint8_t aps_stat = 0;
 
-    rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
-    if (rslt == BMI2_OK)
-    {
-        /* Enable accelerometer */
-        if (sensor_sel & BMI2_ACCEL_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BITS(reg_data, BMI2_ACC_EN, BMI2_ENABLE);
-        }
-
-        /* Enable gyroscope */
-        if (sensor_sel & BMI2_GYRO_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BITS(reg_data, BMI2_GYR_EN, BMI2_ENABLE);
-        }
-
-        /* Enable auxiliary sensor */
-        if (sensor_sel & BMI2_AUX_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BIT_POS0(reg_data, BMI2_AUX_EN, BMI2_ENABLE);
-        }
-
-        /* Enable temperature sensor */
-        if (sensor_sel & BMI2_TEMP_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BITS(reg_data, BMI2_TEMP_EN, BMI2_ENABLE);
-        }
-
-        /* Enable the sensors that are set in the power control register */
-        if (sensor_sel & BMI2_MAIN_SENSORS)
-        {
-            rslt = bmi2_set_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
-        }
-    }
+    rslt = enable_main_sensors(sensor_sel, dev);
 
     if ((rslt == BMI2_OK) && (sensor_sel & ~(BMI2_MAIN_SENSORS)))
     {
@@ -2057,148 +2038,7 @@ static int8_t sensor_enable(uint64_t sensor_sel, struct bmi2_dev *dev)
 
         if (rslt == BMI2_OK)
         {
-            while (loop--)
-            {
-                /* Enable sig-motion feature */
-                if (sensor_sel & BMI2_SIG_MOTION_SEL)
-                {
-                    rslt = set_sig_motion(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_SIG_MOTION_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable any motion feature */
-                if (sensor_sel & BMI2_ANY_MOT_SEL)
-                {
-                    rslt = set_any_motion(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_ANY_MOT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable no motion feature */
-                if (sensor_sel & BMI2_NO_MOT_SEL)
-                {
-                    rslt = set_no_motion(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_NO_MOT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable step detector feature */
-                if (sensor_sel & BMI2_STEP_DETECT_SEL)
-                {
-                    rslt = set_step_detector(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_STEP_DETECT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable step counter feature */
-                if (sensor_sel & BMI2_STEP_COUNT_SEL)
-                {
-                    rslt = set_step_counter(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_STEP_COUNT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable step activity feature */
-                if (sensor_sel & BMI2_STEP_ACT_SEL)
-                {
-                    rslt = set_step_activity(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_STEP_ACT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable gyroscope user gain */
-                if (sensor_sel & BMI2_GYRO_GAIN_UPDATE_SEL)
-                {
-                    rslt = set_gyro_user_gain(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_GYRO_GAIN_UPDATE_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable gyroscope self-offset correction feature */
-                if (sensor_sel & BMI2_GYRO_SELF_OFF_SEL)
-                {
-                    rslt = set_gyro_self_offset_corr(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_GYRO_SELF_OFF_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable wrist gesture feature for wearable variant */
-                if (sensor_sel & BMI2_WRIST_GEST_SEL)
-                {
-                    rslt = set_wrist_gesture(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_WRIST_GEST_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable wrist wear wake-up feature */
-                if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_SEL)
-                {
-                    rslt = set_wrist_wear_wake_up(BMI2_ENABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat |= BMI2_WRIST_WEAR_WAKE_UP_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
+            rslt = enable_sensor_features(sensor_sel, dev);
 
             /* Enable Advance power save if disabled while
              * configuring and not when already disabled
@@ -2221,48 +2061,10 @@ static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev)
     /* Variable to define error */
     int8_t rslt;
 
-    /* Variable to store register values */
-    uint8_t reg_data = 0;
-
-    /* Variable to define loop */
-    uint8_t loop = 1;
-
     /* Variable to get the status of advance power save */
     uint8_t aps_stat = 0;
 
-    rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
-    if (rslt == BMI2_OK)
-    {
-        /* Disable accelerometer */
-        if (sensor_sel & BMI2_ACCEL_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_ACC_EN);
-        }
-
-        /* Disable gyroscope */
-        if (sensor_sel & BMI2_GYRO_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_GYR_EN);
-        }
-
-        /* Disable auxiliary sensor */
-        if (sensor_sel & BMI2_AUX_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_AUX_EN);
-        }
-
-        /* Disable temperature sensor */
-        if (sensor_sel & BMI2_TEMP_SENS_SEL)
-        {
-            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_TEMP_EN);
-        }
-
-        /* Disable the sensors that are set in the power control register */
-        if (sensor_sel & BMI2_MAIN_SENSORS)
-        {
-            rslt = bmi2_set_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
-        }
-    }
+    rslt = disable_main_sensors(sensor_sel, dev);
 
     if ((rslt == BMI2_OK) && (sensor_sel & ~(BMI2_MAIN_SENSORS)))
     {
@@ -2276,155 +2078,14 @@ static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev)
 
         if (rslt == BMI2_OK)
         {
-            while (loop--)
+            rslt = disable_sensor_features(sensor_sel, dev);
+
+            /* Enable Advance power save if disabled while
+             * configuring and not when already disabled
+             */
+            if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
             {
-                /* Disable sig-motion feature */
-                if (sensor_sel & BMI2_SIG_MOTION_SEL)
-                {
-                    rslt = set_sig_motion(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_SIG_MOTION_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable any-motion feature */
-                if (sensor_sel & BMI2_ANY_MOT_SEL)
-                {
-                    rslt = set_any_motion(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_ANY_MOT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable no-motion feature */
-                if (sensor_sel & BMI2_NO_MOT_SEL)
-                {
-                    rslt = set_no_motion(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_NO_MOT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable step detector feature */
-                if (sensor_sel & BMI2_STEP_DETECT_SEL)
-                {
-                    rslt = set_step_detector(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_STEP_DETECT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable step counter feature */
-                if (sensor_sel & BMI2_STEP_COUNT_SEL)
-                {
-                    rslt = set_step_counter(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_STEP_COUNT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable step activity feature */
-                if (sensor_sel & BMI2_STEP_ACT_SEL)
-                {
-                    rslt = set_step_activity(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_STEP_ACT_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable gyroscope user gain */
-                if (sensor_sel & BMI2_GYRO_GAIN_UPDATE_SEL)
-                {
-                    rslt = set_gyro_user_gain(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_GYRO_GAIN_UPDATE_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable gyroscope self-offset correction feature */
-                if (sensor_sel & BMI2_GYRO_SELF_OFF_SEL)
-                {
-                    rslt = set_gyro_self_offset_corr(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_GYRO_SELF_OFF_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Disable wrist gesture feature for wearable variant*/
-                if (sensor_sel & BMI2_WRIST_GEST_SEL)
-                {
-                    rslt = set_wrist_gesture(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_WRIST_GEST_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable wrist wear wake-up feature */
-                if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_SEL)
-                {
-                    rslt = set_wrist_wear_wake_up(BMI2_DISABLE, dev);
-                    if (rslt == BMI2_OK)
-                    {
-                        dev->sens_en_stat &= ~BMI2_WRIST_WEAR_WAKE_UP_SEL;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                /* Enable Advance power save if disabled while
-                 * configuring and not when already disabled
-                 */
-                if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
-                {
-                    rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
-                }
+                rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
             }
         }
     }
@@ -2468,6 +2129,15 @@ static int8_t set_any_motion(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_ANY_MOT_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_ANY_MOT_SEL;
+            }
         }
     }
     else
@@ -2514,6 +2184,15 @@ static int8_t set_no_motion(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_NO_MOT_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_NO_MOT_SEL;
+            }
         }
     }
     else
@@ -2560,6 +2239,15 @@ static int8_t set_step_detector(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_STEP_DETECT_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_STEP_DETECT_SEL;
+            }
         }
     }
     else
@@ -2606,6 +2294,15 @@ static int8_t set_step_counter(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_STEP_COUNT_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_STEP_COUNT_SEL;
+            }
         }
     }
     else
@@ -2652,6 +2349,15 @@ static int8_t set_sig_motion(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_SIG_MOTION_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_SIG_MOTION_SEL;
+            }
         }
     }
     else
@@ -2700,6 +2406,15 @@ static int8_t set_step_activity(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_STEP_ACT_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_STEP_ACT_SEL;
+            }
         }
     }
     else
@@ -2749,6 +2464,15 @@ static int8_t set_gyro_self_offset_corr(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_GYRO_SELF_OFF_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_GYRO_SELF_OFF_SEL;
+            }
         }
     }
     else
@@ -2795,6 +2519,15 @@ static int8_t set_wrist_gesture(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_WRIST_GEST_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_WRIST_GEST_SEL;
+            }
         }
     }
     else
@@ -2843,6 +2576,15 @@ static int8_t set_wrist_wear_wake_up(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_WRIST_WEAR_WAKE_UP_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_WRIST_WEAR_WAKE_UP_SEL;
+            }
         }
     }
     else
@@ -2890,6 +2632,15 @@ static int8_t set_gyro_user_gain(uint8_t enable, struct bmi2_dev *dev)
 
             /* Set the configuration back to the page */
             rslt = bmi2_set_regs(BMI2_FEATURES_REG_ADDR, feat_config, BMI2_FEAT_SIZE_IN_BYTES, dev);
+
+            if ((rslt == BMI2_OK) && (enable == BMI2_ENABLE))
+            {
+                dev->sens_en_stat |= BMI2_GYRO_GAIN_UPDATE_SEL;
+            }
+            else
+            {
+                dev->sens_en_stat &= ~BMI2_GYRO_GAIN_UPDATE_SEL;
+            }
         }
     }
     else
@@ -3136,7 +2887,7 @@ static int8_t set_sig_motion_config(const struct bmi2_sig_motion_config *config,
             /* Set parameter 5 */
             *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_5, config->param_5);
 
-            /* Increment offset by 1 word  to set output- configuration */
+            /* Increment offset by 1 more word to get the total length in words */
             idx++;
 
             /* Get total length in bytes to copy from local pointer to the array */
@@ -3337,12 +3088,6 @@ static int8_t set_step_config(const struct bmi2_step_config *config, struct bmi2
              */
             idx++;
 
-            /* Set step buffer size */
-            *(data_p + idx) = BMI2_SET_BITS(*(data_p + idx), BMI2_STEP_BUFFER_SIZE, config->step_buffer_size);
-
-            /* Increment offset by 1 more word to get the total length in words */
-            idx++;
-
             /* Get total length in bytes to copy from local pointer to the array */
             idx = (uint8_t)(idx * 2) - step_count_config.start_addr;
 
@@ -3486,6 +3231,9 @@ static int8_t set_wrist_wear_wake_up_config(const struct bmi2_wrist_wear_wake_up
 
             /* Get offset in words since all the features are set in words length */
             idx = idx / 2;
+
+            /* Increment offset by 1 more word to set min_angle_focus */
+            idx++;
 
             *(data_p + idx) = config->min_angle_focus;
 
@@ -3943,13 +3691,6 @@ static int8_t get_step_config(struct bmi2_step_config *config, struct bmi2_dev *
 
             /* Get reset counter */
             config->reset_counter = (lsb_msb & BMI2_STEP_COUNT_RST_CNT_MASK) >> BMI2_STEP_COUNT_RST_CNT_POS;
-
-            /* Get word to calculate output configuration of step detector and activity */
-            lsb = (uint16_t) feat_config[idx++];
-            msb = ((uint16_t) feat_config[idx++] << 8);
-            lsb_msb = lsb | msb;
-
-            config->step_buffer_size = (lsb_msb & BMI2_STEP_BUFFER_SIZE_MASK) >> BMI2_STEP_BUFFER_SIZE_POS;
         }
     }
     else
@@ -4060,6 +3801,9 @@ static int8_t get_wrist_wear_wake_up_config(struct bmi2_wrist_wear_wake_up_confi
             /* Get offset in words since all the features are set in words length */
             idx = idx / 2;
 
+            /* Increment the offset value by 1 word to get min_angle_focus */
+            idx++;
+
             config->min_angle_focus = *(data_p + idx);
 
             /* Increment the offset value by 1 word to get min_angle_nonfocus */
@@ -4081,7 +3825,6 @@ static int8_t get_wrist_wear_wake_up_config(struct bmi2_wrist_wear_wake_up_confi
             /* Increment the offset value by 1 word to get max_tilt_pu */
             idx++;
             config->max_tilt_pu = *(data_p + idx);
-
         }
     }
     else
@@ -4448,4 +4191,354 @@ static uint8_t extract_output_feat_config(struct bmi2_feature_config *feat_outpu
 
     /* Return flag */
     return feat_found;
+}
+
+/*!
+ * @brief This internal API sets feature configuration to the sensor.
+ */
+static int8_t set_feat_config(const struct bmi2_sens_config *sens_cfg, uint8_t loop, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    switch (sens_cfg[loop].type)
+    {
+        /* Set any motion configuration */
+        case BMI2_ANY_MOTION:
+            rslt = set_any_motion_config(&sens_cfg[loop].cfg.any_motion, dev);
+            break;
+
+        /* Set no motion configuration */
+        case BMI2_NO_MOTION:
+            rslt = set_no_motion_config(&sens_cfg[loop].cfg.no_motion, dev);
+            break;
+
+        /* Set sig-motion configuration */
+        case BMI2_SIG_MOTION:
+            rslt = set_sig_motion_config(&sens_cfg[loop].cfg.sig_motion, dev);
+            break;
+
+        /* Set the step counter parameters */
+        case BMI2_STEP_COUNTER_PARAMS:
+            rslt = set_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
+            break;
+
+        /* Set step counter/detector/activity configuration */
+        case BMI2_STEP_DETECTOR:
+        case BMI2_STEP_COUNTER:
+        case BMI2_STEP_ACTIVITY:
+            rslt = set_step_config(&sens_cfg[loop].cfg.step_counter, dev);
+            break;
+
+        /* Set the wrist gesture configuration */
+        case BMI2_WRIST_GESTURE:
+            rslt = set_wrist_gest_config(&sens_cfg[loop].cfg.wrist_gest, dev);
+            break;
+
+        /* Set the wrist wear wake-up configuration */
+        case BMI2_WRIST_WEAR_WAKE_UP:
+            rslt = set_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
+            break;
+
+        default:
+            rslt = BMI2_E_INVALID_SENSOR;
+            break;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API gets feature configuration from the sensor.
+ */
+static int8_t get_feat_config(struct bmi2_sens_config *sens_cfg, uint8_t loop, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    switch (sens_cfg[loop].type)
+    {
+        /* Get sig-motion configuration */
+        case BMI2_SIG_MOTION:
+            rslt = get_sig_motion_config(&sens_cfg[loop].cfg.sig_motion, dev);
+            break;
+
+        /* Get any motion configuration */
+        case BMI2_ANY_MOTION:
+            rslt = get_any_motion_config(&sens_cfg[loop].cfg.any_motion, dev);
+            break;
+
+        /* Get no motion configuration */
+        case BMI2_NO_MOTION:
+            rslt = get_no_motion_config(&sens_cfg[loop].cfg.no_motion, dev);
+            break;
+
+        /* Set the step counter parameters */
+        case BMI2_STEP_COUNTER_PARAMS:
+            rslt = get_step_count_params_config(sens_cfg[loop].cfg.step_counter_params, dev);
+            break;
+
+        /* Get step counter/detector/activity configuration */
+        case BMI2_STEP_DETECTOR:
+        case BMI2_STEP_COUNTER:
+        case BMI2_STEP_ACTIVITY:
+            rslt = get_step_config(&sens_cfg[loop].cfg.step_counter, dev);
+            break;
+
+        /* Get the wrist gesture configuration */
+        case BMI2_WRIST_GESTURE:
+            rslt = get_wrist_gest_config(&sens_cfg[loop].cfg.wrist_gest, dev);
+            break;
+
+        /* Get the wrist wear wake-up configuration */
+        case BMI2_WRIST_WEAR_WAKE_UP:
+            rslt = get_wrist_wear_wake_up_config(&sens_cfg[loop].cfg.wrist_wear_wake_up, dev);
+            break;
+
+        default:
+            rslt = BMI2_E_INVALID_SENSOR;
+            break;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to enable main sensors like accel, gyro, aux and temperature.
+ */
+static int8_t enable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store register values */
+    uint8_t reg_data;
+
+    rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+
+    if (rslt == BMI2_OK)
+    {
+        /* Enable accelerometer */
+        if (sensor_sel & BMI2_ACCEL_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BITS(reg_data, BMI2_ACC_EN, BMI2_ENABLE);
+        }
+
+        /* Enable gyroscope */
+        if (sensor_sel & BMI2_GYRO_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BITS(reg_data, BMI2_GYR_EN, BMI2_ENABLE);
+        }
+
+        /* Enable auxiliary sensor */
+        if (sensor_sel & BMI2_AUX_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BIT_POS0(reg_data, BMI2_AUX_EN, BMI2_ENABLE);
+        }
+
+        /* Enable temperature sensor */
+        if (sensor_sel & BMI2_TEMP_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BITS(reg_data, BMI2_TEMP_EN, BMI2_ENABLE);
+        }
+
+        /* Enable the sensors that are set in the power control register */
+        if (sensor_sel & BMI2_MAIN_SENSORS)
+        {
+            rslt = bmi2_set_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to enable sensor features.
+ */
+static int8_t enable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt = BMI2_OK;
+
+    /* Enable sig-motion feature */
+    if (sensor_sel & BMI2_SIG_MOTION_SEL)
+    {
+        rslt = set_sig_motion(BMI2_ENABLE, dev);
+    }
+
+    /* Enable any motion feature */
+    if (sensor_sel & BMI2_ANY_MOT_SEL)
+    {
+        rslt = set_any_motion(BMI2_ENABLE, dev);
+    }
+
+    /* Enable no motion feature */
+    if (sensor_sel & BMI2_NO_MOT_SEL)
+    {
+        rslt = set_no_motion(BMI2_ENABLE, dev);
+    }
+
+    /* Enable step detector feature */
+    if (sensor_sel & BMI2_STEP_DETECT_SEL)
+    {
+        rslt = set_step_detector(BMI2_ENABLE, dev);
+    }
+
+    /* Enable step counter feature */
+    if (sensor_sel & BMI2_STEP_COUNT_SEL)
+    {
+        rslt = set_step_counter(BMI2_ENABLE, dev);
+    }
+
+    /* Enable step activity feature */
+    if (sensor_sel & BMI2_STEP_ACT_SEL)
+    {
+        rslt = set_step_activity(BMI2_ENABLE, dev);
+    }
+
+    /* Enable gyroscope user gain */
+    if (sensor_sel & BMI2_GYRO_GAIN_UPDATE_SEL)
+    {
+        rslt = set_gyro_user_gain(BMI2_ENABLE, dev);
+    }
+
+    /* Enable gyroscope self-offset correction feature */
+    if (sensor_sel & BMI2_GYRO_SELF_OFF_SEL)
+    {
+        rslt = set_gyro_self_offset_corr(BMI2_ENABLE, dev);
+    }
+
+    /* Enable wrist gesture feature for wearable variant */
+    if (sensor_sel & BMI2_WRIST_GEST_SEL)
+    {
+        rslt = set_wrist_gesture(BMI2_ENABLE, dev);
+    }
+
+    /* Enable wrist wear wake-up feature */
+    if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_SEL)
+    {
+        rslt = set_wrist_wear_wake_up(BMI2_ENABLE, dev);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to disable main sensors like accel, gyro, aux and temperature.
+ */
+static int8_t disable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store register values */
+    uint8_t reg_data;
+
+    rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+
+    if (rslt == BMI2_OK)
+    {
+        /* Disable accelerometer */
+        if (sensor_sel & BMI2_ACCEL_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_ACC_EN);
+        }
+
+        /* Disable gyroscope */
+        if (sensor_sel & BMI2_GYRO_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_GYR_EN);
+        }
+
+        /* Disable auxiliary sensor */
+        if (sensor_sel & BMI2_AUX_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_AUX_EN);
+        }
+
+        /* Disable temperature sensor */
+        if (sensor_sel & BMI2_TEMP_SENS_SEL)
+        {
+            reg_data = BMI2_SET_BIT_VAL0(reg_data, BMI2_TEMP_EN);
+        }
+
+        /* Disable the sensors that are set in the power control register */
+        if (sensor_sel & BMI2_MAIN_SENSORS)
+        {
+            rslt = bmi2_set_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API is used to disable sensor features.
+ */
+static int8_t disable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt = BMI2_OK;
+
+    /* Disable sig-motion feature */
+    if (sensor_sel & BMI2_SIG_MOTION_SEL)
+    {
+        rslt = set_sig_motion(BMI2_DISABLE, dev);
+    }
+
+    /* Disable any-motion feature */
+    if (sensor_sel & BMI2_ANY_MOT_SEL)
+    {
+        rslt = set_any_motion(BMI2_DISABLE, dev);
+    }
+
+    /* Disable no-motion feature */
+    if (sensor_sel & BMI2_NO_MOT_SEL)
+    {
+        rslt = set_no_motion(BMI2_DISABLE, dev);
+    }
+
+    /* Disable step detector feature */
+    if (sensor_sel & BMI2_STEP_DETECT_SEL)
+    {
+        rslt = set_step_detector(BMI2_DISABLE, dev);
+    }
+
+    /* Disable step counter feature */
+    if (sensor_sel & BMI2_STEP_COUNT_SEL)
+    {
+        rslt = set_step_counter(BMI2_DISABLE, dev);
+    }
+
+    /* Disable step activity feature */
+    if (sensor_sel & BMI2_STEP_ACT_SEL)
+    {
+        rslt = set_step_activity(BMI2_DISABLE, dev);
+    }
+
+    /* Disable gyroscope user gain */
+    if (sensor_sel & BMI2_GYRO_GAIN_UPDATE_SEL)
+    {
+        rslt = set_gyro_user_gain(BMI2_DISABLE, dev);
+    }
+
+    /* Disable gyroscope self-offset correction feature */
+    if (sensor_sel & BMI2_GYRO_SELF_OFF_SEL)
+    {
+        rslt = set_gyro_self_offset_corr(BMI2_DISABLE, dev);
+    }
+
+    /* Disable wrist gesture feature for wearable variant*/
+    if (sensor_sel & BMI2_WRIST_GEST_SEL)
+    {
+        rslt = set_wrist_gesture(BMI2_DISABLE, dev);
+    }
+
+    /* Enable wrist wear wake-up feature */
+    if (sensor_sel & BMI2_WRIST_WEAR_WAKE_UP_SEL)
+    {
+        rslt = set_wrist_wear_wake_up(BMI2_DISABLE, dev);
+    }
+
+    return rslt;
 }
