@@ -48,6 +48,6 @@ The BMI270 is a small, low power, low noise inertial measurement unit designed f
 
 - Supports a 6kB FIFO
 
-For more information refer product page [Link](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270.html) 
+For more information refer product page [Link](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) 
 
 ---
