@@ -15,7 +15,7 @@
 - User has to include _bmi2_ois.h_ in the code to call OIS related APIs and a _variant header_ for initialization as
 well as BMI2 related API calls, as shown below:
 ``` c
-#include "bmi270.h"
+#include "bmi261.h"
 #include "bmi2_ois.h"
 ````
 ### Driver files information<a name=file></a>
@@ -86,7 +86,7 @@ if (rslt != BMI2_OK) {
 }
 
 /* Enable accelerometer and gyroscope through host interface */
-rslt = bmi270_sensor_enable(sens_list, 2, &dev);
+rslt = bmi2_sensor_enable(sens_list, 2, &dev);
 if (rslt != BMI2_OK) {
         printf("Error: %d\n", rslt);
         return;
@@ -168,3 +168,5 @@ if (rslt != BMI2_OK) {
         return;
 }
 ```
+
+        

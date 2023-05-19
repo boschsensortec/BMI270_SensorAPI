@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -42,20 +42,20 @@ struct temp_axes_val
 /*!
  *  @brief This internal API is to perform gyro FOC
  *
- *  @param[in,out] dev                 : Structure instance of bmi2_dev.
+ *  @param[in,out] bmi                 : Structure instance of bmi2_dev.
  *
  *  @return Status of execution.
  */
-static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi2_dev);
+static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi);
 
 /*!
  *  @brief This internal API is to determind if gyro FOC data is within defined limits
  *
- *  @param[in,out] dev                 : Structure instance of bmi2_dev.
+ *  @param[in,out] bmi                 : Structure instance of bmi2_dev.
  *
  *  @return Status of execution.
  */
-static int8_t verify_gyro_foc_data(struct bmi2_dev *bmi2_dev);
+static int8_t verify_gyro_foc_data(struct bmi2_dev *bmi);
 
 /******************************************************************************/
 /*!            Functions                                                      */
@@ -66,9 +66,8 @@ int main(void)
     /* Sensor initialization configuration. */
     struct bmi2_dev dev;
 
-    uint8_t try = 0, j = 0;
+    uint8_t try = 0, j;
     int8_t rslt;
-    uint8_t sens_list = BMI2_GYRO;
 
     /* Interface reference is given as a parameter
      * For I2C : BMI2_I2C_INTF
@@ -82,7 +81,6 @@ int main(void)
     /* Perform FOC for different ranges */
     for (j = 0; j < 2; j++)
     {
-        rslt = 0;
         try = 0;
 
         if (j == 0)
@@ -94,7 +92,7 @@ int main(void)
             printf("Keep sensor stable in right position and press 5\n");
         }
 
-        while (1)
+        for (;;)
         {
             scanf("%hu", (short unsigned int *)&try);
             if (try == 5)
@@ -103,52 +101,44 @@ int main(void)
             }
         }
 
-        /* Initialize the sensor */
-        rslt = bmi270_context_init(&dev);
-        bmi2_error_codes_print_result(rslt);
-
-        /* Enable gyroscope */
-        rslt = bmi270_context_sensor_enable(&sens_list, 1, &dev);
-        bmi2_error_codes_print_result(rslt);
-
-        rslt = perform_gyro_foc_test(&dev);
-
-        if ((j == 0) && (rslt == BMI2_E_OUT_OF_RANGE))
+        if (rslt == BMI2_OK)
         {
-            printf("\n#########   Valid input - sensor is shaking   #########\n\n");
-            if (rslt != BMI2_E_OUT_OF_RANGE)
-            {
-                printf("rslt != BMI2_E_OUT_OF_RANGE\n");
-                break;
-            }
-        }
-        else if ((j > 0) && (rslt == BMI2_OK))
-        {
-            printf("\n#########   Valid input - Sensor is not shaking   #########\n\n");
+            rslt = perform_gyro_foc_test(&dev);
             bmi2_error_codes_print_result(rslt);
-        }
-        else if ((j == 0) && (rslt == BMI2_OK))
-        {
-            printf("\n#########   Invalid input - sensor is not shaking   #########\n\n");
-            if (rslt == BMI2_OK)
+
+            if (j == 0)
             {
-                printf("rslt == BMI2_OK\n");
-                break;
+                if (rslt == BMI2_E_OUT_OF_RANGE)
+                {
+                    printf("\n#########   Valid input - sensor is shaking   #########\n\n");
+                    printf("rslt is BMI2_E_OUT_OF_RANGE\n");
+                }
+                else if (rslt == BMI2_OK)
+                {
+                    printf("\n#########   Invalid input - sensor is not shaking   #########\n\n");
+                    printf("rslt is BMI2_OK\n");
+
+                    break;
+                }
+            }
+            else if (j > 0)
+            {
+                if (rslt == BMI2_E_OUT_OF_RANGE)
+                {
+                    printf("\n#########   Invalid input - Sensor is shaking   #########\n\n");
+                    printf("rslt is BMI2_E_OUT_OF_RANGE\n");
+
+                    break;
+                }
+                else if (rslt == BMI2_OK)
+                {
+                    printf("\n#########   Valid input - Sensor is not shaking   #########\n\n");
+                    printf("rslt is BMI2_OK\n");
+                }
             }
         }
-        else if ((j > 0) && (rslt == BMI2_E_OUT_OF_RANGE))
-        {
-            printf("\n#########   Invalid input - Sensor is shaking   #########\n\n");
-            if (rslt == BMI2_E_OUT_OF_RANGE)
-            {
-                printf("rslt == BMI2_E_OUT_OF_RANGE\n");
-                break;
-            }
-        }
-        else if (rslt == BMI2_E_OUT_OF_RANGE)
-        {
-            bmi2_error_codes_print_result(rslt);
-        }
+
+        rslt = 0;
     }
 
     bmi2_coines_deinit();
@@ -156,31 +146,25 @@ int main(void)
     return rslt;
 }
 
-static int8_t verify_gyro_foc_data(struct bmi2_dev *bmi2_dev)
+static int8_t verify_gyro_foc_data(struct bmi2_dev *bmi)
 {
     int8_t rslt;
     struct bmi2_sens_axes_data gyr_foc_data[GYRO_SAMPLE_COUNT] = { { 0 } };
     struct temp_axes_val temp_foc_data = { 0 };
     struct bmi2_sens_axes_data avg_foc_data = { 0 };
     struct bmi2_sens_data sensor_data = { { 0 } };
-    uint16_t drdy_status = 0;
     uint8_t i;
 
     /* Read gyroscope values before/after FOC */
     for (i = 0; i < GYRO_SAMPLE_COUNT; i++)
     {
-        while (1)
+        for (;;)
         {
-            /* To get the data ready interrupt status of gyro. */
-            rslt = bmi2_get_int_status(&drdy_status, bmi2_dev);
+            rslt = bmi2_get_sensor_data(&sensor_data, bmi);
             bmi2_error_codes_print_result(rslt);
 
-            /* Read gyroscope data based on data ready interrupt */
-            if ((rslt == BMI2_OK) && (drdy_status & BMI2_GYR_DRDY_INT_MASK))
+            if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
             {
-                rslt = bmi2_get_sensor_data(&sensor_data, bmi2_dev);
-                bmi2_error_codes_print_result(rslt);
-
                 memcpy(&gyr_foc_data[i], &sensor_data.gyr, sizeof(struct bmi2_sens_axes_data));
 
                 printf("X[%d] = %5d,  Y[%d] = %5d,  Z[%d] = %5d\n",
@@ -226,7 +210,7 @@ static int8_t verify_gyro_foc_data(struct bmi2_dev *bmi2_dev)
 }
 
 /* Perform FOC for different ranges*/
-static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi2_dev)
+static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi)
 {
     int8_t rslt;
     struct bmi2_sens_config config = { 0 };
@@ -234,17 +218,17 @@ static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi2_dev)
     uint8_t sens_list = BMI2_GYRO;
 
     /* Initialize the sensor */
-    rslt = bmi270_context_init(bmi2_dev);
+    rslt = bmi270_context_init(bmi);
     bmi2_error_codes_print_result(rslt);
 
     /* Configure the type of feature. */
     config.type = BMI2_GYRO;
 
-    rslt = bmi270_context_get_sensor_config(&config, 1, bmi2_dev);
+    rslt = bmi2_get_sensor_config(&config, 1, bmi);
     bmi2_error_codes_print_result(rslt);
 
     /* Map data ready interrupt to interrupt pin. */
-    rslt = bmi2_map_data_int(BMI2_DRDY_INT, BMI2_INT2, bmi2_dev);
+    rslt = bmi2_map_data_int(BMI2_DRDY_INT, BMI2_INT2, bmi);
     bmi2_error_codes_print_result(rslt);
 
     /* Set Output Data Rate to 25Hz */
@@ -272,35 +256,36 @@ static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi2_dev)
     config.cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
 
     /* Set the gyro configurations. */
-    rslt = bmi270_context_set_sensor_config(&config, 1, bmi2_dev);
+    rslt = bmi2_set_sensor_config(&config, 1, bmi);
     bmi2_error_codes_print_result(rslt);
 
     /* NOTE:
      * Gyro enable must be done after setting configurations
      */
-    rslt = bmi270_context_sensor_enable(&sens_list, 1, bmi2_dev);
+    rslt = bmi2_sensor_enable(&sens_list, 1, bmi);
     bmi2_error_codes_print_result(rslt);
 
     printf("# BWP : %d   ODR : %d   Range : %d\n", config.cfg.gyr.bwp, config.cfg.gyr.odr, config.cfg.gyr.range);
 
     printf("\n# Before GYRO FOC\n");
 
-    rslt = verify_gyro_foc_data(bmi2_dev);
+    rslt = verify_gyro_foc_data(bmi);
+    bmi2_error_codes_print_result(rslt);
 
     printf("\n\n########## Perform GYRO FOC ##########\n\n");
 
     /* Perform gyroscope FOC */
-    rslt = bmi2_perform_gyro_foc(bmi2_dev);
+    rslt = bmi2_perform_gyro_foc(bmi);
     bmi2_error_codes_print_result(rslt);
 
     /* Provide delay after performing FOC */
-    bmi2_dev->delay_us(40000, bmi2_dev->intf_ptr);
+    bmi->delay_us(40000, bmi->intf_ptr);
 
     if (rslt == BMI2_OK)
     {
         printf("\n# After GYRO FOC\n");
 
-        rslt = verify_gyro_foc_data(bmi2_dev);
+        rslt = verify_gyro_foc_data(bmi);
     }
 
     return rslt;

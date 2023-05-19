@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -47,7 +47,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&dev, BMI2_I2C_INTF);
+    rslt = bmi2_interface_init(&dev, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270_legacy. */
@@ -123,7 +123,7 @@ static int8_t set_feature_config(struct bmi2_dev *bmi2_dev)
         /* 1LSB equals 20ms. Default is 100ms, setting to 80ms. */
         config.cfg.no_motion.duration = 0x04;
 
-        /* 1LSB equals to 0.48mg. Default is 83mg, setting to 50mg. */
+        /* 1LSB equals to 0.48mg. Default is 70mg, setting to 50mg. */
         config.cfg.no_motion.threshold = 0x68;
 
         /* Set new configurations. */

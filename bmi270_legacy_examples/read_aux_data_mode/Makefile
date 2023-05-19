@@ -17,7 +17,6 @@ $(COMMON_LOCATION)/common/common.c
 INCLUDEPATHS += \
 $(API_LOCATION) \
 $(BMM150_SOURCE) \
-$(COMMON_LOCATION)/common 
-
+$(COMMON_LOCATION)/common
 
 include $(COINES_INSTALL_PATH)/coines.mk

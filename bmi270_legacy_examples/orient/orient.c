@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -57,7 +57,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&dev, BMI2_I2C_INTF);
+    rslt = bmi2_interface_init(&dev, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270_legacy. */
@@ -101,7 +101,7 @@ int main(void)
                 /* Sensor type of sensor to get data */
                 sensor_data.type = BMI2_ORIENTATION;
 
-                while (1)
+                for (;;)
                 {
                     /* To get the interrupt status of orientation. */
                     rslt = bmi2_get_int_status(&int_status, &dev);
@@ -133,6 +133,8 @@ int main(void)
                             case BMI270_LEGACY_PORTRAIT_UP_RIGHT:
                                 printf("Orientation state is portrait upright\n");
                                 break;
+                            default:
+                                break;
                         }
 
                         switch (orientation_faceup_down)
@@ -142,6 +144,8 @@ int main(void)
                                 break;
                             case BMI270_LEGACY_FACE_DOWN:
                                 printf("Orientation state is face down\n");
+                                break;
+                            default:
                                 break;
                         }
 

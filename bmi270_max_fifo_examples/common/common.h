@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -13,8 +13,25 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdbool.h>
 #include "bmi2.h"
 #include "coines.h"
+
+/******************************************************************************/
+/* Structure declarations */
+/******************************************************************************/
+
+/*!
+ * @brief  Structure to store the interface related configurations
+ */
+struct coines_intf_config
+{
+    uint8_t dev_addr; /* Device address or Chip select of the interface selected */
+    uint8_t bus; /* Bus instance of the interface selected */
+};
+
+/******************************************************************************/
+/*!                       Function Definitions                                */
 
 /*!
  *  @brief Function for reading the sensor's registers through I2C bus.
@@ -91,14 +108,14 @@ void bmi2_delay_us(uint32_t period, void *intf_ptr);
 /*!
  *  @brief Function to select the interface between SPI and I2C.
  *
- *  @param[in] bma  : Structure instance of bmi2_dev
- *  @param[in] intf : Interface selection parameter
+ *  @param[in] bmi    : Structure instance of bmi2_dev
+ *  @param[in] intf   : Interface selection parameter
  *
  *  @return Status of execution
  *  @retval 0 -> Success
  *  @retval < 0 -> Failure Info
  */
-int8_t bmi2_interface_init(struct bmi2_dev *bma, uint8_t intf);
+int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf);
 
 /*!
  *  @brief Prints the execution status of the APIs.

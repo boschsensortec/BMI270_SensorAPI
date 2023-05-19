@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -68,7 +68,7 @@ int main(void)
                 printf("Tilt the board in landscape position to trigger wrist wear wakeup\n");
 
                 /* Loop to print the wrist wear wakeup data when interrupt occurs */
-                while (1)
+                for (;;)
                 {
                     int_status = 0;
 

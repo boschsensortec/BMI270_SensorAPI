@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -7,6 +7,7 @@
 /******************************************************************************/
 /*!                 Header Files                                              */
 #include <stdio.h>
+#include <math.h>
 #include "bmi270.h"
 #include "common.h"
 
@@ -44,79 +45,70 @@ int main(void)
     int8_t rslt;
 
     /* Variable to define limit to print gyro data. */
-    uint8_t limit = 10;
+    uint8_t limit = 100;
 
     uint8_t indx = 0;
 
     float x = 0, y = 0, z = 0;
 
     /* Sensor initialization configuration. */
-    struct bmi2_dev bmi2_dev;
+    struct bmi2_dev bmi;
 
-    /* Create an instance of sensor data structure. */
+    /* Structure to define type of sensor and their respective data. */
     struct bmi2_sens_data sensor_data = { { 0 } };
 
     /* Assign gyro sensor to variable. */
     uint8_t sens_list = BMI2_GYRO;
 
-    /* Initialize the interrupt status of gyro. */
-    uint16_t int_status = 0;
-
     /* Interface reference is given as a parameter
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&bmi2_dev, BMI2_SPI_INTF);
+    rslt = bmi2_interface_init(&bmi, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270. */
-    rslt = bmi270_init(&bmi2_dev);
+    rslt = bmi270_init(&bmi);
     bmi2_error_codes_print_result(rslt);
 
     if (rslt == BMI2_OK)
     {
         /* Gyro configuration settings. */
-        rslt = set_gyro_config(&bmi2_dev);
+        rslt = set_gyro_config(&bmi);
         bmi2_error_codes_print_result(rslt);
 
         if (rslt == BMI2_OK)
         {
             /* NOTE:
-             * Accel and Gyro enable must be done after setting configurations
+             * Gyro enable must be done after setting configurations
              */
 
             /* Enable the selected sensors. */
-            rslt = bmi270_sensor_enable(&sens_list, 1, &bmi2_dev);
+            rslt = bmi2_sensor_enable(&sens_list, 1, &bmi);
             bmi2_error_codes_print_result(rslt);
 
-            printf("Gyro and DPS data\n");
-            printf("Gyro data collected at Range 2000 dps with 16-bit resolution\n");
+            printf("\nData set, Gyr_Raw_X, Gyr_Raw_Y, Gyr_Raw_Z, Gyro_DPS_X, Gyro_DPS_Y, Gyro_DPS_Z\n\n");
 
-            /* Loop to print gyro data when interrupt occurs. */
             while (indx <= limit)
             {
-                /* To get the data ready interrupt status of gyro. */
-                rslt = bmi2_get_int_status(&int_status, &bmi2_dev);
+                rslt = bmi2_get_sensor_data(&sensor_data, &bmi);
                 bmi2_error_codes_print_result(rslt);
 
-                /* To check the data ready interrupt status and print the status for 10 samples. */
-                if (int_status & BMI2_GYR_DRDY_INT_MASK)
+                if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
                 {
-                    /* Get gyro data for x, y and z axis. */
-                    rslt = bmi2_get_sensor_data(&sensor_data, &bmi2_dev);
-                    bmi2_error_codes_print_result(rslt);
-
-                    printf("\nGyr_X = %d\t", sensor_data.gyr.x);
-                    printf("Gyr_Y = %d\t", sensor_data.gyr.y);
-                    printf("Gyr_Z = %d\r\n", sensor_data.gyr.z);
-
                     /* Converting lsb to degree per second for 16 bit gyro at 2000dps range. */
-                    x = lsb_to_dps(sensor_data.gyr.x, 2000, bmi2_dev.resolution);
-                    y = lsb_to_dps(sensor_data.gyr.y, 2000, bmi2_dev.resolution);
-                    z = lsb_to_dps(sensor_data.gyr.z, 2000, bmi2_dev.resolution);
+                    x = lsb_to_dps(sensor_data.gyr.x, (float)2000, bmi.resolution);
+                    y = lsb_to_dps(sensor_data.gyr.y, (float)2000, bmi.resolution);
+                    z = lsb_to_dps(sensor_data.gyr.z, (float)2000, bmi.resolution);
 
-                    /* Print the data in dps. */
-                    printf("Gyr_DPS_X = %4.2f, Gyr_DPS_Y = %4.2f, Gyr_DPS_Z = %4.2f\n", x, y, z);
+                    printf("%d, %d, %d, %d, %4.2f, %4.2f, %4.2f\n",
+                           indx,
+                           sensor_data.gyr.x,
+                           sensor_data.gyr.y,
+                           sensor_data.gyr.z,
+                           x,
+                           y,
+                           z);
 
                     indx++;
                 }
@@ -144,7 +136,7 @@ static int8_t set_gyro_config(struct bmi2_dev *dev)
     config.type = BMI2_GYRO;
 
     /* Get default configurations for the type of feature selected. */
-    rslt = bmi270_get_sensor_config(&config, 1, dev);
+    rslt = bmi2_get_sensor_config(&config, 1, dev);
     bmi2_error_codes_print_result(rslt);
 
     /* Map data ready interrupt to interrupt pin. */
@@ -179,7 +171,7 @@ static int8_t set_gyro_config(struct bmi2_dev *dev)
         config.cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
 
         /* Set the gyro configurations. */
-        rslt = bmi270_set_sensor_config(&config, 1, dev);
+        rslt = bmi2_set_sensor_config(&config, 1, dev);
     }
 
     return rslt;
@@ -191,7 +183,9 @@ static int8_t set_gyro_config(struct bmi2_dev *dev)
  */
 static float lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
 {
-    float half_scale = ((float)(1 << bit_width) / 2.0f);
+    double power = 2;
 
-    return (dps / ((half_scale))) * (val);
+    float half_scale = (float)((pow((double)power, (double)bit_width) / 2.0f));
+
+    return (dps / (half_scale)) * (val);
 }

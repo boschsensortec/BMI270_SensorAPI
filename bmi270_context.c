@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi270_context.c
-* @date       2021-09-30
-* @version    v2.71.8
+* @date       2023-05-03
+* @version    v2.86.1
 *
 */
 
@@ -822,7 +822,7 @@ static int8_t fifo_header_frame(uint16_t frame_to_read,
 /*!
  * @brief This internal API is used to enable main sensors like accel, gyro, aux and temperature.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Enables the selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -834,7 +834,7 @@ static int8_t enable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to enable sensor features.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Enables features of selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -846,7 +846,7 @@ static int8_t enable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to disable main sensors like accel, gyro, aux and temperature.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Disables the selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -858,7 +858,7 @@ static int8_t disable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to disable sensor features.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Disables features of selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status

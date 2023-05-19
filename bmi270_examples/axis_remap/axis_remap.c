@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -39,9 +39,6 @@ int main(void)
 
     struct bmi2_remap remapped_axis = { 0 };
 
-    /* Initialize the interrupt status of accel. */
-    uint16_t int_status = 0;
-
     /* Select sensors for enable and setting */
     uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
 
@@ -49,13 +46,14 @@ int main(void)
     { { 0 }, { "BMI2_X" }, { "BMI2_Y" }, { 0 }, { "BMI2_Z" }, { 0 }, { 0 }, { 0 }, { 0 }, { "BMI2_NEG_X" },
       { "BMI2_NEG_Y" }, { 0 }, { "BMI2_NEG_Z" } };
 
+    /* Structure to define type of sensor and their respective data. */
     struct bmi2_sens_data sensor_data = { { 0 } };
 
     /* Interface reference is given as a parameter
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&dev, BMI2_I2C_INTF);
+    rslt = bmi2_interface_init(&dev, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize the sensor by enabling write configuration */
@@ -69,7 +67,7 @@ int main(void)
     /* NOTE:
      * Accel and Gyro enable must be done after setting configurations
      */
-    rslt = bmi270_sensor_enable(sens_list, 2, &dev);
+    rslt = bmi2_sensor_enable(sens_list, 2, &dev);
     bmi2_error_codes_print_result(rslt);
 
     rslt = bmi2_get_remap_axes(&remapped_axis, &dev);
@@ -99,19 +97,13 @@ int main(void)
     printf("Print un-mapped data\n");
 
     /* Loop to print the accel data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of accel data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the accel data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_ACC_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Accel ::  X : %d    Y : %d    Z :%d\n", sensor_data.acc.x, sensor_data.acc.y, sensor_data.acc.z);
 
             break;
@@ -119,20 +111,15 @@ int main(void)
     }
 
     /* Loop to print the gyro data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of gyro data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the gyro data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_GYR_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Gyro ::  X : %d     Y : %d    Z :%d\n", sensor_data.gyr.x, sensor_data.gyr.y, sensor_data.gyr.z);
+
             break;
         }
     }
@@ -176,19 +163,13 @@ int main(void)
     printf("Print mapped data\n");
 
     /* Loop to print the accel data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of accel data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the accel data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_ACC_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Accel ::  X : %d    Y : %d    Z :%d\n", sensor_data.acc.x, sensor_data.acc.y, sensor_data.acc.z);
 
             break;
@@ -196,20 +177,15 @@ int main(void)
     }
 
     /* Loop to print the gyro data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of gyro data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the gyro data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_GYR_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Gyro ::  X : %d     Y : %d    Z :%d\n", sensor_data.gyr.x, sensor_data.gyr.y, sensor_data.gyr.z);
+
             break;
         }
     }
@@ -253,19 +229,13 @@ int main(void)
     printf("Print mapped data\n");
 
     /* Loop to print the accel data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of accel data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the accel data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_ACC_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Accel ::  X : %d    Y : %d    Z :%d\n", sensor_data.acc.x, sensor_data.acc.y, sensor_data.acc.z);
 
             break;
@@ -273,20 +243,15 @@ int main(void)
     }
 
     /* Loop to print the gyro data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of gyro data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the gyro data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_GYR_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Gyro ::  X : %d     Y : %d    Z :%d\n", sensor_data.gyr.x, sensor_data.gyr.y, sensor_data.gyr.z);
+
             break;
         }
     }
@@ -330,19 +295,13 @@ int main(void)
     printf("Print mapped data\n");
 
     /* Loop to print the accel data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of accel data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the accel data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_ACC_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Accel ::  X : %d    Y : %d    Z :%d\n", sensor_data.acc.x, sensor_data.acc.y, sensor_data.acc.z);
 
             break;
@@ -350,20 +309,15 @@ int main(void)
     }
 
     /* Loop to print the gyro data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of gyro data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the gyro data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_GYR_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Gyro ::  X : %d     Y : %d    Z :%d\n", sensor_data.gyr.x, sensor_data.gyr.y, sensor_data.gyr.z);
+
             break;
         }
     }
@@ -407,19 +361,13 @@ int main(void)
     printf("Print mapped data\n");
 
     /* Loop to print the accel data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of accel data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the accel data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_ACC_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Accel ::  X : %d    Y : %d    Z :%d\n", sensor_data.acc.x, sensor_data.acc.y, sensor_data.acc.z);
 
             break;
@@ -427,20 +375,15 @@ int main(void)
     }
 
     /* Loop to print the gyro data when interrupt occurs. */
-    while (1)
+    for (;;)
     {
-        /* To get the status of gyro data ready interrupt. */
-        rslt = bmi2_get_int_status(&int_status, &dev);
+        rslt = bmi2_get_sensor_data(&sensor_data, &dev);
         bmi2_error_codes_print_result(rslt);
 
-        /* To check the gyro data ready interrupt status and print 1 sample. */
-        if (int_status & BMI2_GYR_DRDY_INT_MASK)
+        if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_GYR))
         {
-            /* Get sensor data */
-            rslt = bmi2_get_sensor_data(&sensor_data, &dev);
-            bmi2_error_codes_print_result(rslt);
-
             printf("Gyro ::  X : %d     Y : %d    Z :%d\n", sensor_data.gyr.x, sensor_data.gyr.y, sensor_data.gyr.z);
+
             break;
         }
     }
@@ -465,7 +408,7 @@ static int8_t set_accel_config(struct bmi2_dev *dev)
     config.type = BMI2_ACCEL;
 
     /* Get default configurations for the type of feature selected. */
-    rslt = bmi270_get_sensor_config(&config, 1, dev);
+    rslt = bmi2_get_sensor_config(&config, 1, dev);
     bmi2_error_codes_print_result(rslt);
 
     /* Map data ready interrupt to interrupt pin. */
@@ -500,7 +443,7 @@ static int8_t set_accel_config(struct bmi2_dev *dev)
         config.cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
 
         /* Set the accel configurations. */
-        rslt = bmi270_set_sensor_config(&config, 1, dev);
+        rslt = bmi2_set_sensor_config(&config, 1, dev);
     }
 
     return rslt;

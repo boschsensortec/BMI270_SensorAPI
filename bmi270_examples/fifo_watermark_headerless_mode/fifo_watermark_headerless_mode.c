@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -35,6 +35,22 @@
 #define BMI2_FIFO_WATERMARK_LEVEL       UINT16_C(650)
 
 /******************************************************************************/
+/*!                        Global Variables                                   */
+
+/* Number of bytes of FIFO data
+ * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
+ */
+uint8_t fifo_data[BMI2_FIFO_RAW_DATA_BUFFER_SIZE] = { 0 };
+
+/* Array of accelerometer frames -> Total bytes =
+ * 50 * (6 axes bytes) = 300 bytes */
+struct bmi2_sens_axes_data fifo_accel_data[BMI2_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
+
+/* Array of gyro frames -> Total bytes =
+ * 50 * (6 axes bytes) = 300 bytes */
+struct bmi2_sens_axes_data fifo_gyro_data[BMI2_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
+
+/******************************************************************************/
 /*!           Static Function Declaration                                     */
 
 /*!
@@ -64,21 +80,8 @@ int main(void)
 
     uint8_t try = 1;
 
-    /* Number of bytes of FIFO data
-     * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
-     */
-    uint8_t fifo_data[BMI2_FIFO_RAW_DATA_BUFFER_SIZE] = { 0 };
-
     /* Sensor initialization configuration. */
     struct bmi2_dev bmi2_dev;
-
-    /* Array of accelerometer frames -> Total bytes =
-     * 50 * (6 axes bytes) = 300 bytes */
-    struct bmi2_sens_axes_data fifo_accel_data[BMI2_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
-
-    /* Array of gyro frames -> Total bytes =
-     * 50 * (6 axes bytes) = 300 bytes */
-    struct bmi2_sens_axes_data fifo_gyro_data[BMI2_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
 
     /* Initialize FIFO frame structure. */
     struct bmi2_fifo_frame fifoframe = { 0 };
@@ -95,7 +98,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&bmi2_dev, BMI2_SPI_INTF);
+    rslt = bmi2_interface_init(&bmi2_dev, BMI2_I2C_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270. */
@@ -139,6 +142,7 @@ int main(void)
     if (rslt == BMI2_OK)
     {
         rslt = bmi2_set_fifo_config(BMI2_FIFO_HEADER_EN, BMI2_DISABLE, &bmi2_dev);
+        bmi2_error_codes_print_result(rslt);
     }
 
     /* FIFO water-mark interrupt is enabled. */
@@ -197,33 +201,37 @@ int main(void)
                 printf("\nFIFO accel frames requested : %d \n", accel_frame_length);
 
                 /* Parse the FIFO data to extract accelerometer data from the FIFO buffer. */
-                rslt = bmi2_extract_accel(fifo_accel_data, &accel_frame_length, &fifoframe, &bmi2_dev);
+                (void)bmi2_extract_accel(fifo_accel_data, &accel_frame_length, &fifoframe, &bmi2_dev);
                 printf("\nFIFO accel frames extracted : %d \n", accel_frame_length);
 
                 printf("\nFIFO gyro frames requested : %d \n", gyro_frame_length);
 
                 /* Parse the FIFO data to extract gyro data from the FIFO buffer. */
-                rslt = bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &bmi2_dev);
+                (void)bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &bmi2_dev);
                 printf("\nFIFO gyro frames extracted : %d \n", gyro_frame_length);
 
-                printf("\nExracted accel frames\n");
+                printf("\nExtracted accel frames\n");
+
+                printf("ACCEL_DATA, X, Y, Z\n");
 
                 /* Print the parsed accelerometer data from the FIFO buffer. */
                 for (index = 0; index < accel_frame_length; index++)
                 {
-                    printf("ACCEL[%d] X : %d\t Y : %d\t Z : %d\n", index, fifo_accel_data[index].x,
-                           fifo_accel_data[index].y, fifo_accel_data[index].z);
+                    printf("%d, %d, %d, %d\n",
+                           index,
+                           fifo_accel_data[index].x,
+                           fifo_accel_data[index].y,
+                           fifo_accel_data[index].z);
                 }
 
                 printf("\nExtracted gyro frames\n");
 
+                printf("GYRO_DATA, X, Y, Z\n");
+
                 /* Print the parsed gyro data from the FIFO buffer. */
                 for (index = 0; index < gyro_frame_length; index++)
                 {
-                    printf("GYRO[%d] X : %d\t Y : %d\t Z : %d\n",
-                           index,
-                           fifo_gyro_data[index].x,
-                           fifo_gyro_data[index].y,
+                    printf("%d, %d, %d, %d\n", index, fifo_gyro_data[index].x, fifo_gyro_data[index].y,
                            fifo_gyro_data[index].z);
                 }
             }

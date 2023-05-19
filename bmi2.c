@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.c
-* @date       2021-09-30
-* @version    v2.71.8
+* @date       2023-05-03
+* @version    v2.86.1
 *
 */
 
@@ -965,10 +965,11 @@ static void unpack_aux_data(struct bmi2_aux_fifo_data *aux,
  * @param[in, out] fifo     : Structure instance of bmi2_fifo_frame.
  * @param[in]      dev      : Structure instance of bmi2_dev.
  *
- * @return None
- * @retval None
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
  */
-static void reset_fifo_frame_structure(struct bmi2_fifo_frame *fifo, const struct bmi2_dev *dev);
+static int8_t reset_fifo_frame_structure(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API checks whether the FIFO data read is an empty frame.
@@ -1330,19 +1331,6 @@ static int8_t perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_val
  * @retval < 0 -> Fail
  */
 static int8_t set_accel_foc_config(struct bmi2_dev *dev);
-
-/*!
- * @brief This internal API enables/disables the offset compensation for
- * filtered and un-filtered accelerometer data.
- *
- * @param[in] offset_en     : enables/disables offset compensation.
- * @param[in] dev           : Structure instance of bmi2_dev
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev);
 
 /*!
  * @brief This internal API converts the range value into accelerometer
@@ -1786,46 +1774,6 @@ static int8_t sensor_enable(uint64_t sensor_sel, struct bmi2_dev *dev);
 static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev);
 
 /*!
- * @brief This internal API reads accelerometer, gyroscope and auxiliary sensor data.
- *
- * @param[in]  aux_len      : Length of auxiliary sensor data
- * @param[in]  acc_len      : Length of accelerometer sensor data
- * @param[in]  gyr_len      : Length of gyroscope sensor data
- * @param[out]  sensor_data : Sensor data from register.
- * @param[in, out]  dev     : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t read_sensor_data(uint8_t aux_len,
-                               uint8_t acc_len,
-                               uint8_t gyr_len,
-                               uint8_t *sensor_data,
-                               struct bmi2_dev *dev);
-
-/*!
- * @brief This internal API parses accelerometer, gyroscope and auxiliary sensor data with sensortime
- *
- * @param[in]  aux_len      : Length of auxiliary sensor data
- * @param[in]  acc_len      : Length of accelerometer sensor data
- * @param[in]  gyr_len      : Length of gyroscope sensor data
- * @param[in]  data         : Structure instance of bmi2_sens_data.
- * @param[in]  sensor_data  : Sensor data from register.
- * @param[in, out]  dev     : Structure instance of bmi2_dev.
- *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
- */
-static int8_t parse_data(uint8_t aux_len,
-                         uint8_t acc_len,
-                         uint8_t gyr_len,
-                         struct bmi2_sens_data *data,
-                         const uint8_t *sensor_data,
-                         struct bmi2_dev *dev);
-
-/*!
  * @brief This internal API is used to test gyro CRT.
  *
  * @param[in]  max_burst_length  : Variable to store maximum burst length.
@@ -1849,15 +1797,78 @@ static int8_t gyro_crt_test(uint8_t max_burst_length, uint8_t gyro_st_crt, struc
  * @param[in]     fifo    : Structure instance of bmi2_fifo_frame.
  * @param[in, out]  dev   : Structure instance of bmi2_dev.
  *
- * @return Result of API execution status
- * @retval 0 -> Success
- * @retval < 0 -> Fail
+ * @return None
+ *
+ * @retval None
  */
 static void unpack_virtual_aux_data(struct bmi2_aux_fifo_data *aux,
                                     uint16_t *idx,
                                     const uint16_t *aux_idx,
                                     const struct bmi2_fifo_frame *fifo,
                                     const struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API is used to verify the right position of the sensor before doing accel FOC.
+ *
+ * @param[in] sens_list     : Sensor type
+ * @param[in] accel_g_axis  : Accel Foc axis and sign input
+ * @param[in] dev           : Structure instance of bmi2_dev
+ *
+ * @return Result of API execution status
+ *
+ * @return 0 -> Success
+ * @return < 0 -> Fail
+ */
+static int8_t verify_foc_position(uint8_t sens_list,
+                                  const struct bmi2_accel_foc_g_value *accel_g_axis,
+                                  struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API reads and provides average for 128 samples of sensor data for accel FOC.
+ *
+ * @param[in] sens_list     : Sensor type.
+ * @param[in] temp_foc_data : To store data samples
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ *
+ * @return 0 -> Success
+ * @return < 0 -> Fail
+ */
+static int8_t get_average_of_sensor_data(uint8_t sens_list,
+                                         struct bmi2_foc_temp_value *temp_foc_data,
+                                         struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API validates accel FOC position as per the range
+ *
+ * @param[in] sens_list     : Sensor type
+ * @param[in] accel_g_axis  : Accel axis to FOC.
+ * @param[in] avg_foc_data  : Average value of sensor sample datas
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ *
+ * @return 0 -> Success
+ * @return < 0 -> Fail
+ */
+static int8_t validate_foc_position(uint8_t sens_list,
+                                    const struct bmi2_accel_foc_g_value *accel_g_axis,
+                                    struct bmi2_sens_axes_data avg_foc_data,
+                                    struct bmi2_dev *dev);
+
+/*!
+ * @brief This internal API validates accel FOC axis given as input
+ *
+ * @param[in] avg_foc_data : Average value of sensor sample datas
+ * @param[in] dev          : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ *
+ * @return 0 -> Success
+ * @return < 0 -> Fail
+ */
+static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev);
 
 /******************************************************************************/
 /*!  @name      User Interface Definitions                            */
@@ -2007,6 +2018,8 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
     /* Variable to define error */
     int8_t rslt;
 
+    uint16_t loop;
+
     /* Null-pointer check */
     rslt = null_ptr_check(dev);
     if ((rslt == BMI2_OK) && (data != NULL))
@@ -2017,17 +2030,24 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
             reg_addr = (reg_addr & BMI2_SPI_WR_MASK);
         }
 
-        dev->intf_rslt = dev->write(reg_addr, data, len, dev->intf_ptr);
-
-        /* Delay for Low power mode of the sensor is 450 us */
+        /* Writing Byte by byte and delay for Low power mode of the sensor is 450 us */
         if (dev->aps_status == BMI2_ENABLE)
         {
-            dev->delay_us(450, dev->intf_ptr);
+            for (loop = 0; loop < len; loop++)
+            {
+                dev->intf_rslt = dev->write((uint8_t)((uint16_t)reg_addr + loop), &data[loop], 1, dev->intf_ptr);
+                dev->delay_us(BMI2_POWER_SAVE_MODE_DELAY_IN_US, dev->intf_ptr);
+                if (dev->intf_rslt != BMI2_INTF_RET_SUCCESS)
+                {
+                    break;
+                }
+            }
         }
-        /* Delay for Normal mode of the sensor is 2 us */
+        /* Burst write and delay for Normal mode of the sensor is 2 us */
         else
         {
-            dev->delay_us(2, dev->intf_ptr);
+            dev->intf_rslt = dev->write(reg_addr, data, len, dev->intf_ptr);
+            dev->delay_us(BMI2_NORMAL_MODE_DELAY_IN_US, dev->intf_ptr);
         }
 
         /* Updating the advance power saver flag */
@@ -2229,8 +2249,12 @@ int8_t bmi2_write_config_file(struct bmi2_dev *dev)
             /* Check the configuration load status */
             rslt = bmi2_get_internal_status(&load_status, dev);
 
+            load_status &= BMI2_CONFIG_LOAD_STATUS_MASK;
+
+            dev->load_status = load_status;
+
             /* Return error if loading not successful */
-            if ((rslt == BMI2_OK) && (!(load_status & BMI2_CONFIG_LOAD_SUCCESS)))
+            if ((rslt == BMI2_OK) && (load_status != BMI2_CONFIG_LOAD_SUCCESS))
             {
                 rslt = BMI2_E_CONFIG_LOAD;
             }
@@ -2363,6 +2387,7 @@ int8_t bmi2_get_int_pin_config(struct bmi2_int_pin_config *int_cfg, struct bmi2_
 
         /* Get the previous configuration data */
         rslt = bmi2_get_regs(BMI2_INT1_IO_CTRL_ADDR, data_array, 3, dev);
+
         if (rslt == BMI2_OK)
         {
             /* Get interrupt pin 1 configuration */
@@ -2769,48 +2794,117 @@ int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev)
     /* Variable to define error */
     int8_t rslt;
 
-    uint8_t reg_data = 0;
-
-    uint8_t aux_len = 0, acc_len = 0, gyr_len = 0;
-
-    /* Array to define data stored in register */
-    uint8_t sensor_data[BMI2_ACC_GYR_AUX_NUM_BYTES] = { 0 };
+    /* Array to hold register sensor data */
+    uint8_t sensor_data[BMI2_ACC_GYR_AUX_SENSORTIME_NUM_BYTES];
 
     /* Null-pointer check */
-    rslt = null_ptr_check(dev);
-    if ((rslt == BMI2_OK) && (data != NULL))
+    if (data != NULL)
     {
-        rslt = bmi2_get_regs(BMI2_PWR_CTRL_ADDR, &reg_data, 1, dev);
+        rslt = bmi2_get_regs(BMI2_STATUS_ADDR, sensor_data, BMI2_ACC_GYR_AUX_SENSORTIME_NUM_BYTES, dev);
 
         if (rslt == BMI2_OK)
         {
-            /* Update auxiliary sensor data length */
-            if (reg_data & BMI2_AUX_EN_MASK)
-            {
-                aux_len = BMI2_AUX_NUM_BYTES;
-            }
-
-            /* Update accelerometer sensor data length */
-            if (reg_data & BMI2_ACC_EN_MASK)
-            {
-                acc_len = aux_len + BMI2_ACC_NUM_BYTES;
-            }
-
-            /* Update gyroscope sensor data length */
-            if (reg_data & BMI2_GYR_EN_MASK)
-            {
-                gyr_len = aux_len + acc_len + BMI2_GYR_NUM_BYTES;
-            }
-
-            /* Read sensor data */
-            rslt = read_sensor_data(aux_len, acc_len, gyr_len, sensor_data, dev);
-
-            if (rslt == BMI2_OK)
-            {
-                /* Parse read sensor data */
-                rslt = parse_data(aux_len, acc_len, gyr_len, data, sensor_data, dev);
-            }
+            rslt = bmi2_parse_sensor_data(sensor_data, data, dev);
         }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API reads the raw temperature data from the register and can be
+ * converted into degree celsius.
+ */
+int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Array to define data stored in register */
+    uint8_t reg_data[2] = { 0 };
+
+    if (temp_data != NULL)
+    {
+        /* Read the sensor data */
+        rslt = bmi2_get_regs(BMI2_TEMPERATURE_0_ADDR, reg_data, 2, dev);
+
+        if (rslt == BMI2_OK)
+        {
+            *temp_data = (uint16_t)(reg_data[0] | ((uint16_t)reg_data[1] << 8));
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API parses the sensor data for accelerometer, gyroscope,
+ * auxiliary sensor with sensortime
+ */
+int8_t bmi2_parse_sensor_data(const uint8_t *sensor_data, struct bmi2_sens_data *data, const struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variables to define loop */
+    uint8_t count = 0;
+
+    uint8_t index = 0;
+
+    uint32_t sensor_time_byte3 = 0;
+    uint16_t sensor_time_byte2 = 0;
+    uint8_t sensor_time_byte1 = 0;
+
+    rslt = null_ptr_check(dev);
+
+    if ((rslt == BMI2_OK) && (data != NULL))
+    {
+        /* Update auxiliary sensor data length */
+        index = BMI2_AUX_START_INDEX;
+
+        /* Get the 8 bytes of auxiliary data */
+        do
+        {
+            *(data->aux_data + count++) = (sensor_data[index++]);
+        } while (count < BMI2_AUX_NUM_BYTES);
+
+        /* Update accelerometer sensor data length */
+        index = BMI2_ACC_START_INDEX;
+
+        /* Get accelerometer data from the register */
+        get_acc_gyr_data(&data->acc, &sensor_data[index]);
+
+        /* Get the re-mapped accelerometer data */
+        get_remapped_data(&data->acc, dev);
+
+        /* Update gyroscope sensor data length */
+        index = BMI2_GYR_START_INDEX;
+
+        /* Get gyroscope data from the register */
+        get_acc_gyr_data(&data->gyr, &sensor_data[index]);
+
+        /* Get the compensated gyroscope data */
+        comp_gyro_cross_axis_sensitivity(&data->gyr, dev);
+
+        /* Get the re-mapped gyroscope data */
+        get_remapped_data(&data->gyr, dev);
+
+        sensor_time_byte3 = sensor_data[BMI2_PARSE_SENSOR_TIME_MSB_BYTE] << 16;
+        sensor_time_byte2 = sensor_data[BMI2_PARSE_SENSOR_TIME_XLSB_BYTE] << 8;
+        sensor_time_byte1 = sensor_data[BMI2_PARSE_SENSOR_TIME_LSB_BYTE];
+
+        data->sens_time = (uint32_t)(sensor_time_byte3 | sensor_time_byte2 | sensor_time_byte1);
+
+        /* Store status register value in structure */
+        data->status = sensor_data[BMI2_STATUS_INDEX];
     }
     else
     {
@@ -2939,50 +3033,53 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev)
     if ((rslt == BMI2_OK) && (fifo != NULL))
     {
         /* Clear the FIFO data structure */
-        reset_fifo_frame_structure(fifo, dev);
-
-        /* Configuring reg_addr for SPI Interface */
-        if (dev->intf == BMI2_SPI_INTF)
-        {
-            addr = (addr | BMI2_SPI_RD_MASK);
-        }
-
-        /* Read FIFO data */
-        dev->intf_rslt = dev->read(addr, fifo->data, (uint32_t)fifo->length, dev->intf_ptr);
-
-        /* Provide delay based on advanced power saving mode status */
-        if (dev->aps_status == BMI2_ENABLE)
-        {
-            dev->delay_us(450, dev->intf_ptr);
-        }
-        else
-        {
-            dev->delay_us(2, dev->intf_ptr);
-        }
-
-        /* If interface read fails, update rslt variable with communication failure */
-        if (dev->intf_rslt != BMI2_INTF_RET_SUCCESS)
-        {
-            rslt = BMI2_E_COM_FAIL;
-        }
+        rslt = reset_fifo_frame_structure(fifo, dev);
 
         if (rslt == BMI2_OK)
         {
-            /* Get the set FIFO frame configurations */
-            rslt = bmi2_get_regs(BMI2_FIFO_CONFIG_0_ADDR, config_data, 2, dev);
+            /* Configuring reg_addr for SPI Interface */
+            if (dev->intf == BMI2_SPI_INTF)
+            {
+                addr = (addr | BMI2_SPI_RD_MASK);
+            }
+
+            /* Read FIFO data */
+            dev->intf_rslt = dev->read(addr, fifo->data, (uint32_t)fifo->length, dev->intf_ptr);
+
+            /* Provide delay based on advanced power saving mode status */
+            if (dev->aps_status == BMI2_ENABLE)
+            {
+                dev->delay_us(450, dev->intf_ptr);
+            }
+            else
+            {
+                dev->delay_us(2, dev->intf_ptr);
+            }
+
+            /* If interface read fails, update rslt variable with communication failure */
+            if (dev->intf_rslt != BMI2_INTF_RET_SUCCESS)
+            {
+                rslt = BMI2_E_COM_FAIL;
+            }
+
             if (rslt == BMI2_OK)
             {
-                /* Get FIFO header status */
-                fifo->header_enable = (uint8_t)((config_data[1]) & (BMI2_FIFO_HEADER_EN >> 8));
+                /* Get the set FIFO frame configurations */
+                rslt = bmi2_get_regs(BMI2_FIFO_CONFIG_0_ADDR, config_data, 2, dev);
+                if (rslt == BMI2_OK)
+                {
+                    /* Get FIFO header status */
+                    fifo->header_enable = (uint8_t)((config_data[1]) & (BMI2_FIFO_HEADER_EN >> 8));
 
-                /* Get sensor enable status, of which the data is to be read */
-                fifo->data_enable =
-                    (uint16_t)(((config_data[0]) | ((uint16_t) config_data[1] << 8)) & BMI2_FIFO_ALL_EN);
+                    /* Get sensor enable status, of which the data is to be read */
+                    fifo->data_enable =
+                        (uint16_t)(((config_data[0]) | ((uint16_t) config_data[1] << 8)) & BMI2_FIFO_ALL_EN);
+                }
             }
-        }
-        else
-        {
-            rslt = BMI2_E_COM_FAIL;
+            else
+            {
+                rslt = BMI2_E_COM_FAIL;
+            }
         }
     }
     else
@@ -3198,6 +3295,359 @@ int8_t bmi2_get_fifo_self_wake_up(uint8_t *fifo_self_wake_up, struct bmi2_dev *d
         if (rslt == BMI2_OK)
         {
             (*fifo_self_wake_up) = BMI2_GET_BITS(data, BMI2_FIFO_SELF_WAKE_UP);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets which error flag will trigger the error interrupt once enabled.
+ */
+int8_t bmi2_set_err_reg_mask(uint8_t err_reg, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get Error interrupt mask */
+        rslt = bmi2_get_regs(BMI2_ERR_REG_MSK_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set Error interrupt mask */
+            data = BMI2_SET_BIT_POS0(data, BMI2_ERR_REG_READ, err_reg);
+            rslt = bmi2_set_regs(BMI2_ERR_REG_MSK_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API gets which error flag will trigger the error interrupt once enabled.
+ */
+int8_t bmi2_get_err_reg_mask(uint8_t *err_reg, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check mask */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (err_reg != NULL))
+    {
+        /* Get Error interrupt mask */
+        rslt = bmi2_get_regs(BMI2_ERR_REG_MSK_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*err_reg) = BMI2_GET_BIT_POS0(data, BMI2_ERR_REG_READ);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets the Fast power up functionality in the sensor.
+ */
+int8_t bmi2_set_fast_power_up(uint8_t fast_power_up, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get fast power up */
+        rslt = bmi2_get_regs(BMI2_PWR_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set fast power up */
+            data = BMI2_SET_BITS(data, BMI2_FUP_EN, fast_power_up);
+            rslt = bmi2_set_regs(BMI2_PWR_CONF_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the status of Fast power up functionality from
+ * the sensor.
+ */
+int8_t bmi2_get_fast_power_up(uint8_t *fast_power_up, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (fast_power_up != NULL))
+    {
+        /* Get the status of Fast power up */
+        rslt = bmi2_get_regs(BMI2_PWR_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*fast_power_up) = BMI2_GET_BITS(data, BMI2_FUP_EN);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets the SPI enable in the sensor.
+ */
+int8_t bmi2_set_spi_en(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get spi enable */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set spi enable */
+            data = BMI2_SET_BIT_POS0(data, BMI2_NV_SPI_EN, enable);
+            rslt = bmi2_set_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the status of SPI enable functionality from
+ * the sensor.
+ */
+int8_t bmi2_get_spi_en(uint8_t *enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (enable != NULL))
+    {
+        /* Get the status of spi enable */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*enable) = BMI2_GET_BIT_POS0(data, BMI2_NV_SPI_EN);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets the i2c watchdog enable in the sensor.
+ */
+int8_t bmi2_set_i2c_wdt_en(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get i2c watchdog enable */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set i2c watchdog enable */
+            data = BMI2_SET_BITS(data, BMI2_NV_I2C_WD_EN, enable);
+            rslt = bmi2_set_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the status of i2c watchdog enable functionality from
+ * the sensor.
+ */
+int8_t bmi2_get_i2c_wdt_en(uint8_t *enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (enable != NULL))
+    {
+        /* Get the status of i2c watchdog enable */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*enable) = BMI2_GET_BITS(data, BMI2_NV_I2C_WD_EN);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets the i2c watchdog select in the sensor.
+ */
+int8_t bmi2_set_i2c_wdt_sel(uint8_t watchdog_select, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get i2c watchdog select */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set i2c watchdog select */
+            data = BMI2_SET_BITS(data, BMI2_NV_I2C_WD_SEL, watchdog_select);
+            rslt = bmi2_set_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the status of i2c watchdog select functionality from
+ * the sensor.
+ */
+int8_t bmi2_get_i2c_wdt_sel(uint8_t *watchdog_select, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (watchdog_select != NULL))
+    {
+        /* Get the status of i2c watchdog select */
+        rslt = bmi2_get_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*watchdog_select) = BMI2_GET_BITS(data, BMI2_NV_I2C_WD_SEL);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*
+ * @brief This API sets the drive strength in the sensor.
+ */
+int8_t bmi2_set_drv_reg(uint8_t drv_reg, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get drive strength */
+        rslt = bmi2_get_regs(BMI2_DRV_STR_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Set drive strength */
+            data = BMI2_SET_BIT_POS0(data, BMI2_DRV_STR, drv_reg);
+            rslt = bmi2_set_regs(BMI2_DRV_STR_ADDR, &data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the status of drive strength functionality from
+ * the sensor.
+ */
+int8_t bmi2_get_drv_reg(uint8_t *drv_reg, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (drv_reg != NULL))
+    {
+        /* Get the status of drive strength */
+        rslt = bmi2_get_regs(BMI2_DRV_STR_ADDR, &data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            (*drv_reg) = BMI2_GET_BIT_POS0(data, BMI2_DRV_STR);
         }
     }
     else
@@ -3703,6 +4153,186 @@ int8_t bmi2_set_ois_interface(uint8_t enable, struct bmi2_dev *dev)
             /* Set the OIS interface configurations */
             rslt = bmi2_set_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
         }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API sets the configuration for SPI3 interface mode.
+ */
+int8_t bmi2_set_spi3_interface_mode(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get the SPI3 Mode  configurations */
+        rslt = bmi2_get_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* SPI3 Mode interface config */
+            reg_data = BMI2_SET_BIT_POS0(reg_data, BMI2_SPI3_MODE, enable);
+
+            /* Set the SPI3 Mode  configurations */
+            rslt = bmi2_set_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the configuration for SPI3 interface mode.
+ */
+int8_t bmi2_get_spi3_interface_mode(uint8_t *enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (enable != NULL))
+    {
+        rslt = bmi2_get_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Get SPI3 Mode interface config */
+            (*enable) = BMI2_GET_BIT_POS0(reg_data, BMI2_SPI3_MODE);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API sets the configuration for SPI3 OIS interface mode.
+ */
+int8_t bmi2_set_spi3_ois_mode(uint8_t enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get the SPI3 ois  configurations */
+        rslt = bmi2_get_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* SPI3 ois interface config */
+            reg_data = BMI2_SET_BITS(reg_data, BMI2_SPI3_OIS, enable);
+
+            /* Set the SPI3 ois  configurations */
+            rslt = bmi2_set_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the configuration for SPI3 OIS interface mode.
+ */
+int8_t bmi2_get_spi3_ois_mode(uint8_t *enable, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (enable != NULL))
+    {
+        rslt = bmi2_get_regs(BMI2_IF_CONF_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Get SPI3 Mode interface config */
+            (*enable) = BMI2_GET_BITS(reg_data, BMI2_SPI3_OIS);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets the internal error status of the sensor.
+ */
+int8_t bmi2_get_internal_error_status(uint8_t *status, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (status != NULL))
+    {
+        rslt = bmi2_get_regs(BMI2_INTERNAL_ERR_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Get internal error status */
+            (*status) = BMI2_GET_BIT_POS0(reg_data, BMI2_INTERNAL_ERROR_REG);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API gets saturation status of the sensor.
+ */
+int8_t bmi2_get_saturation_status(uint8_t *status, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to store data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if ((rslt == BMI2_OK) && (status != NULL))
+    {
+        rslt = bmi2_get_regs(BMI2_SATURATION_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            /* Get saturation status */
+            (*status) = BMI2_GET_BIT_POS0(reg_data, BMI2_SATURATION_REG);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
     }
 
     return rslt;
@@ -4331,6 +4961,81 @@ int8_t bmi2_set_gyro_offset_comp(uint8_t enable, struct bmi2_dev *dev)
 }
 
 /*!
+ * @brief This API reads the gyroscope offset compensation.
+ */
+int8_t bmi2_get_gyro_offset_comp(uint8_t *offset, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to define register data */
+    uint8_t reg_data = 0;
+
+    /* Get the status of gyroscope gain */
+    rslt = bmi2_get_regs(BMI2_GYR_OFF_COMP_6_ADDR, &reg_data, 1, dev);
+    if (rslt == BMI2_OK)
+    {
+        (*offset) = BMI2_GET_BITS(reg_data, BMI2_GYR_OFF_COMP_EN);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API enables/disables gyroscope gain for Sensitivity Error Compensation.
+ */
+int8_t bmi2_set_gyro_gain(uint8_t gyro_gain, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to define register data */
+    uint8_t reg_data = 0;
+
+    /* Null-pointer check */
+    rslt = null_ptr_check(dev);
+    if (rslt == BMI2_OK)
+    {
+        /* Get the status of gyroscope gain enable */
+        rslt = bmi2_get_regs(BMI2_GYR_OFF_COMP_6_ADDR, &reg_data, 1, dev);
+        if (rslt == BMI2_OK)
+        {
+            reg_data = BMI2_SET_BITS(reg_data, BMI2_GYR_GAIN_EN, gyro_gain);
+
+            /* Enable/Disable gyroscope gain */
+            rslt = bmi2_set_regs(BMI2_GYR_OFF_COMP_6_ADDR, &reg_data, 1, dev);
+        }
+    }
+    else
+    {
+        rslt = BMI2_E_NULL_PTR;
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API reads the Gyro gain.
+ */
+int8_t bmi2_get_gyro_gain(uint8_t *gyro_gain, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    /* Variable to define register data */
+    uint8_t reg_data = 0;
+
+    /* Get the status of gyroscope gain */
+    rslt = bmi2_get_regs(BMI2_GYR_OFF_COMP_6_ADDR, &reg_data, 1, dev);
+    if (rslt == BMI2_OK)
+    {
+        (*gyro_gain) = BMI2_GET_BITS(reg_data, BMI2_GYR_GAIN_EN);
+    }
+
+    return rslt;
+}
+
+/*!
  * @brief This API reads the gyroscope bias values for each axis which is used
  * for gyroscope offset compensation.
  */
@@ -4558,10 +5263,15 @@ int8_t bmi2_perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_value
         if ((((BMI2_ABS(accel_g_value->x)) + (BMI2_ABS(accel_g_value->y)) + (BMI2_ABS(accel_g_value->z))) == 1) &&
             ((accel_g_value->sign == 1) || (accel_g_value->sign == 0)))
         {
+            rslt = verify_foc_position(BMI2_ACCEL, accel_g_value, dev);
+
             /* Save accelerometer configurations, accelerometer
              * enable status and advance power save status
              */
-            rslt = save_accel_foc_config(&acc_cfg, &aps, &acc_en, dev);
+            if (rslt == BMI2_OK)
+            {
+                rslt = save_accel_foc_config(&acc_cfg, &aps, &acc_en, dev);
+            }
 
             /* Set configurations for FOC */
             if (rslt == BMI2_OK)
@@ -6018,13 +6728,13 @@ static int8_t parse_fifo_accel_len(uint16_t *start_idx,
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ACC_AUX_LENGTH);
+        (*len) = (uint16_t)((*acc_count) * (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_ACC_AUX_LENGTH;
+        (*skip_length) = (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
 
         /* Data start index */
-        (*start_idx) = fifo->acc_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
+        (*start_idx) = fifo->acc_byte_start_idx + fifo->aux_frm_len;
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
@@ -6042,13 +6752,13 @@ static int8_t parse_fifo_accel_len(uint16_t *start_idx,
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*acc_count) * BMI2_FIFO_ALL_LENGTH);
+        (*len) = (uint16_t)((*acc_count) * (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
+        (*skip_length) = (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
         /* Data start index */
-        (*start_idx) = fifo->acc_byte_start_idx + BMI2_FIFO_GYR_AUX_LENGTH;
+        (*start_idx) = fifo->acc_byte_start_idx + (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
     }
     else
     {
@@ -6081,7 +6791,7 @@ static int8_t check_dummy_frame(uint8_t dummy_frame_header,
     int8_t rslt;
 
     /* Validate data index */
-    if (((*data_index) + 6) < fifo->length)
+    if (((*data_index) + 6) <= fifo->length)
     {
         /* Check if FIFO contains dummy frame */
         if (((fifo->data[(*data_index)] == dummy_frame_header) &&
@@ -6340,7 +7050,7 @@ static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
         case BMI2_FIFO_HEAD_LESS_GYR_ACC_FRM:
 
             /* Partially read, then skip the data */
-            if (((*idx) + fifo->acc_gyr_frm_len) > fifo->length)
+            if (((*idx) + fifo->acc_frm_len) > fifo->length)
             {
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
@@ -6372,7 +7082,7 @@ static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
         case BMI2_FIFO_HEAD_LESS_AUX_ACC_FRM:
 
             /* Partially read, then skip the data */
-            if (((*idx) + fifo->acc_aux_frm_len) > fifo->length)
+            if (((*idx) + fifo->acc_frm_len) > fifo->length)
             {
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
@@ -6385,7 +7095,7 @@ static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
             unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ACC_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -6404,7 +7114,7 @@ static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
         case BMI2_FIFO_HEAD_LESS_ALL_FRM:
 
             /* Partially read, then skip the data*/
-            if ((*idx + fifo->all_frm_len) > fifo->length)
+            if ((*idx + fifo->acc_frm_len) > fifo->length)
             {
                 /* Move the data index to the last byte */
                 (*idx) = fifo->length;
@@ -6417,7 +7127,7 @@ static int8_t unpack_accel_headerless_frame(struct bmi2_sens_axes_data *acc,
             unpack_accel_data(&acc[(*acc_idx)], *idx, fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -6569,10 +7279,10 @@ static int8_t unpack_accel_header_frame(struct bmi2_sens_axes_data *acc,
             }
 
             /* Get the accelerometer data */
-            unpack_accel_data(&acc[(*acc_idx)], ((*idx) + BMI2_FIFO_AUX_LENGTH), fifo, dev);
+            unpack_accel_data(&acc[(*acc_idx)], ((*idx) + fifo->aux_frm_len), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ACC_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -6601,10 +7311,10 @@ static int8_t unpack_accel_header_frame(struct bmi2_sens_axes_data *acc,
             }
 
             /* Get the accelerometer data */
-            unpack_accel_data(&acc[(*acc_idx)], ((*idx) + BMI2_FIFO_GYR_AUX_LENGTH), fifo, dev);
+            unpack_accel_data(&acc[(*acc_idx)], ((*idx) + (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len)), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -6724,13 +7434,13 @@ static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_GYR_AUX_LENGTH);
+        (*len) = (uint16_t)((*gyr_count) * (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_GYR_AUX_LENGTH;
+        (*skip_length) = (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
         /* Data start index */
-        (*start_idx) = fifo->gyr_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
+        (*start_idx) = fifo->gyr_byte_start_idx + fifo->aux_frm_len;
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_ACC_EN | BMI2_FIFO_GYR_EN))
@@ -6745,13 +7455,13 @@ static int8_t parse_fifo_gyro_len(uint16_t *start_idx,
     else if (fifo->data_enable == (BMI2_FIFO_GYR_EN | BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*gyr_count) * BMI2_FIFO_ALL_LENGTH);
+        (*len) = (uint16_t)((*gyr_count) * (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
+        (*skip_length) = (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
         /* Data start index */
-        (*start_idx) = fifo->gyr_byte_start_idx + BMI2_FIFO_AUX_LENGTH;
+        (*start_idx) = fifo->gyr_byte_start_idx + fifo->aux_frm_len;
     }
     else
     {
@@ -7041,10 +7751,10 @@ static int8_t unpack_gyro_header_frame(struct bmi2_sens_axes_data *gyr,
             }
 
             /* Get the gyroscope data */
-            unpack_gyro_data(&gyr[(*gyr_idx)], ((*idx) + BMI2_FIFO_AUX_LENGTH), fifo, dev);
+            unpack_gyro_data(&gyr[(*gyr_idx)], ((*idx) + fifo->aux_frm_len), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_GYR_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -7073,10 +7783,10 @@ static int8_t unpack_gyro_header_frame(struct bmi2_sens_axes_data *gyr,
             }
 
             /* Get the gyroscope data */
-            unpack_gyro_data(&gyr[(*gyr_idx)], ((*idx) + BMI2_FIFO_AUX_LENGTH), fifo, dev);
+            unpack_gyro_data(&gyr[(*gyr_idx)], ((*idx) + fifo->aux_frm_len), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -7232,7 +7942,7 @@ static int8_t unpack_gyro_headerless_frame(struct bmi2_sens_axes_data *gyr,
             unpack_gyro_data(&gyr[(*gyr_idx)], (*idx), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_GYR_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -7264,7 +7974,7 @@ static int8_t unpack_gyro_headerless_frame(struct bmi2_sens_axes_data *gyr,
             unpack_gyro_data(&gyr[(*gyr_idx)], (*idx), fifo, dev);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             /* Get virtual sensor time if S4S is enabled */
             if (dev->sens_en_stat & BMI2_EXT_SENS_SEL)
@@ -7377,37 +8087,37 @@ static int8_t parse_fifo_aux_len(uint16_t *start_idx,
     if (fifo->data_enable == BMI2_FIFO_AUX_EN)
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_AUX_LENGTH);
+        (*len) = (uint16_t)((*aux_count) * fifo->aux_frm_len);
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_AUX_LENGTH;
+        (*skip_length) = fifo->aux_frm_len;
     }
     /* If only accelerometer and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ACC_AUX_LENGTH);
+        (*len) = (uint16_t)((*aux_count) * (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_ACC_AUX_LENGTH;
+        (*skip_length) = (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
     }
     /* If only accelerometer and gyroscope are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_GYR_AUX_LENGTH);
+        (*len) = (uint16_t)((*aux_count) * (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_GYR_AUX_LENGTH;
+        (*skip_length) = (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
     }
     /* If only accelerometer, gyroscope and auxiliary are enabled */
     else if (fifo->data_enable == (BMI2_FIFO_AUX_EN | BMI2_FIFO_GYR_EN | BMI2_FIFO_ACC_EN))
     {
         /* Number of bytes to be read */
-        (*len) = (uint16_t)((*aux_count) * BMI2_FIFO_ALL_LENGTH);
+        (*len) = (uint16_t)((*aux_count) * (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len));
 
         /* Number of bytes to skip in case dummy frame is obtained */
-        (*skip_length) = BMI2_FIFO_ALL_LENGTH;
+        (*skip_length) = (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
     }
     else
     {
@@ -7638,7 +8348,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             unpack_aux_data(&aux[(*aux_idx)], (*idx), fifo);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_AUX_LENGTH;
+            (*idx) = (*idx) + fifo->aux_frm_len;
 
             unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
@@ -7667,7 +8377,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             unpack_aux_data(&aux[(*aux_idx)], (*idx), fifo);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ACC_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
 
             unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
@@ -7696,7 +8406,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             unpack_aux_data(&aux[(*aux_idx)], (*idx), fifo);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_GYR_AUX_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
@@ -7725,7 +8435,7 @@ static int8_t unpack_aux_frame(struct bmi2_aux_fifo_data *aux,
             unpack_aux_data(&aux[(*aux_idx)], (*idx), fifo);
 
             /* Update data index */
-            (*idx) = (*idx) + BMI2_FIFO_ALL_LENGTH;
+            (*idx) = (*idx) + (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
 
             unpack_virtual_aux_data(&aux[(*aux_idx)], idx, aux_idx, fifo, dev);
 
@@ -7894,8 +8604,12 @@ static void unpack_virt_aux_sensor_time(struct bmi2_aux_fifo_data *aux,
  * @brief This internal API is used to reset the FIFO related configurations in
  * the FIFO frame structure for the next FIFO read.
  */
-static void reset_fifo_frame_structure(struct bmi2_fifo_frame *fifo, const struct bmi2_dev *dev)
+static int8_t reset_fifo_frame_structure(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev)
 {
+    int8_t rslt;
+
+    struct bmi2_aux_config config;
+
     /* Reset FIFO data structure */
     fifo->acc_byte_start_idx = 0;
     fifo->aux_byte_start_idx = 0;
@@ -7904,29 +8618,56 @@ static void reset_fifo_frame_structure(struct bmi2_fifo_frame *fifo, const struc
     fifo->skipped_frame_count = 0;
     fifo->act_recog_byte_start_idx = 0;
 
-    /* If S4S is enabled */
-    if ((dev->sens_en_stat & BMI2_EXT_SENS_SEL) == BMI2_EXT_SENS_SEL)
-    {
-        fifo->acc_frm_len = BMI2_FIFO_VIRT_ACC_LENGTH;
-        fifo->gyr_frm_len = BMI2_FIFO_VIRT_GYR_LENGTH;
-        fifo->aux_frm_len = BMI2_FIFO_VIRT_AUX_LENGTH;
-        fifo->acc_gyr_frm_len = BMI2_FIFO_VIRT_ACC_GYR_LENGTH;
-        fifo->acc_aux_frm_len = BMI2_FIFO_VIRT_ACC_AUX_LENGTH;
-        fifo->aux_gyr_frm_len = BMI2_FIFO_VIRT_GYR_AUX_LENGTH;
-        fifo->all_frm_len = BMI2_FIFO_VIRT_ALL_LENGTH;
+    /* Get default configurations for the type of feature selected. */
+    rslt = get_aux_interface_config(&config, dev);
 
-        /* If S4S is not enabled */
-    }
-    else
+    if (rslt == BMI2_OK)
     {
-        fifo->acc_frm_len = BMI2_FIFO_ACC_LENGTH;
-        fifo->gyr_frm_len = BMI2_FIFO_GYR_LENGTH;
-        fifo->aux_frm_len = BMI2_FIFO_AUX_LENGTH;
-        fifo->acc_gyr_frm_len = BMI2_FIFO_ACC_GYR_LENGTH;
-        fifo->acc_aux_frm_len = BMI2_FIFO_ACC_AUX_LENGTH;
-        fifo->aux_gyr_frm_len = BMI2_FIFO_GYR_AUX_LENGTH;
-        fifo->all_frm_len = BMI2_FIFO_ALL_LENGTH;
+        /* If S4S is enabled */
+        if ((dev->sens_en_stat & BMI2_EXT_SENS_SEL) == BMI2_EXT_SENS_SEL)
+        {
+            fifo->acc_frm_len = BMI2_FIFO_VIRT_ACC_LENGTH;
+            fifo->gyr_frm_len = BMI2_FIFO_VIRT_GYR_LENGTH;
+            fifo->aux_frm_len = BMI2_FIFO_VIRT_AUX_LENGTH;
+            fifo->acc_gyr_frm_len = BMI2_FIFO_VIRT_ACC_GYR_LENGTH;
+            fifo->acc_aux_frm_len = BMI2_FIFO_VIRT_ACC_AUX_LENGTH;
+            fifo->aux_gyr_frm_len = BMI2_FIFO_VIRT_GYR_AUX_LENGTH;
+            fifo->all_frm_len = BMI2_FIFO_VIRT_ALL_LENGTH;
+
+            /* If S4S is not enabled */
+        }
+        else
+        {
+            if (config.aux_rd_burst == BMI2_AUX_READ_LEN_0)
+            {
+                fifo->aux_frm_len = BMI2_AUX_RD_BURST_FRM_LEN_1;
+            }
+
+            if (config.aux_rd_burst == BMI2_AUX_READ_LEN_1)
+            {
+                fifo->aux_frm_len = BMI2_AUX_RD_BURST_FRM_LEN_2;
+            }
+
+            if (config.aux_rd_burst == BMI2_AUX_READ_LEN_2)
+            {
+                fifo->aux_frm_len = BMI2_AUX_RD_BURST_FRM_LEN_6;
+            }
+
+            if (config.aux_rd_burst == BMI2_AUX_READ_LEN_3)
+            {
+                fifo->aux_frm_len = BMI2_AUX_RD_BURST_FRM_LEN_8;
+            }
+
+            fifo->acc_frm_len = BMI2_FIFO_ACC_LENGTH;
+            fifo->gyr_frm_len = BMI2_FIFO_GYR_LENGTH;
+            fifo->acc_gyr_frm_len = BMI2_FIFO_ACC_GYR_LENGTH;
+            fifo->acc_aux_frm_len = (BMI2_FIFO_ACC_LENGTH + fifo->aux_frm_len);
+            fifo->aux_gyr_frm_len = (BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
+            fifo->all_frm_len = (BMI2_FIFO_ACC_LENGTH + BMI2_FIFO_GYR_LENGTH + fifo->aux_frm_len);
+        }
     }
+
+    return rslt;
 }
 
 /*!
@@ -8673,7 +9414,7 @@ static int8_t set_accel_foc_config(struct bmi2_dev *dev)
     uint8_t acc_conf_data = BMI2_FOC_ACC_CONF_VAL;
 
     /* Disabling offset compensation */
-    rslt = set_accel_offset_comp(BMI2_DISABLE, dev);
+    rslt = bmi2_set_accel_offset_comp(BMI2_DISABLE, dev);
     if (rslt == BMI2_OK)
     {
         /* Set accelerometer configurations to 50Hz, continuous mode, CIC mode */
@@ -8797,7 +9538,7 @@ static int8_t perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_val
         /* Enable offset compensation */
         if (rslt == BMI2_OK)
         {
-            rslt = set_accel_offset_comp(BMI2_ENABLE, dev);
+            rslt = bmi2_set_accel_offset_comp(BMI2_ENABLE, dev);
         }
     }
 
@@ -8808,7 +9549,7 @@ static int8_t perform_accel_foc(const struct bmi2_accel_foc_g_value *accel_g_val
  * @brief This internal API enables/disables the offset compensation for
  * filtered and un-filtered accelerometer data.
  */
-static int8_t set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev)
+int8_t bmi2_set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -8822,6 +9563,30 @@ static int8_t set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev)
     {
         data = BMI2_SET_BITS(data, BMI2_NV_ACC_OFFSET, offset_en);
         rslt = bmi2_set_regs(BMI2_NV_CONF_ADDR, &data, 1, dev);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API reads the accelerometer offset compensation value.
+ */
+int8_t bmi2_get_accel_offset_comp(uint8_t *accel_offset, struct bmi2_dev *dev)
+{
+    /* Variable to define error */
+    int8_t rslt;
+
+    uint8_t count = 0;
+
+    while (count < 3)
+    {
+        rslt = bmi2_get_regs(BMI2_ACC_OFF_COMP_0_ADDR + count, accel_offset + count, 1, dev);
+        if (rslt != BMI2_OK)
+        {
+            break;
+        }
+
+        count++;
     }
 
     return rslt;
@@ -10633,168 +11398,6 @@ static int8_t sensor_disable(uint64_t sensor_sel, struct bmi2_dev *dev)
 }
 
 /*!
- * @brief This internal API reads accelerometer, gyroscope and auxiliary sensor data.
- */
-static int8_t read_sensor_data(uint8_t aux_len,
-                               uint8_t acc_len,
-                               uint8_t gyr_len,
-                               uint8_t *sensor_data,
-                               struct bmi2_dev *dev)
-{
-    int8_t rslt;
-    uint8_t start_addr = 0;
-    uint8_t len = 0;
-
-    /* Read data with auxiliary sensor data */
-    if (aux_len != 0)
-    {
-        /* Read auxiliary, accelerometer and gyroscope sensor data */
-        if ((acc_len != 0) && (gyr_len != 0))
-        {
-            start_addr = BMI2_AUX_X_LSB_ADDR;
-            len = BMI2_ACC_GYR_AUX_NUM_BYTES;
-        }
-        /* Read auxiliary and accelerometer sensor data */
-        else if ((acc_len != 0) && (gyr_len == 0))
-        {
-            start_addr = BMI2_AUX_X_LSB_ADDR;
-            len = BMI2_AUX_ACC_NUM_BYTES;
-        }
-        /* Read auxiliary and gyroscope sensor data */
-        else if ((gyr_len != 0) && (acc_len == 0))
-        {
-            start_addr = BMI2_AUX_X_LSB_ADDR;
-            len = BMI2_ACC_GYR_AUX_NUM_BYTES;
-        }
-        /* Read only auxiliary sensor data */
-        else if ((acc_len == 0) && (gyr_len == 0))
-        {
-            start_addr = BMI2_AUX_X_LSB_ADDR;
-            len = BMI2_AUX_NUM_BYTES;
-        }
-    }
-    /* Read data without auxiliary sensor data */
-    else
-    {
-        /* Read accelerometer and gyroscope sensor data */
-        if ((acc_len != 0) && (gyr_len != 0))
-        {
-            start_addr = BMI2_ACC_X_LSB_ADDR;
-            len = BMI2_ACC_GYR_NUM_BYTES;
-        }
-        /* Read only accelerometer sensor data */
-        else if ((acc_len != 0) && (gyr_len == 0))
-        {
-            start_addr = BMI2_ACC_X_LSB_ADDR;
-            len = BMI2_ACC_NUM_BYTES;
-        }
-        /* Read only gyroscope sensor data */
-        else if ((gyr_len != 0) && (acc_len == 0))
-        {
-            start_addr = BMI2_GYR_X_LSB_ADDR;
-            len = BMI2_GYR_NUM_BYTES;
-        }
-    }
-
-    /* Read data with start_addr and len determined */
-    rslt = bmi2_get_regs(start_addr, sensor_data, len, dev);
-
-    return rslt;
-}
-
-/*!
- * @brief This internal API parses accelerometer, gyroscope and auxiliary sensor data with sensortime
- */
-static int8_t parse_data(uint8_t aux_len,
-                         uint8_t acc_len,
-                         uint8_t gyr_len,
-                         struct bmi2_sens_data *data,
-                         const uint8_t *sensor_data,
-                         struct bmi2_dev *dev)
-{
-    int8_t rslt;
-
-    uint8_t sens_time[3] = { 0 };
-
-    /* Variables to define loop */
-    uint8_t count = 0;
-
-    /* Variables to define index */
-    uint8_t index = 0;
-
-    uint32_t sensor_time_byte3 = 0;
-    uint16_t sensor_time_byte2 = 0;
-    uint8_t sensor_time_byte1 = 0;
-
-    /* Parse auxiliary sensor data */
-    if (aux_len != 0)
-    {
-        /* Get the 8 bytes of auxiliary data */
-        do
-        {
-            *(data->aux_data + count++) = *(sensor_data + index++);
-        } while (count < BMI2_AUX_NUM_BYTES);
-    }
-
-    /* Parse auxiliary(if enabled) and accelerometer sensor data */
-    if (acc_len != 0)
-    {
-        /* Get accelerometer data from the register */
-        get_acc_gyr_data(&data->acc, sensor_data + (acc_len - BMI2_ACC_NUM_BYTES));
-
-        /* Get the re-mapped accelerometer data */
-        get_remapped_data(&data->acc, dev);
-    }
-
-    /* Parse auxiliary(if enabled), acceleromter(if enabled) and gyroscope sensor data */
-    if (gyr_len != 0)
-    {
-        if ((aux_len != 0) && (acc_len != 0))
-        {
-            /* Get gyroscope data from the register */
-            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_AUX_ACC_NUM_BYTES);
-        }
-
-        if ((aux_len != 0) && (acc_len == 0))
-        {
-            /* Get gyroscope data from the register */
-            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_AUX_ACC_NUM_BYTES);
-        }
-
-        if ((acc_len != 0) && (aux_len == 0))
-        {
-            /* Get gyroscope data from the register */
-            get_acc_gyr_data(&data->gyr, sensor_data + BMI2_ACC_NUM_BYTES);
-        }
-
-        if ((acc_len == 0) && (aux_len == 0))
-        {
-            /* Get gyroscope data from the register */
-            get_acc_gyr_data(&data->gyr, sensor_data);
-        }
-
-        /* Get the compensated gyroscope data */
-        comp_gyro_cross_axis_sensitivity(&data->gyr, dev);
-
-        /* Get the re-mapped gyroscope data */
-        get_remapped_data(&data->gyr, dev);
-    }
-
-    /* Read sensortime */
-    rslt = bmi2_get_regs(BMI2_SENSORTIME_ADDR, sens_time, 3, dev);
-    if (rslt == BMI2_OK)
-    {
-        sensor_time_byte3 = sens_time[BMI2_SENSOR_TIME_MSB_BYTE] << 16;
-        sensor_time_byte2 = sens_time[BMI2_SENSOR_TIME_XLSB_BYTE] << 8;
-        sensor_time_byte1 = sens_time[0];
-
-        data->sens_time = (uint32_t)(sensor_time_byte3 | sensor_time_byte2 | sensor_time_byte1);
-    }
-
-    return rslt;
-}
-
-/*!
  * @brief This internal API is used to test gyro CRT.
  */
 static int8_t gyro_crt_test(uint8_t max_burst_length, uint8_t gyro_st_crt, struct bmi2_dev *dev)
@@ -10883,6 +11486,216 @@ static int8_t gyro_crt_test(uint8_t max_burst_length, uint8_t gyro_st_crt, struc
                     rslt = rslt_crt;
                 }
             }
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API verifies and allows only the correct position to do Fast Offset Compensation for
+ * accelerometer.
+ */
+static int8_t verify_foc_position(uint8_t sens_list,
+                                  const struct bmi2_accel_foc_g_value *accel_g_axis,
+                                  struct bmi2_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Structure to define accelerometer sensor axes */
+    struct bmi2_sens_axes_data avg_foc_data = { 0 };
+
+    /* Structure to store temporary accelerometer values */
+    struct bmi2_foc_temp_value temp_foc_data = { 0 };
+
+    rslt = get_average_of_sensor_data(sens_list, &temp_foc_data, dev);
+
+    if (rslt == BMI2_OK)
+    {
+        if (sens_list == BMI2_ACCEL)
+        {
+            /* Taking modulus to make negative values as positive */
+            if ((accel_g_axis->x == 1) && (accel_g_axis->sign == 1))
+            {
+                temp_foc_data.x = temp_foc_data.x * BMI2_FOC_INVERT_VALUE;
+            }
+            else if ((accel_g_axis->y == 1) && (accel_g_axis->sign == 1))
+            {
+                temp_foc_data.y = temp_foc_data.y * BMI2_FOC_INVERT_VALUE;
+            }
+            else if ((accel_g_axis->z == 1) && (accel_g_axis->sign == 1))
+            {
+                temp_foc_data.z = temp_foc_data.z * BMI2_FOC_INVERT_VALUE;
+            }
+        }
+
+        avg_foc_data.x = (int16_t)(temp_foc_data.x);
+        avg_foc_data.y = (int16_t)(temp_foc_data.y);
+        avg_foc_data.z = (int16_t)(temp_foc_data.z);
+
+        rslt = validate_foc_position(sens_list, accel_g_axis, avg_foc_data, dev);
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API reads and provides average for 128 samples of sensor data for accel FOC.
+ */
+static int8_t get_average_of_sensor_data(uint8_t sens_list,
+                                         struct bmi2_foc_temp_value *temp_foc_data,
+                                         struct bmi2_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Structure to store sensor data */
+    struct bmi2_sens_data sensor_data;
+
+    uint8_t sample_count = 0;
+    uint8_t datardy_try_cnt;
+    uint8_t drdy_status = 0;
+
+    rslt = null_ptr_check(dev);
+
+    if (rslt == BMI2_OK)
+    {
+        /* Read sensor values before FOC */
+        while (sample_count < BMI2_FOC_SAMPLE_LIMIT)
+        {
+            datardy_try_cnt = 5;
+            do
+            {
+                dev->delay_us(20000, dev->intf_ptr);
+                rslt = bmi2_get_status(&drdy_status, dev);
+                datardy_try_cnt--;
+            } while ((rslt == BMI2_OK) && (!(drdy_status)) && (datardy_try_cnt));
+
+            if ((rslt != BMI2_OK) || (datardy_try_cnt == 0))
+            {
+                rslt = BMI2_E_DATA_RDY_INT_FAILED;
+                break;
+            }
+
+            rslt = bmi2_get_sensor_data(&sensor_data, dev);
+
+            if (rslt == BMI2_OK)
+            {
+                if (sens_list == BMI2_ACCEL)
+                {
+                    temp_foc_data->x += sensor_data.acc.x;
+                    temp_foc_data->y += sensor_data.acc.y;
+                    temp_foc_data->z += sensor_data.acc.z;
+                }
+                else if (sens_list == BMI2_GYRO)
+                {
+                    temp_foc_data->x += sensor_data.gyr.x;
+                    temp_foc_data->y += sensor_data.gyr.y;
+                    temp_foc_data->z += sensor_data.gyr.z;
+                }
+            }
+            else
+            {
+                break;
+            }
+
+            sample_count++;
+        }
+
+        if (rslt == BMI2_OK)
+        {
+            temp_foc_data->x = (temp_foc_data->x / BMI2_FOC_SAMPLE_LIMIT);
+            temp_foc_data->y = (temp_foc_data->y / BMI2_FOC_SAMPLE_LIMIT);
+            temp_foc_data->z = (temp_foc_data->z / BMI2_FOC_SAMPLE_LIMIT);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API validates accel FOC position as per the range
+ */
+static int8_t validate_foc_position(uint8_t sens_list,
+                                    const struct bmi2_accel_foc_g_value *accel_g_axis,
+                                    struct bmi2_sens_axes_data avg_foc_data,
+                                    struct bmi2_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt = BMI2_E_INVALID_INPUT;
+
+    if (sens_list == BMI2_ACCEL)
+    {
+        if (accel_g_axis->x == 1)
+        {
+            rslt = validate_foc_accel_axis(avg_foc_data.x, dev);
+        }
+        else if (accel_g_axis->y == 1)
+        {
+            rslt = validate_foc_accel_axis(avg_foc_data.y, dev);
+        }
+        else
+        {
+            rslt = validate_foc_accel_axis(avg_foc_data.z, dev);
+        }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This internal API validates accel FOC axis given as input
+ */
+static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev)
+{
+    /* Variable to store result of API */
+    int8_t rslt;
+
+    /* Structure to store sensor configurations */
+    struct bmi2_sens_config sens_cfg = { 0 };
+
+    /* Variable to store accel range */
+    uint8_t range;
+
+    /* Assign the accel type */
+    sens_cfg.type = BMI2_ACCEL;
+
+    /* Get accel configurations */
+    rslt = bmi2_get_sensor_config(&sens_cfg, 1, dev);
+
+    if (rslt == BMI2_OK)
+    {
+        /* Assign accel range to variable */
+        range = sens_cfg.cfg.acc.range;
+
+        /* Reference LSB value of 2G */
+        if ((range == BMI2_ACC_RANGE_2G) && (avg_foc_data > BMI2_ACC_2G_MIN_NOISE_LIMIT) &&
+            (avg_foc_data < BMI2_ACC_2G_MAX_NOISE_LIMIT))
+        {
+            rslt = BMI2_OK;
+        }
+        /* Reference LSB value of 4G */
+        else if ((range == BMI2_ACC_RANGE_4G) && (avg_foc_data > BMI2_ACC_4G_MIN_NOISE_LIMIT) &&
+                 (avg_foc_data < BMI2_ACC_4G_MAX_NOISE_LIMIT))
+        {
+            rslt = BMI2_OK;
+        }
+        /* Reference LSB value of 8G */
+        else if ((range == BMI2_ACC_RANGE_8G) && (avg_foc_data > BMI2_ACC_8G_MIN_NOISE_LIMIT) &&
+                 (avg_foc_data < BMI2_ACC_8G_MAX_NOISE_LIMIT))
+        {
+            rslt = BMI2_OK;
+        }
+        /* Reference LSB value of 16G */
+        else if ((range == BMI2_ACC_RANGE_16G) && (avg_foc_data > BMI2_ACC_16G_MIN_NOISE_LIMIT) &&
+                 (avg_foc_data < BMI2_ACC_16G_MAX_NOISE_LIMIT))
+        {
+            rslt = BMI2_OK;
+        }
+        else
+        {
+            rslt = BMI2_E_INVALID_FOC_POSITION;
         }
     }
 

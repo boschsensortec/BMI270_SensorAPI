@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -51,7 +51,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&bmi2_dev, BMI2_I2C_INTF);
+    rslt = bmi2_interface_init(&bmi2_dev, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270. */
@@ -77,7 +77,7 @@ int main(void)
                 printf("Flip the board in portrait/landscape mode:\n");
 
                 /* Loop to print the wrist gesture data when interrupt occurs */
-                while (1)
+                for (;;)
                 {
                     /* Get the interrupt status of the wrist gesture */
                     rslt = bmi2_get_int_status(&int_status, &bmi2_dev);

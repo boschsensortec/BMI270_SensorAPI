@@ -19,6 +19,4 @@ $(API_LOCATION) \
 $(BMM150_SOURCE) \
 $(COMMON_LOCATION)/common 
 
-TARGET = MCU_APP20
-
 include $(COINES_INSTALL_PATH)/coines.mk

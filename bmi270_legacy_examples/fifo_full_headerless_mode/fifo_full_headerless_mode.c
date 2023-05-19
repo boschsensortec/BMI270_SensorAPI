@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -28,6 +28,22 @@
 
 /*! Number of gyro frames to be extracted from FIFO */
 #define BMI270_LEGACY_FIFO_GYRO_FRAME_COUNT      UINT8_C(169)
+
+/******************************************************************************/
+/*!                        Global Variables                                   */
+
+/* Number of bytes of FIFO data
+ * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
+ */
+uint8_t fifo_data[BMI270_LEGACY_FIFO_RAW_DATA_BUFFER_SIZE] = { 0 };
+
+/* Array of accelerometer frames -> Total bytes =
+ * 150 * (6 axes bytes) = 900 bytes */
+struct bmi2_sens_axes_data fifo_accel_data[BMI270_LEGACY_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
+
+/* Array of gyro frames -> Total bytes =
+ * 150 * (6 axes bytes) = 900 bytes */
+struct bmi2_sens_axes_data fifo_gyro_data[BMI270_LEGACY_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
 
 /******************************************************************************/
 /*!                 Static Function Declaration                               */
@@ -60,21 +76,8 @@ int main(void)
 
     uint16_t gyro_frame_length = BMI270_LEGACY_FIFO_GYRO_FRAME_COUNT;
 
-    /* Number of bytes of FIFO data
-     * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
-     */
-    uint8_t fifo_data[BMI270_LEGACY_FIFO_RAW_DATA_BUFFER_SIZE] = { 0 };
-
     /* Sensor initialization configuration. */
     struct bmi2_dev dev;
-
-    /* Array of accelerometer frames -> Total bytes =
-     * 150 * (6 axes bytes) = 900 bytes */
-    struct bmi2_sens_axes_data fifo_accel_data[BMI270_LEGACY_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
-
-    /* Array of gyro frames -> Total bytes =
-     * 150 * (6 axes bytes) = 900 bytes */
-    struct bmi2_sens_axes_data fifo_gyro_data[BMI270_LEGACY_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
 
     /* Initialize FIFO frame structure. */
     struct bmi2_fifo_frame fifoframe = { 0 };
@@ -130,6 +133,7 @@ int main(void)
     if (rslt == BMI2_OK)
     {
         rslt = bmi2_set_fifo_config(BMI2_FIFO_HEADER_EN, BMI2_DISABLE, &dev);
+        bmi2_error_codes_print_result(rslt);
     }
 
     /* Map FIFO full interrupt. */
@@ -172,33 +176,37 @@ int main(void)
                 printf("\nFIFO accel frames requested : %d \n", accel_frame_length);
 
                 /* Parse the FIFO data to extract accelerometer data from the FIFO buffer. */
-                rslt = bmi2_extract_accel(fifo_accel_data, &accel_frame_length, &fifoframe, &dev);
+                (void)bmi2_extract_accel(fifo_accel_data, &accel_frame_length, &fifoframe, &dev);
                 printf("\nFIFO accel frames extracted : %d \n", accel_frame_length);
 
                 printf("\nFIFO gyro frames requested : %d \n", gyro_frame_length);
 
                 /* Parse the FIFO data to extract gyro data from the FIFO buffer. */
-                rslt = bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &dev);
+                (void)bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &dev);
                 printf("\nFIFO gyro frames extracted : %d \n", gyro_frame_length);
 
                 printf("\nExtracted accel frames\n");
 
+                printf("ACCEL_DATA, X, Y, Z\n");
+
                 /* Print the parsed accelerometer data from the FIFO buffer. */
                 for (index = 0; index < accel_frame_length; index++)
                 {
-                    printf("ACCEL[%d] X : %d\t Y : %d\t Z : %d\n", index, fifo_accel_data[index].x,
-                           fifo_accel_data[index].y, fifo_accel_data[index].z);
+                    printf("%d, %d, %d, %d\n",
+                           index,
+                           fifo_accel_data[index].x,
+                           fifo_accel_data[index].y,
+                           fifo_accel_data[index].z);
                 }
 
                 printf("\nExtracted gyro frames\n");
 
+                printf("GYRO_DATA, X, Y, Z\n");
+
                 /* Print the parsed gyro data from the FIFO buffer. */
                 for (index = 0; index < gyro_frame_length; index++)
                 {
-                    printf("GYRO[%d] X : %d\t Y : %d\t Z : %d\n",
-                           index,
-                           fifo_gyro_data[index].x,
-                           fifo_gyro_data[index].y,
+                    printf("%d, %d, %d, %d\n", index, fifo_gyro_data[index].x, fifo_gyro_data[index].y,
                            fifo_gyro_data[index].z);
                 }
             }
@@ -236,7 +244,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *dev)
         /* NOTE: The user can change the following configuration parameters according to their requirement. */
         /* Accel configuration settings. */
         /* Output Data Rate. By default ODR is set as 100Hz for accel. */
-        config[0].cfg.acc.odr = BMI2_ACC_ODR_100HZ;
+        config[0].cfg.acc.odr = BMI2_ACC_ODR_50HZ;
 
         /* Gravity range of the sensor (+/- 2G, 4G, 8G, 16G). */
         config[0].cfg.acc.range = BMI2_ACC_RANGE_2G;
@@ -261,7 +269,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *dev)
 
         /* Gyro configuration settings. */
         /* Output data Rate. Default ODR is 200Hz, setting to 100Hz. */
-        config[1].cfg.gyr.odr = BMI2_GYR_ODR_100HZ;
+        config[1].cfg.gyr.odr = BMI2_GYR_ODR_50HZ;
 
         /* Gyroscope Angular Rate Measurement Range.By default the range is 2000dps. */
         config[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;

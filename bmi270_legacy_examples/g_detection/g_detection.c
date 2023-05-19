@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -48,7 +48,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&dev, BMI2_SPI_INTF);
+    rslt = bmi2_interface_init(&dev, BMI2_I2C_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270_legacy. */
@@ -98,6 +98,7 @@ int main(void)
                         printf("High-g interrupt is generated\n");
 
                         rslt = bmi270_legacy_get_feature_data(&sensor_data, 1, &dev);
+                        bmi2_error_codes_print_result(rslt);
 
                         high_g_out = sensor_data.sens_data.high_g_output;
 

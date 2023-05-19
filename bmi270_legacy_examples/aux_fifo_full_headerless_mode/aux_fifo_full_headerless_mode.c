@@ -1,5 +1,5 @@
 /**\
- * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  **/
@@ -44,6 +44,23 @@
 /* Sensor initialization configuration. */
 struct bmi2_dev aux_bmi2_dev;
 
+/******************************************************************************/
+/*!                        Global Variables                                   */
+
+/* Array of accelerometer frames */
+struct bmi2_sens_axes_data fifo_accel_data[BMI2_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
+
+/* Array of gyro frames */
+struct bmi2_sens_axes_data fifo_gyro_data[BMI2_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
+
+/* Array of aux frames */
+struct bmi2_aux_fifo_data fifo_aux_data[BMI2_FIFO_AUX_FRAME_COUNT] = { { { 0 } } };
+
+/* Number of bytes of FIFO data
+ * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
+ */
+uint8_t fifo_data[BMI2_FIFO_RAW_DATA_BUFFER_SIZE];
+
 /*******************************************************************************/
 /*!                 Functions                                                  */
 
@@ -65,7 +82,7 @@ static int8_t aux_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length,
  * aux_i2c_write - Writes data to the auxiliary sensor.
  *
  *  @param[in] reg_addr     : Register address.
- *  @param[out] reg_data    : Aux data pointer to store the data being written.
+ *  @param[in] reg_data    : Aux data pointer to store the data being written.
  *  @param[in] length       : No of bytes to read.
  *  @param[in] intf_ptr     : Interface pointer
  *
@@ -132,23 +149,9 @@ int main(void)
 
     uint16_t aux_frame_length = BMI2_FIFO_AUX_FRAME_COUNT;
 
-    /* Array of accelerometer frames */
-    struct bmi2_sens_axes_data fifo_accel_data[BMI2_FIFO_ACCEL_FRAME_COUNT] = { { 0 } };
-
-    /* Array of gyro frames */
-    struct bmi2_sens_axes_data fifo_gyro_data[BMI2_FIFO_GYRO_FRAME_COUNT] = { { 0 } };
-
-    /* Array of aux frames */
-    struct bmi2_aux_fifo_data fifo_aux_data[BMI2_FIFO_AUX_FRAME_COUNT] = { { { 0 } } };
-
     uint16_t fifo_length = 0;
 
     int8_t try = 1;
-
-    /* Number of bytes of FIFO data
-     * NOTE : Dummy byte (for SPI Interface) required for FIFO data read must be given as part of array size
-     */
-    uint8_t fifo_data[BMI2_FIFO_RAW_DATA_BUFFER_SIZE];
 
     /* Initialize FIFO frame structure. */
     struct bmi2_fifo_frame fifoframe = { 0 };
@@ -171,7 +174,7 @@ int main(void)
      * For I2C : BMI2_I2C_INTF
      * For SPI : BMI2_SPI_INTF
      */
-    rslt = bmi2_interface_init(&aux_bmi2_dev, BMI2_I2C_INTF);
+    rslt = bmi2_interface_init(&aux_bmi2_dev, BMI2_SPI_INTF);
     bmi2_error_codes_print_result(rslt);
 
     /* Initialize bmi270_legacy. */
@@ -267,6 +270,7 @@ int main(void)
     if (rslt == BMI2_OK)
     {
         rslt = bmi2_set_fifo_config(BMI2_FIFO_HEADER_EN, BMI2_DISABLE, &aux_bmi2_dev);
+        bmi2_error_codes_print_result(rslt);
     }
 
     /* Map FIFO full interrupt. */
@@ -326,34 +330,46 @@ int main(void)
                     printf("\nFIFO gyro frames requested : %d \n", gyro_frame_length);
 
                     /* Parse the FIFO data to extract gyro data from the FIFO buffer. */
-                    rslt = bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &aux_bmi2_dev);
+                    (void)bmi2_extract_gyro(fifo_gyro_data, &gyro_frame_length, &fifoframe, &aux_bmi2_dev);
                     printf("\nFIFO gyro frames extracted : %d \n", gyro_frame_length);
 
                     printf("\nFIFO aux frames requested : %d \n", aux_frame_length);
 
                     /* Parse the FIFO data to extract aux data from the FIFO buffer. */
-                    rslt = bmi2_extract_aux(fifo_aux_data, &aux_frame_length, &fifoframe, &aux_bmi2_dev);
+                    (void)bmi2_extract_aux(fifo_aux_data, &aux_frame_length, &fifoframe, &aux_bmi2_dev);
                     printf("\nFIFO aux frames extracted : %d \n", aux_frame_length);
 
                     printf("\nExtracted accel frames\n");
 
+                    printf("ACCEL_DATA, X, Y, Z\n");
+
                     /* Print the parsed accelerometer data from the FIFO buffer. */
                     for (index = 0; index < accel_frame_length; index++)
                     {
-                        printf("ACCEL[%d] X : %d\t Y : %d\t Z : %d\n", index, fifo_accel_data[index].x,
-                               fifo_accel_data[index].y, fifo_accel_data[index].z);
+                        printf("%d, %d, %d, %d\n",
+                               index,
+                               fifo_accel_data[index].x,
+                               fifo_accel_data[index].y,
+                               fifo_accel_data[index].z);
                     }
 
                     printf("\nExtracted gyro frames\n");
 
+                    printf("GYRO_DATA, X, Y, Z\n");
+
                     /* Print the parsed gyro data from the FIFO buffer. */
                     for (index = 0; index < gyro_frame_length; index++)
                     {
-                        printf("GYRO[%d] X : %d\t Y : %d\t Z : %d\n", index, fifo_gyro_data[index].x,
-                               fifo_gyro_data[index].y, fifo_gyro_data[index].z);
+                        printf("%d, %d, %d, %d\n",
+                               index,
+                               fifo_gyro_data[index].x,
+                               fifo_gyro_data[index].y,
+                               fifo_gyro_data[index].z);
                     }
 
-                    printf("\nExtracted aux frames\n");
+                    printf("\nExtracted AUX frames\n");
+
+                    printf("AUX_DATA, Mag_uT_X, Mag_uT_Y, Mag_uT_Z\n");
 
                     /* Print the parsed aux data from the FIFO buffer. */
                     for (index = 0; index < aux_frame_length; index++)
@@ -362,11 +378,11 @@ int main(void)
                         rslt = bmm150_aux_mag_data(fifo_aux_data[index].data, &mag_data, &aux_bmm150_dev);
                         bmm150_error_codes_print_result(rslt);
 
-                        printf("AUX[%d] Mag_uT_X : %ld\t Mag_uT_Y : %ld\t Mag_uT_Z : %ld\n",
+                        printf("%d, %ld, %ld, %ld\n",
                                index,
-                               (long unsigned int)mag_data.x,
-                               (long unsigned int)mag_data.y,
-                               (long unsigned int)mag_data.z);
+                               (long int)mag_data.x,
+                               (long int)mag_data.y,
+                               (long int)mag_data.z);
                     }
 
                     try++;
@@ -391,7 +407,9 @@ static int8_t aux_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length,
 {
     int8_t rslt;
 
-    rslt = bmi2_read_aux_man_mode(reg_addr, reg_data, length, &aux_bmi2_dev);
+    (void)intf_ptr;
+
+    rslt = bmi2_read_aux_man_mode(reg_addr, reg_data, (uint16_t)length, &aux_bmi2_dev);
 
     return rslt;
 }
@@ -403,7 +421,9 @@ static int8_t aux_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t 
 {
     int8_t rslt;
 
-    rslt = bmi2_write_aux_man_mode(reg_addr, reg_data, length, &aux_bmi2_dev);
+    (void)intf_ptr;
+
+    rslt = bmi2_write_aux_man_mode(reg_addr, reg_data, (uint16_t)length, &aux_bmi2_dev);
 
     return rslt;
 }
@@ -413,6 +433,8 @@ static int8_t aux_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t 
  */
 static void aux_delay_us(uint32_t period, void *intf_ptr)
 {
+    (void)intf_ptr;
+
     coines_delay_usec(period);
 }
 

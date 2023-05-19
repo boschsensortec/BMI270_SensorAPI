@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2021 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (C) 2023 Bosch Sensortec GmbH. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "common.h"
 #include "bmi2_defs.h"
@@ -24,6 +24,12 @@
 /*! Variable that holds the I2C device address or SPI chip selection */
 static uint8_t dev_addr;
 
+/*! Variable that holds the I2C or SPI bus instance */
+static uint8_t bus_inst;
+
+/*! Structure to hold interface configurations */
+static struct coines_intf_config intf_conf;
+
 /******************************************************************************/
 /*!                User interface functions                                   */
 
@@ -32,9 +38,9 @@ static uint8_t dev_addr;
  */
 BMI2_INTF_RETURN_TYPE bmi2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
-    uint8_t dev_addr = *(uint8_t*)intf_ptr;
+    struct coines_intf_config intf_info = *(struct coines_intf_config *)intf_ptr;
 
-    return coines_read_i2c(dev_addr, reg_addr, reg_data, (uint16_t)len);
+    return coines_read_i2c(intf_info.bus, intf_info.dev_addr, reg_addr, reg_data, (uint16_t)len);
 }
 
 /*!
@@ -42,9 +48,9 @@ BMI2_INTF_RETURN_TYPE bmi2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_
  */
 BMI2_INTF_RETURN_TYPE bmi2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
-    uint8_t dev_addr = *(uint8_t*)intf_ptr;
+    struct coines_intf_config intf_info = *(struct coines_intf_config *)intf_ptr;
 
-    return coines_write_i2c(dev_addr, reg_addr, (uint8_t *)reg_data, (uint16_t)len);
+    return coines_write_i2c(intf_info.bus, intf_info.dev_addr, reg_addr, (uint8_t *)reg_data, (uint16_t)len);
 }
 
 /*!
@@ -52,9 +58,9 @@ BMI2_INTF_RETURN_TYPE bmi2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, 
  */
 BMI2_INTF_RETURN_TYPE bmi2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
-    uint8_t dev_addr = *(uint8_t*)intf_ptr;
+    struct coines_intf_config intf_info = *(struct coines_intf_config *)intf_ptr;
 
-    return coines_read_spi(dev_addr, reg_addr, reg_data, (uint16_t)len);
+    return coines_read_spi(intf_info.bus, intf_info.dev_addr, reg_addr, reg_data, (uint16_t)len);
 }
 
 /*!
@@ -62,9 +68,9 @@ BMI2_INTF_RETURN_TYPE bmi2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_
  */
 BMI2_INTF_RETURN_TYPE bmi2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
-    uint8_t dev_addr = *(uint8_t*)intf_ptr;
+    struct coines_intf_config intf_info = *(struct coines_intf_config *)intf_ptr;
 
-    return coines_write_spi(dev_addr, reg_addr, (uint8_t *)reg_data, (uint16_t)len);
+    return coines_write_spi(intf_info.bus, intf_info.dev_addr, reg_addr, (uint8_t *)reg_data, (uint16_t)len);
 }
 
 /*!
@@ -76,24 +82,24 @@ void bmi2_delay_us(uint32_t period, void *intf_ptr)
 }
 
 /*!
- *  @brief Function to select the interface between SPI and I2C.
- *  Also to initialize coines platform
+ *  @brief Function to initialize coines platform
  */
-int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
+int16_t coines_board_init(enum coines_comm_intf intf_type, bool get_board_info)
 {
-    int8_t rslt = BMI2_OK;
     struct coines_board_info board_info;
 
-    if (bmi != NULL)
+    int16_t result = coines_open_comm_intf(intf_type, NULL);
+
+    if (result < COINES_SUCCESS)
     {
-        int16_t result = coines_open_comm_intf(COINES_COMM_INTF_USB);
-        if (result < COINES_SUCCESS)
-        {
-            printf(
-                "\n Unable to connect with Application Board ! \n" " 1. Check if the board is connected and powered on. \n" " 2. Check if Application Board USB driver is installed. \n"
-                " 3. Check if board is in use by another application. (Insufficient permissions to access USB) \n");
-            exit(result);
-        }
+        printf(
+            "\n Unable to connect with Application Board ! \n" " 1. Check if the board is connected and powered on. \n" " 2. Check if Application Board USB driver is installed. \n"
+            " 3. Check if board is in use by another application. (Insufficient permissions to access USB) \n");
+        exit(result);
+    }
+
+    if (get_board_info)
+    {
 
         result = coines_get_board_info(&board_info);
 
@@ -106,12 +112,37 @@ int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
             if ((board_info.shuttle_id != BMI2XY_SHUTTLE_ID))
             {
                 printf("! Warning invalid sensor shuttle \n ," "This application will not support this sensor \n");
-                exit(COINES_E_FAILURE);
             }
         }
+    }
 
-        coines_set_shuttleboard_vdd_vddio_config(0, 0);
-        coines_delay_msec(100);
+    coines_delay_msec(100);
+
+    /* Power up the board */
+    coines_set_shuttleboard_vdd_vddio_config(3300, 3300);
+
+    coines_delay_msec(200);
+
+    return result;
+}
+
+/*!
+ *  @brief Function to select the interface between SPI and I2C.
+ */
+int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
+{
+    int8_t rslt = BMI2_OK;
+
+    if (bmi != NULL)
+    {
+        int16_t result = coines_board_init(COINES_COMM_INTF_USB, true);
+
+        if (result != COINES_SUCCESS)
+        {
+            printf("\n Unable to open device ! \n");
+
+            return COINES_E_UNABLE_OPEN_DEVICE;
+        }
 
         /* Bus configuration : I2C */
         if (intf == BMI2_I2C_INTF)
@@ -131,7 +162,12 @@ int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
             coines_set_pin_config(COINES_SHUTTLE_PIN_21, COINES_PIN_DIRECTION_OUT, COINES_PIN_VALUE_HIGH);
             coines_delay_msec(100);
 
-            coines_config_i2c_bus(COINES_I2C_BUS_0, COINES_I2C_STANDARD_MODE);
+            /* SDO pin is made low */
+            coines_set_pin_config(COINES_SHUTTLE_PIN_SDO, COINES_PIN_DIRECTION_OUT, COINES_PIN_VALUE_LOW);
+
+            result = coines_config_i2c_bus(COINES_I2C_BUS_0, COINES_I2C_STANDARD_MODE);
+
+            bus_inst = COINES_I2C_BUS_0;
         }
         /* Bus configuration : SPI */
         else if (intf == BMI2_SPI_INTF)
@@ -139,31 +175,38 @@ int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
             printf("SPI Interface \n");
 
             /* To initialize the user SPI function */
-            dev_addr = COINES_SHUTTLE_PIN_7;
+            dev_addr = COINES_MINI_SHUTTLE_PIN_2_1;
             bmi->intf = BMI2_SPI_INTF;
             bmi->read = bmi2_spi_read;
             bmi->write = bmi2_spi_write;
-            coines_config_spi_bus(COINES_SPI_BUS_0, COINES_SPI_SPEED_5_MHZ, COINES_SPI_MODE3);
-            coines_set_pin_config(COINES_SHUTTLE_PIN_7, COINES_PIN_DIRECTION_OUT, COINES_PIN_VALUE_HIGH);
+
+            result = coines_config_spi_bus(COINES_SPI_BUS_0, COINES_SPI_SPEED_5_MHZ, COINES_SPI_MODE0);
+
+            coines_set_pin_config(COINES_SHUTTLE_PIN_21, COINES_PIN_DIRECTION_OUT, COINES_PIN_VALUE_HIGH);
+
+            bus_inst = COINES_SPI_BUS_0;
         }
 
-        /* Assign device address to interface pointer */
-        bmi->intf_ptr = &dev_addr;
+        if (COINES_SUCCESS == result)
+        {
+            /* Assign device address and bus instance to interface pointer */
+            intf_conf.bus = bus_inst;
+            intf_conf.dev_addr = dev_addr;
+            bmi->intf_ptr = ((void *)&intf_conf);
 
-        /* Configure delay in microseconds */
-        bmi->delay_us = bmi2_delay_us;
+            /* Configure delay in microseconds */
+            bmi->delay_us = bmi2_delay_us;
 
-        /* Configure max read/write length (in bytes) ( Supported length depends on target machine) */
-        bmi->read_write_len = READ_WRITE_LEN;
+            /* Configure max read/write length (in bytes) ( Supported length depends on target machine) */
+            bmi->read_write_len = READ_WRITE_LEN;
 
-        /* Assign to NULL to load the default config file. */
-        bmi->config_file_ptr = NULL;
-
-        coines_delay_msec(100);
-
-        coines_set_shuttleboard_vdd_vddio_config(3300, 3300);
-
-        coines_delay_msec(200);
+            /* Assign to NULL to load the default config file. */
+            bmi->config_file_ptr = NULL;
+        }
+        else
+        {
+            rslt = COINES_E_COMM_INIT_FAILED;
+        }
     }
     else
     {
@@ -171,7 +214,6 @@ int8_t bmi2_interface_init(struct bmi2_dev *bmi, uint8_t intf)
     }
 
     return rslt;
-
 }
 
 /*!
@@ -385,5 +427,5 @@ void bmi2_coines_deinit(void)
     coines_soft_reset();
     coines_delay_msec(100);
 
-    coines_close_comm_intf(COINES_COMM_INTF_USB);
+    coines_close_comm_intf(COINES_COMM_INTF_USB, NULL);
 }

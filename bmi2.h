@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.h
-* @date       2021-09-30
-* @version    v2.71.8
+* @date       2023-05-03
+* @version    v2.86.1
 *
 */
 
@@ -88,6 +88,204 @@ extern "C" {
  * @retval < 0 -> Fail
  */
 int8_t bmi2_sec_init(struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInit
+ * \page bmi2_api_bmi2_set_spi_en bmi2_set_spi_en
+ * \code
+ * int8_t bmi2_set_spi_en(uint8_t enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets the status of SPI enable .
+ *
+ * @param[in] enable   : To enable/disable SPI  interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable I2C
+ * BMI2_ENABLE  | Enable SPI
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_spi_en(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInit
+ * \page bmi2_api_bmi2_get_spi_en bmi2_get_spi_en
+ * \code
+ * int8_t bmi2_get_spi_en(uint8_t *enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the status of SPI enable .
+ *
+ * @param[in] enable   : Pointer to get enable/disable SPI  interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable I2C
+ * BMI2_ENABLE  | Enable SPI
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_spi_en(uint8_t *enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInit
+ * \page bmi2_api_bmi2_set_spi3_interface_mode bmi2_set_spi3_interface_mode
+ * \code
+ * int8_t bmi2_set_spi3_interface_mode(uint8_t enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets the status of SPI interface.
+ *
+ * @param[in] enable   : To enable/disable SPI 3/4 wire interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable SPI 4 wire mode
+ * BMI2_ENABLE  | Enable SPI 3 wire mode
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_spi3_interface_mode(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInit
+ * \page bmi2_api_bmi2_get_spi3_interface_mode bmi2_get_spi3_interface_mode
+ * \code
+ * int8_t bmi2_get_spi3_interface_mode(uint8_t *enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the status of SPI interface.
+ *
+ * @param[in] enable   : Pointer to get enable/disable SPI 3/4 wire interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable SPI 4 wire mode
+ * BMI2_ENABLE  | Enable SPI 3 wire mode
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_spi3_interface_mode(uint8_t *enable, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2ApiI2C  I2c watchdog init
+ * @brief Initialize the watchdog for i2c
+ */
+
+/*!
+ * \ingroup bmi2ApiI2C
+ * \page bmi2_api_bmi2_set_i2c_wdt_en bmi2_set_i2c_wdt_en
+ * \code
+ * int8_t bmi2_set_i2c_wdt_en(uint8_t enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API enables/disables the i2c watchdog timer .
+ *
+ * @param[in] enable   : To enable/disable i2c watchdog timer.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Disable I2C watchdog timer
+ * BMI2_ENABLE  | Enable I2C watchdog timer
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_i2c_wdt_en(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiI2C
+ * \page bmi2_api_bmi2_get_i2c_wdt_en bmi2_get_i2c_wdt_en
+ * \code
+ * int8_t bmi2_get_i2c_wdt_en(uint8_t *enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the  enable/disable status of the i2c watchdog timer .
+ *
+ * @param[in] enable   : Pointer to get status of enable/disable i2c watchdog timer.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Disable I2C watchdog timer
+ * BMI2_ENABLE  | Enable I2C watchdog timer
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_i2c_wdt_en(uint8_t *enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiI2C
+ * \page bmi2_api_bmi2_set_i2c_wdt_sel bmi2_set_i2c_wdt_sel
+ * \code
+ * int8_t bmi2_set_i2c_wdt_sel(uint8_t watchdog_select, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets i2c watchdog timer .
+ *
+ * @param[in] watchdog_select   : To set watchdog timer for i2c.
+ * @param[in] dev               : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Watchdog_select      |  Description
+ * ----------------------|---------------
+ * BMI2_DISABLE          | I2C watchdog timeout after 1.25ms
+ * BMI2_ENABLE           | I2c watchdog timeout after 40ms
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_i2c_wdt_sel(uint8_t watchdog_select, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiI2C
+ * \page bmi2_api_bmi2_get_i2c_wdt_sel bmi2_get_i2c_wdt_sel
+ * \code
+ * int8_t bmi2_get_i2c_wdt_sel(uint8_t *watchdog_select, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets i2c watchdog timer .
+ *
+ * @param[in] watchdog_select   : Pointer to get watchdog timer for i2c.
+ * @param[in] dev               : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Watchdog_select      |  Description
+ * --------------------- |---------------
+ * BMI2_DISABLE          | I2C watchdog timeout after 1.25ms
+ * BMI2_ENABLE           | I2c watchdog timeout after 40ms
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_i2c_wdt_sel(uint8_t *watchdog_select, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -245,6 +443,54 @@ int8_t bmi2_set_adv_power_save(uint8_t enable, struct bmi2_dev *dev);
  * @retval BMI2_E_SET_APS_FAIL - Error: Set Advance Power Save Fail
  */
 int8_t bmi2_get_adv_power_save(uint8_t *aps_status, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiPowersave
+ * \page bmi2_api_bmi2_set_fast_power_up bmi2_set_fast_power_up
+ * \code
+ * int8_t bmi2_set_fast_power_up(uint8_t fast_power_up, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API enables/disables the fast power up mode in the sensor.
+ *
+ * @param[in] fast_power_up  : To enable/disable advance power mode.
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *    Fast_power_up    |  Description
+ * --------------------|---------------
+ * BMI2_DISABLE        | Disables fast power up.
+ * BMI2_ENABLE         | Enables fast power up.
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_fast_power_up(uint8_t fast_power_up, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiPowersave
+ * \page bmi2_api_bmi2_get_fast_power_up bmi2_get_fast_power_up
+ * \code
+ * int8_t bmi2_get_fast_power_up(uint8_t *fast_power_up, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the enable/disable status of the fast power up mode in the sensor.
+ *
+ * @param[in] fast_power_up  : Pointer to get the enable/disable advance power mode.
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *    Fast power up    |  Description
+ * --------------------|---------------
+ * BMI2_DISABLE        | Disables fast power up.
+ * BMI2_ENABLE         | Enables fast power up.
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_fast_power_up(uint8_t *fast_power_up, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi2ApiConfig
@@ -516,7 +762,7 @@ int8_t bmi2_get_feature_data(struct bmi2_feat_sensor_data *feat_sensor_data, uin
  * \endcode
  * @details This API gets the sensor data for accelerometer, gyroscope and auxiliary sensor
  *
- * @param[out] data          : Structure instance of bmi2_sensor_data.
+ * @param[out] data          : Structure instance of bmi2_sens_data.
  * @param[in]  dev           : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -524,6 +770,51 @@ int8_t bmi2_get_feature_data(struct bmi2_feat_sensor_data *feat_sensor_data, uin
  * @retval < 0 -> Fail
  */
 int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2ApiTemperature Temperature
+ * @brief Read temperature of the sensor.
+ */
+
+/*!
+ * \ingroup bmi2ApiTemperature
+ * \page bmi2_api_bmi2_get_temperature_data bmi2_get_temperature_data
+ * \code
+ * int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API reads the raw temperature data from the register and can be
+ * converted into degree celsius using the below formula.
+ * Formula: temperature_value = (float)(((float)((int16_t)temperature_data)) / 512.0) + 23.0
+ * @note Enable gyro to read temperature
+ *
+ * @param[out] temp_data : Pointer variable which stores the raw temperature value.
+ * @param[in] dev   : Structure instance of bmi2_dev.
+ *
+ *
+ *  @return Result of API execution status
+ *  @retval 0 -> Success
+ *  @retval < 0 -> Fail
+ */
+int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiSensorD
+ * \page bmi2_api_bmi2_parse_sensor_data bmi2_parse_sensor_data
+ * \code
+ * int8_t bmi2_parse_sensor_data(const uint8_t *sensor_data, struct bmi2_sens_data *data, const struct bmi2_dev *dev);
+ * \endcode
+ * @details This API parses the sensor data for accelerometer, gyroscope and auxiliary sensor
+ *
+ * @param[in] sensor_data    : Array of register data (24 bytes from Register 0x03 to 0x1A)
+ * @param[out] data          : Structure instance of bmi2_sens_data.
+ * @param[in]  dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_parse_sensor_data(const uint8_t *sensor_data, struct bmi2_sens_data *data, const struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -935,6 +1226,34 @@ int8_t bmi2_get_fifo_down_sample(uint8_t sens_sel, uint8_t *fifo_down_samp, stru
  */
 int8_t bmi2_get_fifo_length(uint16_t *fifo_length, struct bmi2_dev *dev);
 
+/*!
+ * \ingroup bmi2ApiFIFO
+ * \page bmi2_api_bmi2_get_saturation_status bmi2_get_saturation_status
+ * \code
+ * int8_t bmi2_get_saturation_status(uint8_t *status, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API reads the saturation status of the sensor.
+ *
+ * @param[in] status   : Pointer to read the status of saturation.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Macro                       |  Status
+ * -----------------------------|---------------
+ * BMI2_SATURATION_ACC_X_MASK   | 0X01
+ * BMI2_SATURATION_ACC_Y_MASK   | 0X02
+ * BMI2_SATURATION_ACC_Z_MASK   | 0X04
+ * BMI2_SATURATION_GYR_X_MASK   | 0X08
+ * BMI2_SATURATION_GYR_Y_MASK   | 0X10
+ * BMI2_SATURATION_GYR_Z_MASK   | 0X20
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_saturation_status(uint8_t *status, struct bmi2_dev *dev);
+
 /**
  * \ingroup bmi2
  * \defgroup bmi2ApiOIS OIS
@@ -964,6 +1283,88 @@ int8_t bmi2_get_fifo_length(uint16_t *fifo_length, struct bmi2_dev *dev);
  * @retval < 0 -> Fail
  */
 int8_t bmi2_set_ois_interface(uint8_t enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiOIS
+ * \page bmi2_api_bmi2_get_spi3_ois_mode bmi2_get_spi3_ois_mode
+ * \code
+ * int8_t bmi2_get_spi3_ois_mode(uint8_t *enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the status of SPI OIS interface.
+ *
+ * @param[in] enable   : Pointer to read SPI OIS 3/4 wire interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable SPI OIS 4 wire mode
+ * BMI2_ENABLE  | Enable SPI OIS 3 wire mode
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_spi3_ois_mode(uint8_t *enable, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApisensorC
+ * \page bmi2_api_bmi2_set_drv_reg bmi2_set_drv_reg
+ * \code
+ * int8_t bmi2_set_drv_reg(uint8_t drv_reg, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets the drive strength of the sensor
+ *
+ * @param[in] drv_reg  : To set the drive strength of the sensor.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_drv_reg(uint8_t drv_reg, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApisensorC
+ * \page bmi2_api_bmi2_get_drv_reg bmi2_get_drv_reg
+ * \code
+ * int8_t bmi2_get_drv_reg(uint8_t *drv_reg, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets the drive strength of the sensor
+ *
+ * @param[in] drv_reg  : Pointer to get the drive strength of the sensor.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_drv_reg(uint8_t *drv_reg, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiOIS
+ * \page bmi2_api_bmi2_set_spi3_ois_mode bmi2_set_spi3_ois_mode
+ * \code
+ * int8_t bmi2_set_spi3_ois_mode(uint8_t enable, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets the status of SPI OIS interface.
+ *
+ * @param[in] enable   : To enable/disable SPI OIS 3/4 wire interface.
+ * @param[in] dev      : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  Enable      |  Description
+ * -------------|---------------
+ * BMI2_DISABLE | Enable SPI OIS 4 wire mode
+ * BMI2_ENABLE  | Enable SPI OIS 3 wire mode
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_spi3_ois_mode(uint8_t enable, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -1216,6 +1617,71 @@ int8_t bmi2_set_gyro_offset_comp(uint8_t enable, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi2ApiGyroOC
+ * \page bmi2_api_bmi2_set_gyro_offset_comp bmi2_get_gyro_offset_comp
+ * \code
+ * int8_t bmi2_get_gyro_offset_comp(uint8_t *offset, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API reads the gyroscope offset compensation.
+ *
+ * @param[in, out] offset         : The value of the offset compensation.
+ * @param[in]      dev            : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  enable      |  Description
+ * -------------|---------------
+ * BMI2_ENABLE  | Enables gyroscope offset compensation.
+ * BMI2_DISABLE | Disables gyroscope offset compensation.
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_gyro_offset_comp(uint8_t *offset, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiGyroOC
+ * \page bmi2_api_bmi2_set_gyro_offset_comp bmi2_set_gyro_gain
+ * \code
+ * int8_t bmi2_set_gyro_gain(uint8_t gyro_gain, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API enables/disables gyroscope gain for Sensitivity Error Compensation.
+ *
+ * @param[in] gyro_gain      : Enables/Disables gyroscope gain.
+ * @param[in] dev            : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ *  enable      |  Description
+ * -------------|---------------
+ * BMI2_ENABLE  | Enables gyroscope gain.
+ * BMI2_DISABLE | Disables gyroscope gain.
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_gyro_gain(uint8_t gyro_gain, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiGyroOC
+ * \page bmi2_api_bmi2_set_gyro_offset_comp bmi2_get_gyro_gain
+ * \code
+ * int8_t bmi2_get_gyro_gain(uint8_t *gyro_gain, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API reads the Gyro gain.
+ *
+ * @param[in, out] gyro_gain      : The value of the Gyro gain.
+ * @param[in]      dev            : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_gyro_gain(uint8_t *gyro_gain, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiGyroOC
  * \page bmi2_api_bmi2_read_gyro_offset_comp_axes bmi2_read_gyro_offset_comp_axes
  * \code
  * int8_t bmi2_read_gyro_offset_comp_axes(struct bmi2_sens_axes_data *gyr_off_comp_axes, const struct bmi2_dev *dev);
@@ -1315,6 +1781,84 @@ int8_t bmi2_get_gyro_cross_sense(struct bmi2_dev *dev);
  * @retval < 0 -> Fail
  */
 int8_t bmi2_get_internal_status(uint8_t *int_stat, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInts
+ * \page bmi2_api_bmi2_get_internal_error_status bmi2_get_internal_error_status
+ * \code
+ * int8_t bmi2_get_internal_error_status(uint8_t *status, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets Interanl error status.
+ *
+ * @param[in]  status       : Pointer variable to store the status of the error
+ * @param[out] int_stat     : Pointer variable to store error bits and
+ *                           message.
+ *
+ *@verbatim
+ * Internal status            |  status
+ * ---------------------------|---------------------
+ * BMI2_INTERNAL_ERROR_1_MASK |  0X02
+ * BMI2_INTERNAL_ERROR_2_MASK |  0X04
+ * BMI2_FEAT_ENG_DIS_MASK     |  0X10
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_internal_error_status(uint8_t *status, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInts
+ * \page bmi2_api_bmi2_get_err_reg_mask bmi2_get_err_reg_mask
+ * \code
+ * int8_t bmi2_get_err_reg_mask(uint8_t *err_reg, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API gets error status of interrupt.
+ *
+ * @param[in]  err_reg       : Pointer variable to store the status of the error
+ * @param[out] dev           : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ * Internal status            |  err_reg
+ * ---------------------------|---------------------
+ * BMI2_FATAL_ERR_MASK        |  0X01
+ * BMI2_INTERNAL_ERR_MASK     |  0X1E
+ * BMI2_FIFO_ERR_MASK         |  0X40
+ * BMI2_AUX_ERR_MASK          |  0x80
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_err_reg_mask(uint8_t *err_reg, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2ApiInts
+ * \page bmi2_api_bmi2_set_err_reg_mask bmi2_set_err_reg_mask
+ * \code
+ * int8_t bmi2_set_err_reg_mask(uint8_t err_reg, struct bmi2_dev *dev);
+ * \endcode
+ * @details This API sets error interrupt.
+ *
+ * @param[in]  err_reg       : Variable to store the status of the error
+ * @param[out] dev           : Structure instance of bmi2_dev.
+ *
+ *@verbatim
+ * Internal status            |  err_reg
+ * ---------------------------|---------------------
+ * BMI2_FATAL_ERR_MASK        |  0X01
+ * BMI2_INTERNAL_ERR_MASK     |  0X1E
+ * BMI2_FIFO_ERR_MASK         |  0X40
+ * BMI2_AUX_ERR_MASK          |  0x80
+ *@endverbatim
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_err_reg_mask(uint8_t err_reg, struct bmi2_dev *dev);
 
 /**
  * \ingroup bmi2
@@ -1477,6 +2021,48 @@ uint8_t bmi2_extract_input_feat_config(struct bmi2_feature_config *feat_config, 
  * @retval < 0 -> Fail
  */
 int8_t bmi2_get_feat_config(uint8_t sw_page, uint8_t *feat_config, struct bmi2_dev *dev);
+
+/**
+ * \ingroup bmi2
+ * \defgroup bmi2AccelOffset Accelerometer Offset Compensation
+ * @brief Enable / Disable Accelerometer Offset Compensation
+ */
+
+/*!
+ * \ingroup bmi2AccelOffset
+ * \page bmi2_api_bmi2_set_accel_offset_comp bmi2_set_accel_offset_comp
+ * \code
+ * int8_t bmi2_set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev);
+ * \endcode
+ * @brief This internal API enables/disables the offset compensation for
+ * filtered and un-filtered accelerometer data.
+ *
+ * @param[in] offset_en     : enables/disables offset compensation.
+ * @param[in] dev           : Structure instance of bmi2_dev
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_set_accel_offset_comp(uint8_t offset_en, struct bmi2_dev *dev);
+
+/*!
+ * \ingroup bmi2AccelOffset
+ * \page bmi2_api_bmi2_get_accel_offset_comp bmi2_get_accel_offset_comp
+ * \code
+ * int8_t bmi2_get_accel_offset_comp(uint8_t *accel_offset, struct bmi2_dev *dev);
+ * \endcode
+ * @brief This internal API reads the accelerometer offset compensation value.
+ *
+ * @param[in] accel_offset  : Pointer to an array of size 3 to hold Accel Axis X, Y, Z,
+ *                            Offset Compensation.
+ * @param[in] dev           : Structure instance of bmi2_dev
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+int8_t bmi2_get_accel_offset_comp(uint8_t *accel_offset, struct bmi2_dev *dev);
 
 #ifdef __cplusplus
 }

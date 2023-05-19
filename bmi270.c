@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi270.c
-* @date       2021-09-30
-* @version    v2.71.8
+* @date       2023-05-03
+* @version    v2.86.1
 *
 */
 
@@ -808,7 +808,7 @@ static int8_t set_any_motion_config(const struct bmi2_any_motion_config *config,
  * -------------------------|---------------------------------------------------
  *                          | Slope threshold value for in 5.11g format.
  *  threshold               | Range is 0 to 1g.
- *                          | Default value is 0xAA = 83mg.
+ *                          | Default value is 0x90 = 70mg.
  * -------------------------|---------------------------------------------------
  *  x_sel, y_sel, z_sel     |  Selects the feature on a per-axis basis
  * -------------------------|---------------------------------------------------
@@ -1000,7 +1000,7 @@ static int8_t get_any_motion_config(struct bmi2_any_motion_config *config, struc
  * -------------------------|---------------------------------------------------
  *                          | Slope threshold value for in 5.11g format.
  *  threshold               | Range is 0 to 1g.
- *                          | Default value is 0xAA = 83mg.
+ *                          | Default value is 0x90 = 70mg.
  * -------------------------|---------------------------------------------------
  *  select_x, select_y,     |
  *       select_z           |  Selects the feature on a per-axis basis
@@ -1293,7 +1293,7 @@ static int8_t get_feat_config(struct bmi2_sens_config *sens_cfg, uint8_t loop, s
 /*!
  * @brief This internal API is used to enable main sensors like accel, gyro, aux and temperature.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Enables the selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -1305,7 +1305,7 @@ static int8_t enable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to enable sensor features.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Enables features of selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -1317,7 +1317,7 @@ static int8_t enable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to disable main sensors like accel, gyro, aux and temperature.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Disables the selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -1329,7 +1329,7 @@ static int8_t disable_main_sensors(uint64_t sensor_sel, struct bmi2_dev *dev);
 /*!
  * @brief This internal API is used to disable sensor features.
  *
- * @param[in] sensor_sel    : Gets the selected sensor.
+ * @param[in] sensor_sel    : Disables features of selected sensor.
  * @param[in, out]  dev     : Structure instance of bmi2_dev.
  *
  * @return Result of API execution status
@@ -2863,30 +2863,6 @@ static int8_t set_sig_motion_config(const struct bmi2_sig_motion_config *config,
             /* Set parameter 1 */
             *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_1, config->block_size);
 
-            /* Increment offset by 1 word to set parameter 2 */
-            idx++;
-
-            /* Set parameter 2 */
-            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_2, config->param_2);
-
-            /* Increment offset by 1 word to set parameter 3 */
-            idx++;
-
-            /* Set parameter 3 */
-            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_3, config->param_3);
-
-            /* Increment offset by 1 word to set parameter 4 */
-            idx++;
-
-            /* Set parameter 4 */
-            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_4, config->param_4);
-
-            /* Increment offset by 1 word to set parameter 5 */
-            idx++;
-
-            /* Set parameter 5 */
-            *(data_p + idx) = BMI2_SET_BIT_POS0(*(data_p + idx), BMI2_SIG_MOT_PARAM_5, config->param_5);
-
             /* Increment offset by 1 more word to get the total length in words */
             idx++;
 
@@ -3480,38 +3456,6 @@ static int8_t get_sig_motion_config(struct bmi2_sig_motion_config *config, struc
 
             /* Get parameter 1  */
             config->block_size = lsb_msb & BMI2_SIG_MOT_PARAM_1_MASK;
-
-            /* Get word to calculate parameter 2 */
-            lsb = (uint16_t) feat_config[idx++];
-            msb = ((uint16_t) feat_config[idx++] << 8);
-            lsb_msb = lsb | msb;
-
-            /* Get parameter 2  */
-            config->param_2 = lsb_msb & BMI2_SIG_MOT_PARAM_2_MASK;
-
-            /* Get word to calculate parameter 3 */
-            lsb = (uint16_t) feat_config[idx++];
-            msb = ((uint16_t) feat_config[idx++] << 8);
-            lsb_msb = lsb | msb;
-
-            /* Get parameter 3  */
-            config->param_3 = lsb_msb & BMI2_SIG_MOT_PARAM_3_MASK;
-
-            /* Get word to calculate parameter 4 */
-            lsb = (uint16_t) feat_config[idx++];
-            msb = ((uint16_t) feat_config[idx++] << 8);
-            lsb_msb = lsb | msb;
-
-            /* Get parameter 4  */
-            config->param_4 = lsb_msb & BMI2_SIG_MOT_PARAM_4_MASK;
-
-            /* Get word to calculate parameter 5 */
-            lsb = (uint16_t) feat_config[idx++];
-            msb = ((uint16_t) feat_config[idx++] << 8);
-            lsb_msb = lsb | msb;
-
-            /* Get parameter 5  */
-            config->param_5 = lsb_msb & BMI2_SIG_MOT_PARAM_5_MASK;
         }
     }
     else
