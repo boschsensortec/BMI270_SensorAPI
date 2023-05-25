@@ -2280,7 +2280,9 @@ int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct
     int8_t rslt;
 
     /* Variable to define data array */
-    uint8_t data_array[3] = { 0 };
+    uint8_t data_int1 = 0;
+    uint8_t data_int2 = 0;
+    uint8_t data_int_latch = 0;
 
     /* Variable to store register data */
     uint8_t reg_data = 0;
@@ -2297,14 +2299,16 @@ int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct
         if ((int_pin > BMI2_INT_NONE) && (int_pin < BMI2_INT_PIN_MAX))
         {
             /* Get the previous configuration data */
-            rslt = bmi2_get_regs(BMI2_INT1_IO_CTRL_ADDR, data_array, 3, dev);
+            rslt = bmi2_get_regs(BMI2_INT1_IO_CTRL_ADDR, &data_int1, 1, dev);
+            rslt = bmi2_get_regs(BMI2_INT2_IO_CTRL_ADDR, &data_int2, 1, dev);
+            rslt = bmi2_get_regs(BMI2_INT_LATCH_ADDR, &data_int_latch, 1, dev);
             if (rslt == BMI2_OK)
             {
                 /* Set interrupt pin 1 configuration */
                 if ((int_pin == BMI2_INT1) || (int_pin == BMI2_INT_BOTH))
                 {
                     /* Configure active low or high */
-                    reg_data = BMI2_SET_BITS(data_array[0], BMI2_INT_LEVEL, int_cfg->pin_cfg[0].lvl);
+                    reg_data = BMI2_SET_BITS(data_int1, BMI2_INT_LEVEL, int_cfg->pin_cfg[0].lvl);
 
                     /* Configure push-pull or open drain */
                     reg_data = BMI2_SET_BITS(reg_data, BMI2_INT_OPEN_DRAIN, int_cfg->pin_cfg[0].od);
@@ -2316,14 +2320,14 @@ int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct
                     reg_data = BMI2_SET_BITS(reg_data, BMI2_INT_INPUT_EN, int_cfg->pin_cfg[0].input_en);
 
                     /* Copy the data to be written in the respective array */
-                    data_array[0] = reg_data;
+                    data_int1 = reg_data;
                 }
 
                 /* Set interrupt pin 2 configuration */
                 if ((int_pin == BMI2_INT2) || (int_pin == BMI2_INT_BOTH))
                 {
                     /* Configure active low or high */
-                    reg_data = BMI2_SET_BITS(data_array[1], BMI2_INT_LEVEL, int_cfg->pin_cfg[1].lvl);
+                    reg_data = BMI2_SET_BITS(data_int2, BMI2_INT_LEVEL, int_cfg->pin_cfg[1].lvl);
 
                     /* Configure push-pull or open drain */
                     reg_data = BMI2_SET_BITS(reg_data, BMI2_INT_OPEN_DRAIN, int_cfg->pin_cfg[1].od);
@@ -2335,17 +2339,19 @@ int8_t bmi2_set_int_pin_config(const struct bmi2_int_pin_config *int_cfg, struct
                     reg_data = BMI2_SET_BITS(reg_data, BMI2_INT_INPUT_EN, int_cfg->pin_cfg[1].input_en);
 
                     /* Copy the data to be written in the respective array */
-                    data_array[1] = reg_data;
+                    data_int2 = reg_data;
                 }
 
                 /* Configure the interrupt mode */
-                data_array[2] = BMI2_SET_BIT_POS0(data_array[2], BMI2_INT_LATCH, int_cfg->int_latch);
+                data_int_latch = BMI2_SET_BIT_POS0(data_int_latch, BMI2_INT_LATCH, int_cfg->int_latch);
 
-                /* Set the configurations simultaneously as
+                /* Do not set the configurations simultaneously:
                  * INT1_IO_CTRL, INT2_IO_CTRL, and INT_LATCH lie
-                 * in consecutive addresses
+                 * in consecutive addresses, but there is a HW bug when using SPI
                  */
-                rslt = bmi2_set_regs(BMI2_INT1_IO_CTRL_ADDR, data_array, 3, dev);
+                rslt = bmi2_set_regs(BMI2_INT1_IO_CTRL_ADDR, &data_int1, 1, dev);
+                rslt = bmi2_set_regs(BMI2_INT2_IO_CTRL_ADDR, &data_int2, 1, dev);
+                rslt = bmi2_set_regs(BMI2_INT_LATCH_ADDR, &data_int_latch, 1, dev);
             }
         }
         else
