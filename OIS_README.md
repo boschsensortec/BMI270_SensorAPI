@@ -48,7 +48,7 @@ Parameters    | Details
 --------------|-----------------------------------
 _intf_ptr_    | device address reference of SPI interface        
 _ois_read_    | read through SPI interface
-_ois_write_   | read through SPI interface
+_ois_write_   | write through SPI interface
 _ois_delay_us_| delay in micro seconds
 _acc_en_      | for enabling accelerometer
 _gyr_en_      | for enabling gyroscope   
@@ -57,7 +57,7 @@ _gyr_en_      | for enabling gyroscope
 int8_t rslt = 0;
 
 struct bmi2_ois_dev ois_dev = {  
-        .intf_ptr = intf_ptr will contain the chip selection info of SPI CS pin,  
+        .intf_ptr = intf_ptr // will contain the chip selection info of SPI CS pin,  
         .ois_read = user_spi_reg_read,
         .ois_write = user_spi_reg_write,
         .ois_delay_us = user_delay_us
