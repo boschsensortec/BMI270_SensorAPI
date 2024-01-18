@@ -150,7 +150,7 @@ extern "C" {
  * @retval 0 -> Success
  * @retval < 0 -> Fail
  */
-int8_t bmi270_init(struct bmi2_dev *dev);
+int8_t bmi270_init(struct bmi2_dev *dev, uint8_t skip_reset);
 
 /**
  * \ingroup bmi270
