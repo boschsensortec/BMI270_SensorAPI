@@ -89,6 +89,8 @@ extern "C" {
  */
 int8_t bmi2_sec_init(struct bmi2_dev *dev);
 
+int8_t bmi2_sec_init_with_opt(struct bmi2_dev *dev, uint8_t skip_reset);
+
 /*!
  * \ingroup bmi2ApiInit
  * \page bmi2_api_bmi2_set_spi_en bmi2_set_spi_en

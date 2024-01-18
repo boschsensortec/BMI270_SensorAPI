@@ -1351,7 +1351,7 @@ static int8_t disable_sensor_features(uint64_t sensor_sel, struct bmi2_dev *dev)
  *  4) Updates the feature offset parameters in the device structure.
  *  5) Updates the maximum number of pages, in the device structure.
  */
-int8_t bmi270_init(struct bmi2_dev *dev)
+int8_t bmi270_init(struct bmi2_dev *dev, uint8_t skip_reset)
 {
     /* Variable to define error */
     int8_t rslt;
@@ -1389,7 +1389,7 @@ int8_t bmi270_init(struct bmi2_dev *dev)
         }
 
         /* Initialize BMI2 sensor */
-        rslt = bmi2_sec_init(dev);
+        rslt = bmi2_sec_init_with_opt(dev, skip_reset);
         if (rslt == BMI2_OK)
         {
             /* Assign the offsets of the feature input
