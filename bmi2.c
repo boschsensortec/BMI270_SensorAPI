@@ -1881,6 +1881,11 @@ static int8_t validate_foc_accel_axis(int16_t avg_foc_data, struct bmi2_dev *dev
  */
 int8_t bmi2_sec_init(struct bmi2_dev *dev)
 {
+    return bmi2_sec_init_with_opt(dev, 0);
+}
+
+int8_t bmi2_sec_init_with_opt(struct bmi2_dev *dev, uint8_t skip_reset)
+{
     /* Variable to define error */
     int8_t rslt;
 
@@ -1927,6 +1932,8 @@ int8_t bmi2_sec_init(struct bmi2_dev *dev)
                      *  re-mapping in the device structure
                      */
                     dev->remap = axes_remap;
+
+                    if (skip_reset) return BMI2_OK;
 
                     /* Perform soft-reset to bring all register values to their
                      * default values
