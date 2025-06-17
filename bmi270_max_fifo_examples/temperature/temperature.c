@@ -42,7 +42,7 @@ int main(void)
     /* Assign gyro sensor to variable. */
     uint8_t sens_list[2] = { BMI2_GYRO, BMI2_TEMP };
 
-    uint16_t temperature_data;
+    int16_t temperature_data;
 
     /* Variable to store temperature */
     float temperature_value;

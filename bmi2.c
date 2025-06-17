@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2025 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.c
-* @date       2023-05-03
-* @version    v2.86.1
+* @date       2025-04-22
+* @version    v2.113.0
 *
 */
 
@@ -2819,7 +2819,7 @@ int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev)
  * @brief This API reads the raw temperature data from the register and can be
  * converted into degree celsius.
  */
-int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev)
+int8_t bmi2_get_temperature_data(int16_t *temp_data, struct bmi2_dev *dev)
 {
     /* Variable to store result of API */
     int8_t rslt;
@@ -2834,7 +2834,7 @@ int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev)
 
         if (rslt == BMI2_OK)
         {
-            *temp_data = (uint16_t)(reg_data[0] | ((uint16_t)reg_data[1] << 8));
+            *temp_data = (int16_t)(reg_data[0] | ((int16_t)reg_data[1] << 8));
         }
     }
     else
@@ -5084,13 +5084,16 @@ int8_t bmi2_read_gyro_offset_comp_axes(struct bmi2_sens_axes_data *gyr_off_comp_
             gyr_off_msb_z = reg_data[3] & BMI2_GYR_OFF_COMP_MSB_Z_MASK;
 
             /* Gyroscope offset compensation value for x-axis */
-            gyr_off_comp_axes->x = (int16_t)(((uint16_t) gyr_off_msb_x << 8) | gyr_off_lsb_x);
+            gyr_off_comp_axes->x =
+                ((int16_t)(((gyr_off_msb_x << 8) | gyr_off_lsb_x) << BMI2_N_SENSE_COUNT_6) >> BMI2_N_SENSE_COUNT_6);
 
             /* Gyroscope offset compensation value for y-axis */
-            gyr_off_comp_axes->y = (int16_t)(((uint16_t) gyr_off_msb_y << 6) | gyr_off_lsb_y);
+            gyr_off_comp_axes->y =
+                ((int16_t)(((gyr_off_msb_y << 6) | gyr_off_lsb_y) << BMI2_N_SENSE_COUNT_6) >> BMI2_N_SENSE_COUNT_6);
 
             /* Gyroscope offset compensation value for z-axis */
-            gyr_off_comp_axes->z = (int16_t)(((uint16_t) gyr_off_msb_z << 4) | gyr_off_lsb_z);
+            gyr_off_comp_axes->z =
+                ((int16_t)(((gyr_off_msb_z << 4) | gyr_off_lsb_z) << BMI2_N_SENSE_COUNT_6) >> BMI2_N_SENSE_COUNT_6);
         }
     }
     else
@@ -5767,7 +5770,7 @@ static int8_t validate_gyro_config(struct bmi2_gyro_config *config, struct bmi2_
     if (rslt == BMI2_OK)
     {
         /* Validate and auto-correct bandwidth parameter */
-        rslt = check_boundary_val(&config->bwp, BMI2_GYR_OSR4_MODE, BMI2_GYR_CIC_MODE, dev);
+        rslt = check_boundary_val(&config->bwp, BMI2_GYR_OSR4_MODE, BMI2_GYR_NORMAL_MODE, dev);
         if (rslt == BMI2_OK)
         {
             /* Validate and auto-correct low power/high-performance parameter */
@@ -10986,12 +10989,6 @@ int8_t bmi2_nvm_prog(struct bmi2_dev *dev)
     {
         /* perform soft reset */
         rslt = bmi2_soft_reset(dev);
-    }
-
-    /* Enable Advance power save if disabled while configuring and not when already disabled */
-    if ((aps_stat == BMI2_ENABLE) && (rslt == BMI2_OK))
-    {
-        rslt = bmi2_set_adv_power_save(BMI2_ENABLE, dev);
     }
 
     return rslt;

@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2025 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2.h
-* @date       2023-05-03
-* @version    v2.86.1
+* @date       2025-04-22
+* @version    v2.113.0
 *
 */
 
@@ -796,7 +796,7 @@ int8_t bmi2_get_sensor_data(struct bmi2_sens_data *data, struct bmi2_dev *dev);
  *  @retval 0 -> Success
  *  @retval < 0 -> Fail
  */
-int8_t bmi2_get_temperature_data(uint16_t *temp_data, struct bmi2_dev *dev);
+int8_t bmi2_get_temperature_data(int16_t *temp_data, struct bmi2_dev *dev);
 
 /*!
  * \ingroup bmi2ApiSensorD

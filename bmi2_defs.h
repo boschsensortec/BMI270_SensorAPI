@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+* Copyright (c) 2025 Bosch Sensortec GmbH. All rights reserved.
 *
 * BSD-3-Clause
 *
@@ -31,8 +31,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 * @file       bmi2_defs.h
-* @date       2023-05-03
-* @version    v2.86.1
+* @date       2025-04-22
+* @version    v2.113.0
 *
 */
 
@@ -81,7 +81,7 @@
 #ifdef __cplusplus
 #define NULL         0
 #else
-#define NULL         ((void *) 0)
+#define NULL         ((void *)0)
 #endif
 #endif
 
@@ -90,15 +90,15 @@
 /******************************************************************************/
 /*! @name  Utility macros */
 #define BMI2_SET_BITS(reg_data, bitname, data) \
-    ((reg_data & ~(bitname##_MASK)) | \
+    ((reg_data & ~(bitname##_MASK)) |          \
      ((data << bitname##_POS) & bitname##_MASK))
 
 #define BMI2_GET_BITS(reg_data, bitname) \
-    ((reg_data & (bitname##_MASK)) >> \
+    ((reg_data & (bitname##_MASK)) >>    \
      (bitname##_POS))
 
 #define BMI2_SET_BIT_POS0(reg_data, bitname, data) \
-    ((reg_data & ~(bitname##_MASK)) | \
+    ((reg_data & ~(bitname##_MASK)) |              \
      (data & bitname##_MASK))
 
 #define BMI2_GET_BIT_POS0(reg_data, bitname)          (reg_data & (bitname##_MASK))
@@ -209,6 +209,7 @@
 #define BMI2_SC_OUT_0_ADDR                            UINT8_C(0x1E)
 #define BMI2_SYNC_COMMAND_ADDR                        UINT8_C(0x1E)
 #define BMI2_GYR_CAS_GPIO0_ADDR                       UINT8_C(0x1E)
+#define BMI2_DSD_OUT_ADDR                             UINT8_C(0x1E)
 #define BMI2_INTERNAL_STATUS_ADDR                     UINT8_C(0x21)
 #define BMI2_TEMPERATURE_0_ADDR                       UINT8_C(0x22)
 #define BMI2_TEMPERATURE_1_ADDR                       UINT8_C(0x23)
@@ -494,14 +495,25 @@
 #define BMI2_CONFIG_ID                                UINT8_C(47)
 #define BMI2_EXT_TCO                                  UINT8_C(48)
 #define BMI2_LPD                                      UINT8_C(49)
-#define BMI2_LAPTOP_POSITION_DETECTOR_1               UINT8_C(50)
-#define BMI2_LAPTOP_POSITION_DETECTOR_2               UINT8_C(51)
-#define BMI2_LAPTOP_POSITION_DETECTOR_3               UINT8_C(52)
-#define BMI2_LAPTOP_POSITION_DETECTOR_4               UINT8_C(53)
-#define BMI2_WRIST_GESTURE_WH_1                       UINT8_C(54)
-#define BMI2_WRIST_GESTURE_WH_2                       UINT8_C(55)
+
+#define BMI2_IMU_FUSION_QUATERION                     UINT8_C(50)
+#define BMI2_HEAD_ORIENTATION_QUATERION               UINT8_C(51)
+#define BMI2_HMC_CALIBRATION_PARAMS                   UINT8_C(52)
+#define BMI2_HMC_CORRECTION_QUATERION                 UINT8_C(53)
+
+#define BMI2_WRIST_GESTURE_DETECTOR_1                 UINT8_C(54)
+#define BMI2_WRIST_GESTURE_DETECTOR_2                 UINT8_C(55)
+
 #define BMI2_WRIST_WEAR_DROP_WH                       UINT8_C(56)
 #define BMI2_DOOR_STATE_DETECTOR                      UINT8_C(57)
+#define BMI2_SHAKE                                    UINT8_C(58)
+#define BMI2_CIRCLE                                   UINT8_C(59)
+#define BMI2_PUSH                                     UINT8_C(60)
+#define BMI2_EXTREMUM_DETECT                          UINT8_C(61)
+#define BMI2_IOB_DETECTOR_1                           UINT8_C(62)
+#define BMI2_IOB_DETECTOR_2                           UINT8_C(63)
+#define BMI2_IOB_PICK_UP                              UINT8_C(64)
+#define BMI2_DOOR_STATE_DETECTOR_2                    UINT8_C(65)
 
 /*! @name Bit wise for selecting BMI2 sensors/features */
 #define BMI2_ACCEL_SENS_SEL                           (1)
@@ -539,8 +551,17 @@
 #define BMI2_FREE_FALL_DET_SEL                        (1 << BMI2_FREE_FALL_DET)
 #define BMI2_EXT_TCO_SEL                              ((uint64_t)1 << BMI2_EXT_TCO)
 #define BMI2_LPD_SEL                                  ((uint64_t)1 << BMI2_LPD)
+#define BMI2_IOB_DETECTOR_1_SEL                       ((uint64_t)1 << BMI2_IOB_DETECTOR_1)
 #define BMI2_WRIST_WEAR_DROP_WH_SEL                   ((uint64_t)1 << BMI2_WRIST_WEAR_DROP_WH)
 #define BMI2_DOOR_STATE_DETECTOR_SEL                  ((uint64_t)1 << BMI2_DOOR_STATE_DETECTOR)
+#define BMI2_SHAKE_SEL                                ((uint64_t)1 << BMI2_SHAKE)
+#define BMI2_CIRCLE_SEL                               ((uint64_t)1 << BMI2_CIRCLE)
+#define BMI2_PUSH_SEL                                 ((uint64_t)1 << BMI2_PUSH)
+#define BMI2_EXTREMUM_DETECT_SEL                      ((uint64_t)1 << BMI2_EXTREMUM_DETECT)
+#define BMI2_IMU_FUSION_QUATERION_SEL                 ((uint64_t)1 << BMI2_IMU_FUSION_QUATERION)
+#define BMI2_HEAD_ORIENTATION_QUATERION_SEL           ((uint64_t)1 << BMI2_HEAD_ORIENTATION_QUATERION)
+#define BMI2_HMC_CALIBRATION_PARAMS_SEL               ((uint64_t)1 << BMI2_HMC_CALIBRATION_PARAMS)
+#define BMI2_WRIST_GESTURE_DETECTOR_1_SEL             ((uint64_t)1 << BMI2_WRIST_GESTURE_DETECTOR_1)
 
 /*! @name Macro definitions for Internal error */
 #define BMI2_INTERNAL_ERROR_REG_MASK                  UINT8_C(0xFF)
@@ -602,6 +623,11 @@
 #define BMI2_HIGH_G_FEAT_EN_OFFSET                    UINT8_C(0x03)
 #define BMI2_LOW_G_FEAT_EN_OFFSET                     UINT8_C(0x03)
 #define BMI2_TILT_FEAT_EN_OFFSET                      UINT8_C(0x00)
+#define BMI2_SHAKE_FEAT_EN_OFFSET                     UINT8_C(0x02)
+#define BMI2_CIRCLE_FEAT_EN_OFFSET                    UINT8_C(0x02)
+#define BMI2_PUSH_FEAT_EN_OFFSET                      UINT8_C(0x02)
+#define BMI2_IMU_FUS_FEAT_EN_OFFSET                   UINT8_C(0x00)
+#define BMI2_HEAD_ORIENT_FEAT_EN_OFFSET               UINT8_C(0x00)
 
 /*! @name Mask definitions for BMI2 feature enable/disable */
 #define BMI2_ANY_NO_MOT_EN_MASK                       UINT8_C(0x80)
@@ -632,6 +658,11 @@
 #define BMI2_FREE_FALL_DET_FEAT_EN_MASK               UINT8_C(0x01)
 #define BMI2_WRIST_GEST_WH_FEAT_EN_MASK               UINT8_C(0x02)
 #define BMI2_DOOR_STATE_DETECTOR_FEAT_EN_MASK         UINT8_C(0x01)
+#define BMI2_SHAKE_FEAT_EN_MASK                       UINT8_C(0x10)
+#define BMI2_CIRCLE_FEAT_EN_MASK                      UINT8_C(0x10)
+#define BMI2_PUSH_FEAT_EN_MASK                        UINT8_C(0x10)
+#define BMI2_IMU_FUS_FEAT_EN_MASK                     UINT8_C(0x01)
+#define BMI2_HEAD_ORIENT_FEAT_EN_MASK                 UINT8_C(0X01)
 
 /*! @name Bit position definitions for BMI2 feature enable/disable */
 #define BMI2_ANY_NO_MOT_EN_POS                        UINT8_C(0x07)
@@ -649,6 +680,9 @@
 #define BMI2_ABORT_FEATURE_EN_POS                     UINT8_C(0x1)
 #define BMI2_NVM_PREP_FEATURE_EN_POS                  UINT8_C(0x02)
 #define BMI2_WRIST_GEST_WH_FEAT_EN_POS                UINT8_C(0x01)
+#define BMI2_SHAKE_FEAT_EN_POS                        UINT8_C(0x04)
+#define BMI2_CIRCLE_FEAT_EN_POS                       UINT8_C(0x04)
+#define BMI2_PUSH_FEAT_EN_POS                         UINT8_C(0x04)
 
 /*! @name Bit position and mask definitions for BMI2 Error register  */
 #define BMI2_ERR_REG_READ_MASK                        UINT8_C(0xFF)
@@ -862,6 +896,36 @@
 #define BMI2_WRIST_WAKE_UP_MIN_DUR_QUITE_POS          UINT16_C(0x0008)
 #define BMI2_WRIST_WAKE_UP_MIN_DROP_POS_DUR_LOC_POS   UINT16_C(0x0008)
 
+/*! @name Mask definition for BMI2 shake configuration for pen variant */
+#define BMI2_SHAKE_GEST_SHAKE_NUM_MASK                UINT8_C(0x07)
+#define BMI2_SHAKE_GEST_THRESHOLD_MASK                UINT8_C(0xF8)
+
+/*! @name Bit position definition for BMI2 shake configuration for pen variant */
+#define BMI2_SHAKE_GEST_THRESHOLD_POS                 UINT8_C(0x03)
+
+/*! @name Mask definition for BMI2 circle configuration for pen variant */
+#define BMI2_CIRCLE_UPPER_THRESHOLD_MASK              UINT16_C(0x00FF)
+#define BMI2_CIRCLE_LOWER_THRESHOLD_MASK              UINT16_C(0x1F00)
+#define BMI2_CIRCLE_MIN_DISTANCE_MASK                 UINT16_C(0x6000)
+
+/*! @name Bit position definition for BMI2 circle configuration for pen variant */
+#define BMI2_CIRCLE_LOWER_THRESHOLD_POS               UINT8_C(0x08)
+#define BMI2_CIRCLE_MIN_DISTANCE_POS                  UINT8_C(0x0D)
+
+/*! @name Mask definition for BMI2 push configuration for pen variant */
+#define BMI2_PUSH_LOW_THRESHOLD_MASK                  UINT16_C(0x00FF)
+#define BMI2_PUSH_HIGH_THRESHOLD_MASK                 UINT16_C(0xFF00)
+
+/*! @name Bit position definition for BMI2 push configuration for pen variant */
+#define BMI2_PUSH_HIGH_THRESHOLD_POS                  UINT8_C(0x08)
+
+/*! @name Mast definnition for BMI2 extremum detection for pen variant */
+#define BMI2_EXTREMUM_IDLE_THRESHOLD_MASK             UINT16_C(0x00FF)
+#define BMI2_EXTREMUM_DETECT_THRESHOLD_MASK           UINT16_C(0xFF00)
+
+/*! @name Bit position definition for BMI2 extremum detection for pen variant */
+#define BMI2_EXTREMUM_DETECT_THRESHOLD_POS            UINT8_C(0x08)
+
 /*! @name Mask definition for BMI2 EXT TCO configuration */
 #define BMI2_EXT_TCO_MASK                             UINT8_C(0x01)
 
@@ -961,8 +1025,7 @@
 
 /*! @name Bit wise selection of BMI2 sensors */
 #define BMI2_MAIN_SENSORS \
-    (BMI2_ACCEL_SENS_SEL | BMI2_GYRO_SENS_SEL \
-     | BMI2_AUX_SENS_SEL | BMI2_TEMP_SENS_SEL)
+    (BMI2_ACCEL_SENS_SEL | BMI2_GYRO_SENS_SEL | BMI2_AUX_SENS_SEL | BMI2_TEMP_SENS_SEL)
 
 /*!  @name Maximum number of BMI2 main sensors */
 #define BMI2_MAIN_SENS_MAX_NUM                        UINT8_C(4)
@@ -1064,7 +1127,6 @@
 #define BMI2_GYR_OSR4_MODE                            UINT8_C(0x00)
 #define BMI2_GYR_OSR2_MODE                            UINT8_C(0x01)
 #define BMI2_GYR_NORMAL_MODE                          UINT8_C(0x02)
-#define BMI2_GYR_CIC_MODE                             UINT8_C(0x03)
 
 /*! @name Gyroscope Output Data Rate */
 #define BMI2_GYR_ODR_25HZ                             UINT8_C(0x06)
@@ -1223,7 +1285,7 @@
 /*! @name FIFO frame masks */
 #define BMI2_FIFO_LSB_CONFIG_CHECK                    UINT8_C(0x00)
 #define BMI2_FIFO_MSB_CONFIG_CHECK                    UINT8_C(0x80)
-#define BMI2_FIFO_TAG_INTR_MASK                       UINT8_C(0xFF)
+#define BMI2_FIFO_TAG_INTR_MASK                       UINT8_C(0xFC)
 
 /*! @name BMI2 Mask definitions of FIFO configuration registers */
 #define BMI2_FIFO_CONFIG_0_MASK                       UINT16_C(0x0003)
@@ -1415,6 +1477,64 @@
 #define BMI2_ASDA_PUPSEL_40K                          UINT8_C(0x01)
 #define BMI2_ASDA_PUPSEL_10K                          UINT8_C(0x02)
 #define BMI2_ASDA_PUPSEL_2K                           UINT8_C(0x03)
+
+#define INITIAL_LOW_VALUE                             INT16_C(32767)
+#define INITIAL_HIGH_VALUE                            INT16_C(-32768)
+
+/*! G values */
+/* Macro function to derive the value macro from the range macro */
+#define BMI2_GET_RANGE_VAL(range)                     (range##_VAL)
+
+#define BMI2_ACC_RANGE_2G_VAL                         (2.0f)
+#define BMI2_ACC_RANGE_4G_VAL                         (4.00f)
+#define BMI2_ACC_RANGE_8G_VAL                         (8.00f)
+#define BMI2_ACC_RANGE_16G_VAL                        (16.00f)
+
+/*! dps values */
+/* Macro function to derive the value macro from the range macro */
+#define BMI2_GET_DPS_VAL(dps)                         (dps##_VAL)
+
+#define BMI2_GYR_RANGE_125_VAL                        (125.00f)
+#define BMI2_GYR_RANGE_250_VAL                        (250.00f)
+#define BMI2_GYR_RANGE_500_VAL                        (500.00f)
+#define BMI2_GYR_RANGE_1000_VAL                       (1000.00f)
+#define BMI2_GYR_RANGE_2000_VAL                       (2000.00f)
+
+/* Macros to replace constant values */
+#define BMI2_N_SENSE_COUNT_1                          UINT8_C(1)
+#define BMI2_N_SENSE_COUNT_2                          UINT8_C(2)
+#define BMI2_N_SENSE_COUNT_3                          UINT8_C(3)
+#define BMI2_N_SENSE_COUNT_4                          UINT8_C(4)
+#define BMI2_N_SENSE_COUNT_5                          UINT8_C(5)
+#define BMI2_N_SENSE_COUNT_6                          UINT8_C(6)
+
+/* Any-no-motion duration values */
+#define BMI2_ANY_NO_MOT_DUR_100_MSEC                  UINT8_C(0x05)
+#define BMI2_ANY_NO_MOT_DUR_80_MSEC                   UINT8_C(0x04)
+#define BMI2_ANY_NO_MOT_DUR_20_MSEC                   UINT8_C(0x01)
+
+/* Any-no-motion threshold values */
+#define BMI2_ANY_MOT_THRE_DEFAULT_83_MG               UINT8_C(0xAA)
+#define BMI2_ANY_NO_THRE_DEFAULT_70_MG                UINT8_C(0x90)
+#define BMI2_ANY_NO_MOT_THRE_50_MG                    UINT8_C(0x68)
+
+/**\name    BIT SLICE GET AND SET FUNCTIONS */
+#define BMI2_GET_BITSLICE(regvar, bitname) \
+    ((regvar & bitname##_MASK) >> bitname##_POS)
+
+#define BMI2_SET_BITSLICE(regvar, bitname, val) \
+    ((regvar & ~bitname##_MASK) | \
+     ((val << bitname##_POS) & bitname##_MASK))
+
+#define BMI2_GET_DIFF(x, y)                           ((x) - (y))
+
+#define BMI2_SET_BIT_VAL_0(reg_data, bitname)         (reg_data & ~(bitname##_MASK))
+
+#define BMI2_SET_BITS_POS_0(reg_data, bitname, data) \
+    ((reg_data & ~(bitname##_MASK)) | \
+     (data & bitname##_MASK))
+
+#define BMI2_GET_BITS_POS_0(reg_data, bitname)        (reg_data & (bitname##_MASK))
 
 /******************************************************************************/
 /*! @name           Function Pointers                             */
@@ -1874,6 +1994,39 @@ struct bmi2_sens_data
     uint8_t status;
 };
 
+/*!
+ * @brief Store Accel data in terms of RAW, g_val, ms2
+ */
+struct bmi2_accel_processed_data
+{
+    /*! Accelerometer raw value */
+    float accel_raw;
+
+    /*! Accelerometer G value */
+    float accel_g;
+
+    /*! Accelerometer MS2 value */
+    float accel_ms2;
+};
+
+/*!
+ * @brief Store Gyro data in terms of RAW, DPS, MS2 and RPS
+ */
+struct bmi2_gyro_processed_data
+{
+    /*! Gyroscope raw value */
+    float gyro_raw;
+
+    /*! Gyroscope DPS value */
+    float gyro_dps;
+
+    /*! Gyroscope MS2 value */
+    float gyro_ms2;
+
+    /*! Gyroscope RPS value */
+    float gyro_rps;
+};
+
 /*! @name Structure to define BMI2 DSD data */
 struct bmi2_door_state_detector_output
 {
@@ -1882,6 +2035,92 @@ struct bmi2_door_state_detector_output
 
     /*! Heading output */
     int16_t heading_output;
+};
+
+/*! @name Structure to store IMU Fuion Quaterion output */
+struct bmi2_imu_fusion_quaterion_output
+{
+    /*! Vector_x lsb_msb output */
+    int32_t vector_x;
+
+    /*! Vector_y lsb_msb output */
+    int32_t vector_y;
+
+    /*! Vector_z lsb_msb output */
+    int32_t vector_z;
+
+    /*! Scalar_w lsb_msb output */
+    int32_t scalar_w;
+
+};
+
+/*! @name Structure to store head orientation output */
+struct bmi2_head_orientation_output
+{
+    /*! Vector_x lsb_msb output */
+    int32_t vector_x;
+
+    /*! Vector_y lsb_msb output */
+    int32_t vector_y;
+
+    /*! Vector_z lsb_msb output */
+    int32_t vector_z;
+
+    /*! Scalar_w lsb_msb output */
+    int32_t scalar_w;
+
+};
+
+/*! @name Structure to store HMC Correction output and feed in values*/
+struct bmi2_hmc_correction_quaterion
+{
+    /*! Vector_x lsb_msb output */
+    int32_t vector_x;
+
+    /*! Vector_y lsb_msb output */
+    int32_t vector_y;
+
+    /*! Vector_z lsb_msb output */
+    int32_t vector_z;
+
+    /*! Scalar_w lsb_msb output */
+    int32_t scalar_w;
+
+};
+
+/*! @name Structure to store gyro bias values*/
+struct bmi2_gyro_bias_xyz
+{
+    /*! x lsb_msb output */
+    int16_t gyro_bias_x;
+
+    /*! y lsb_msb output */
+    int16_t gyro_bias_y;
+
+    /*! z lsb_msb output */
+    int16_t gyro_bias_z;
+
+};
+
+struct bmi2_gyro_calib_config
+{
+    /*! To enable or disable gyro calibrator feature */
+    uint8_t gyr_calib_offsetcorrection_en;
+
+    /*! To apply  gyro  bias to  XYZ */
+    uint8_t apply_gyro_bias_xyz;
+
+    /*! To store input gyro status */
+    uint8_t input_gyro_calib_status;
+
+    /*! To store output gyro status */
+    uint8_t output_gyro_calib_status;
+
+    /*! To store output gyro status */
+    struct bmi2_gyro_bias_xyz input;
+
+    /*! To store output gyro status */
+    struct bmi2_gyro_bias_xyz output;
 };
 
 /*! @name Union to define BMI2 feature data */
@@ -1925,6 +2164,16 @@ union bmi2_feature_data
 
     /*! DSD output */
     struct bmi2_door_state_detector_output door_state_detector_output;
+
+    /*! IMU fusion output */
+    struct bmi2_imu_fusion_quaterion_output imu_fusion_quaterion_output;
+
+    /*! Head orientation output */
+    struct bmi2_head_orientation_output head_orien_quaterion_output;
+
+    /*! HMC correction quaterion output */
+    struct bmi2_hmc_correction_quaterion hmc_correction_output;
+
 };
 
 /*! @name Structure to define type of sensor and their respective data */
@@ -2129,6 +2378,12 @@ struct bmi2_tap_config
 
     /*! Axis selection */
     uint16_t axis_sel;
+
+    /*! Settling time of high frequency acceleration signal components after tap */
+    uint16_t tap_shock_dur;
+
+    /*! Minimum threshold for peak detection */
+    uint16_t min_const_thres;
 };
 
 /*! @name Structure to define orientation configuration */
@@ -2402,56 +2657,49 @@ struct bmi2_wrist_gest_w_config
 /*! @name Structure to configure Laptop position recognition settings for bmi260lpd */
 struct bmi2_lpd_config
 {
-    /*! Sets the bit for filtered data enable */
-    uint8_t flit_data_en;
-
     /*! lpd enable bit */
     uint8_t lpd_enable;
 
-    /*! Sets angle for portrait oriented in bag cases */
-    uint8_t portrait_theta;
+    /*!Transition threshold to detect movement of laptop*/
+    uint16_t transition_threshold;
 
-    /*! Sets Hysteresis for portrait oriented in bag theta detection */
-    uint8_t portrait_hysteresis;
+    /*!Activity threshold to detect the typing and touch activity*/
+    uint16_t activity_threshold;
 
-    /*! Sets angle for landscape oriented in bag cases */
-    uint8_t landscape_theta;
+    /*!Low 16 bits for Tan of X rotation tolerance low for on table*/
+    uint16_t x_rot_tolerance_low;
 
-    /*! Sets Hysteresis for landscape oriented in bag theta detection */
-    uint8_t landscape_hysteresis;
+    /*!High 16 bits for Tan of X rotation tolerance high for on table*/
+    uint16_t x_rot_tolerance_high;
 
-    /*! Sets angle for flat oriented in bag cases */
-    uint8_t flat_posture_theta;
+    /*!Low 16 bits for Tan of Y rotation tolerance low for on table*/
+    uint16_t y_rot_tolerance_low;
 
-    /*! Sets Hysteresis for landscape oriented in bag theta detection */
-    uint8_t flat_posture_hysteresis;
+    /*!High 16 bits for Tan of Y rotation tolerance high for on table*/
+    uint16_t y_rot_tolerance_high;
+};
 
-    /*! Sets blocking mode, if blocking mode is set no interrupt will be triggered */
-    uint8_t blocking_mode;
+/*! @name Structure to configure inbag/outbag feature*/
+struct bmi2_iob_config
+{
+    /*! IOB enable bit */
+    uint8_t iob_enable;
 
-    /*! Sets the hold time for which the condition has to be respected */
-    uint8_t hold_time;
+    /*! Write the value 1 when the user has the false inbag output*/
+    uint8_t false_inbag;
 
-    /*! Sets threshold slope for block mode conditions */
-    uint8_t blockingslope_thres;
+    /*! IOB Settings 1 */
+    uint16_t settings_1;
 
-    /*! Segment size for which the predictors are computed on */
-    uint16_t segment_size;
+    /*! IOB Settings 2 */
+    uint16_t settings_2;
 
-    /* Post processing enable for the lap status detected */
-    uint8_t post_processing_enable;
+    /*! IOB Settings 3 */
+    uint16_t settings_3;
 
-    /* Minimum threshold of the Gini's diversity index for accepting position */
-    uint16_t mingdithreshold;
+    /*! IOB Settings 4 */
+    uint16_t settings_4;
 
-    /* Maximum threshold of the Gini's diversity index for rejecting position */
-    uint16_t maxgdithreshold;
-
-    /* Buffer size for the post processing of the position detected */
-    uint8_t output_buffersize;
-
-    /* Minimum segments classified with moderate confidence as belonging to certain position */
-    uint16_t minseg_moderateconf;
 };
 
 /*! @name Structure to configure wrist gesture configuration */
@@ -2504,6 +2752,9 @@ struct bmi2_door_state_detector_config
     /*! Map the desired axis to z axis */
     uint8_t z_axis;
 
+    /*! Apply gyro calibration bias */
+    uint8_t gyro_calib_apply;
+
     /*! Initial calibration threshold */
     uint8_t init_calib_thr;
 
@@ -2511,22 +2762,96 @@ struct bmi2_door_state_detector_config
     uint8_t reset_enable_flag;
 
     /*! Value of lower word of bias_x */
-    int32_t bias_x_low_word;
+    uint16_t bias_x_low_word;
 
     /*! Value of higher word of bias_x */
-    int32_t bias_x_high_word;
+    uint16_t bias_x_high_word;
 
     /*! Value of lower word of bias_y */
-    int32_t bias_y_low_word;
+    uint16_t bias_y_low_word;
 
     /*! Value of higher word of bias_y */
-    int32_t bias_y_high_word;
+    uint16_t bias_y_high_word;
 
     /* Value of lower word of bias_z */
-    int32_t bias_z_low_word;
+    uint16_t bias_z_low_word;
 
     /*! Value of higher word of bias_z */
-    int32_t bias_z_high_word;
+    uint16_t bias_z_high_word;
+
+    /*! Value of door closed threshold */
+    uint16_t door_closed_thr;
+};
+
+/*! @name Structure to configure shake configuration */
+struct bmi2_shake_config
+{
+    /*! Number of threshold crossing to be qualified as a shake gesture */
+    uint8_t shake_number;
+
+    /*! Magnitude threshold for linear component of acceleration to be qualified as shake gesture */
+    uint8_t threshold;
+};
+
+/*! @name Structure to configure circle configuration */
+struct bmi2_circle_config
+{
+    /*! Upper threshold to continue the detection of possible circle gesture */
+    uint8_t upper_threshold;
+
+    /*! Lower threshold to continue the detection of possible circle gesture */
+    uint8_t lower_threshold;
+
+    /*! Minimum distance between the extrema at the beginning of circle and other extremas */
+    uint8_t min_distance;
+};
+
+/*! @name Structure to configure push configuration */
+struct bmi2_push_config
+{
+    /*! Lower threshold to start the detection of possible push gesture */
+    uint8_t push_low_threshold;
+
+    /*! Higher threshold to continue the detection of possible push gesture */
+    uint8_t push_high_threshold;
+};
+
+/*! @name Structure to configure extremum configuration */
+struct bmi2_extremum_config
+{
+    /*! Threshold for idle state */
+    uint8_t extremum_idle_threshold;
+
+    /*! Threshold for extremum detection */
+    uint8_t extremum_detect_threshold;
+};
+
+/*! @name Structure to configure head orientation */
+struct bmi2_hmc_calibration_config
+{
+    /*! Sets the HMC calibration to Dynamic/Semi automatic */
+    uint8_t hmc_mode;
+
+    /*! Triggers HMC calibration as per HMC mode */
+    uint8_t calib_trigger;
+
+    /*! HMC Calibration Output Status */
+    uint8_t hmc_calib_out_status;
+};
+
+struct bmi2_wrist_gest_det_config
+{
+    uint8_t enable;
+    uint16_t min_flick_peak_y_threshold;
+    uint16_t min_flick_peak_z_threshold;
+    uint16_t gravity_bound_x_neg;
+    uint16_t gravity_bound_x_pos;
+    uint16_t gravity_bound_y_neg;
+    uint16_t gravity_bound_z_neg;
+    uint16_t flick_peak_decay_coeff;
+    uint16_t lp_mean_filter_coeff;
+    uint16_t max_duration_jiggle_peaks;
+    uint16_t device_position;
 };
 
 /*!  @name Union to define the sensor configurations */
@@ -2601,11 +2926,33 @@ union bmi2_sens_config_types
     /*! Laptop position detection configurations */
     struct bmi2_lpd_config lap_pos_det;
 
+    /*! Laptop inbag/outbag feature*/
+    struct bmi2_iob_config iob;
+
     /*! Structure to configure wrist gesture configurations */
     struct bmi2_wrist_gesture_config wrist_g_config;
 
     /*! Structure to configure door state detector */
     struct bmi2_door_state_detector_config door_state_detector;
+
+    /*! Shake configurations */
+    struct bmi2_shake_config shake;
+
+    /*! Circle configurations */
+    struct bmi2_circle_config circle;
+
+    /*1 Push configurations */
+    struct bmi2_push_config push;
+
+    /*! Extremum detect configurations */
+    struct bmi2_extremum_config extremum;
+
+    /*! Head orientation configurations */
+    struct bmi2_hmc_calibration_config hmc_calibration_config;
+
+    /*! Structure to configure wrist gest detector configurations */
+    struct bmi2_wrist_gest_det_config wrist_gest_det;
+
 };
 
 /*!  @name Structure to define the type of the sensor and its configurations */
@@ -2671,6 +3018,9 @@ struct bmi2_dev
 
     /*! User set read/write length */
     uint16_t read_write_len;
+
+    /*! Feature len */
+    uint8_t feature_len;
 
     /*! Store load status value */
     uint8_t load_status;
