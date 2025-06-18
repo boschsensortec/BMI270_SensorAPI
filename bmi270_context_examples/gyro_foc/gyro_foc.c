@@ -238,7 +238,7 @@ static int8_t perform_gyro_foc_test(struct bmi2_dev *bmi)
     config.cfg.gyr.range = BMI2_GYR_RANGE_2000;
 
     /* Set Gyroscope bandwidth to CIC mode */
-    config.cfg.gyr.bwp = BMI2_GYR_CIC_MODE;
+    config.cfg.gyr.bwp = BMI2_GYR_NORMAL_MODE;
 
     /* Enable/Disable the noise performance mode for precision yaw rate sensing
      * There are two modes
